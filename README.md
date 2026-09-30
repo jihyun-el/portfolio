@@ -4,6 +4,8 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 
 현재 소개·카드·상세 글은 **근거를 바탕으로 준비한 1차 초안**이다. 공개 저장소는 [jihyun-el/portfolio](https://github.com/jihyun-el/portfolio), Pages 주소는 [jihyun-el.github.io/portfolio](https://jihyun-el.github.io/portfolio/)다. 개인 연락처·프로필 사진은 미정이라 표시하지 않았다.
 
+**첫 공개 상태:** 제출을 위해 로컬 정적 빌드 결과를 `gh-pages` 브랜치에 올려 배포했다. 현재 Pages source는 `gh-pages`의 루트다. 아래 Actions workflow는 준비돼 있으나 아직 실행 이력이 없어 자동 재배포는 확인 전이다. 다음 수정에서 Actions 활성화와 Source 전환을 마친 뒤 자동 배포를 검증한다. 콘텐츠는 계속 JSON·Markdown에서 수정하며, 생성된 `gh-pages` HTML을 직접 편집하지 않는다.
+
 ## 수정할 파일
 
 대표 프로젝트는 **클래식메이트 + VQA 두 개**다. 클래식메이트의 앱·파이프라인·엔진은 JSON의 `parts`와 `content/projects/classicmate-<part id>.md`에서 편집하며 한 상세 페이지의 각 절로 표시된다. 세 저장소를 별개 프로젝트 카드로 늘리지 않는다. 본문/한글은 로컬 Pretendard Variable, 헤딩의 Latin은 Geist를 사용한다.
@@ -65,7 +67,7 @@ npm.cmd run preview
 
 ## 공개 후 계속 고치기
 
-**파일 편집 → commit → push → 자동 검증·빌드 → 재배포**가 반복된다. GitHub 웹에서 JSON·Markdown을 편집하고 commit해도 같은 배포 흐름이 실행된다. PR은 정적 빌드·타입 검사만 하며 공개 사이트를 바꾸지 않는다. `main` 반영 후 배포한다. 이전 내용으로 돌아가려면 해당 수정 commit을 revert해 다시 push한다.
+**자동화 전환 후의 흐름:** 파일 편집 → commit → push → 자동 검증·빌드 → 재배포. GitHub 웹에서 JSON·Markdown을 편집하고 commit해도 같은 배포 흐름을 실행하도록 구성했다. PR은 정적 빌드·타입 검사만 하며 공개 사이트를 바꾸지 않는다. `main` 반영 후 배포한다. 현재의 첫 공개는 위의 `gh-pages` 결과물 방식이며 자동화는 검증 전이다.
 
 글이 늘어도 레이아웃 파일을 매번 수정하지 않는다. 내용은 `content/`, 화면은 `src/`, 정적 자산은 `public/`에서 관리한다. 관리자 로그인·DB 없이도 공개 후 계속 편집할 수 있는 구조다.
 
