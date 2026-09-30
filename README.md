@@ -2,7 +2,7 @@
 
 Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그래피·다크 모드를 가져온 정적 포트폴리오다. 원본 패널 구현은 `src/components/panel.tsx`에 복사했으며 CSS는 정적 앱에 맞게 적용했다. 원본 전체 코드는 상위 `src/`에 보존돼 있다.
 
-현재 소개·카드·상세 글은 **근거를 바탕으로 준비한 1차 초안**이다. 로컬 빌드까지 확인했으며 실제 GitHub 저장소 생성·push·사이트 공개는 아직 하지 않았다. 개인 연락처·프로필 사진은 미정이라 표시하지 않았다.
+현재 소개·카드·상세 글은 **근거를 바탕으로 준비한 1차 초안**이다. 공개 저장소는 [jihyun-el/portfolio](https://github.com/jihyun-el/portfolio), Pages 주소는 [jihyun-el.github.io/portfolio](https://jihyun-el.github.io/portfolio/)다. 개인 연락처·프로필 사진은 미정이라 표시하지 않았다.
 
 ## 수정할 파일
 
@@ -21,7 +21,7 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 
 상세 글·기록은 일반 Markdown이다. JSX나 서버 코드를 글에 넣을 필요가 없다. 새 프로젝트를 추가할 때는 JSON 항목과 같은 id의 `.md` 파일을 함께 만든다. 새 기록 파일은 빌드할 때 자동으로 목록과 상세 페이지에 추가된다. 초안 메모는 `content/` 밖에 둔다. `content/` 안의 모든 글은 빌드 대상이다.
 
-`content/profile.json`의 `links`에는 예를 들어 `{"label":"GitHub","url":"https://github.com/본인계정"}`을 넣는다. 이름·URL이 확인된 공개 연락처만 추가한다. `updated`는 실제 내용 갱신 날짜로 고친다.
+`content/profile.json`의 `links`에는 예를 들어 `{"label":"GitHub","url":"https://github.com/본인계정"}`을 넣는다. 이름·URL이 확인된 공개 연락처만 추가한다. 작성·갱신 날짜는 화면에 표시하지 않는다.
 
 ## 로컬 편집과 미리보기
 
@@ -56,8 +56,8 @@ npm.cmd run preview
 
 ## 첫 공개 준비
 
-1. **이 앱의 상위 `portfolio/web` 저장소만** 본인 GitHub의 포트폴리오 저장소에 올린다. `pesonal_docs` 아카이브는 별도다. 원본 remote는 `upstream`; 본인 저장소 URL은 정한 뒤 `origin`으로 추가한다.
-2. 공개 저장소의 기본 브랜치를 `main`으로 둔다. `codex/woojihyun-portfolio`의 준비한 변경을 검토한 뒤 `main`에 반영한다.
+1. **이 앱의 상위 저장소만** 본인 GitHub의 포트폴리오 저장소에 올린다. `pesonal_docs` 아카이브는 별도다. 원본 remote는 `upstream`, 본인 공개 저장소는 `origin`이다.
+2. 공개 저장소의 기본 브랜치는 `main`이다. 새 작업은 `codex/` 브랜치에서 진행하고 검증 후 `main`에 반영할 수 있다.
 3. GitHub 저장소 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 설정한다.
 4. **Actions → Portfolio GitHub Pages → Run workflow**로 첫 빌드를 실행한다. 이후 `main`에 콘텐츠나 앱 변경을 push하면 자동 재배포된다.
 
