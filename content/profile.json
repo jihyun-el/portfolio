@@ -5,16 +5,9 @@
     "사람의 연주에 반응하는 반주 구조를 설계하고, 모델 평가와 실기기 성능 검증을 진행했습니다. 악보 앱과 자산 파이프라인을 개발했으며, SSAFY AI 챌린지에서는 5인 팀의 실험을 설계하고 배분했습니다.",
     "Python·Dart를 직접 읽고 쓰며 AI 코딩 에이전트와 협업합니다. 구현을 맡긴 부분도 참조 결과·측정값·실제 동작을 대조해 검수합니다."
   ],
-  "updated": "2026-09-30",
-  "skills": [
-    { "label": "Python · Dart", "description": "모델 학습·검증, 악보 처리 배치, Flutter 앱 개발에 사용했습니다." },
-    { "label": "모델과 실험", "description": "PyTorch, LoRA·QLoRA, VLM 평가와 추론 결합. 실기기의 처리 시간과 청취 결과를 함께 확인했습니다." },
-    { "label": "서비스", "description": "Flutter, Supabase, PostgreSQL. 계정·소유권·결제·필기 동기화의 데이터 경계를 다뤘습니다." },
-    { "label": "AI 구현 검수", "description": "Rust 구현은 AI 에이전트와 협업했습니다. 본인의 설계·Python 참조 구현·검증 기준과 구현 도구의 역할을 구분합니다." }
-  ],
   "experiences": [
     { "title": "클래식메이트 초기팀 개발총괄 참여", "period": "2025.09 ~ 2026.07", "description": "모바일 악보 앱, 악보 자산 파이프라인, 반주 엔진을 개발했습니다. 초기팀 참여 경험입니다." },
     { "title": "SSAFY 16기 AI 챌린지 A011 팀장", "period": "2026.09.21 ~ 2026.09.28", "description": "5인 팀의 가설 설계·실험 배분·공통 실행 환경·발표를 맡았습니다. Public 리더보드 14위 / 219팀을 기록했습니다." }
   ],
-  "links": []
+  "links": [{"label":"GitHub","url":"https://github.com/jihyun-el"}]
 }

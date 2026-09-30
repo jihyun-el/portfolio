@@ -1,0 +1,30 @@
+{
+  "engine": {
+    "frontendBeforeMs": 89,
+    "frontendAfterMs": 2.6,
+    "computeMs": 4.5,
+    "budgetMs": 10,
+    "controlTicks": 9392,
+    "note": "개발 기록의 실기기 계산 시간. 마이크 입력부터 스피커 출력까지의 전체 지연과 구분합니다."
+  },
+  "vqa": {
+    "matrix": [
+      {"size":"4B","pixels":512,"score":0.89037},
+      {"size":"4B","pixels":768,"score":0.93029},
+      {"size":"8B","pixels":512,"score":0.91271},
+      {"size":"8B","pixels":768,"score":0.95233}
+    ],
+    "stages": [
+      {"label":"제공 베이스라인","score":0.70241},
+      {"label":"4B 공통 출발점","score":0.89037},
+      {"label":"추론 해상도 768²","score":0.93029},
+      {"label":"8B · 768²","score":0.95233},
+      {"label":"초반 7표 앙상블","score":0.97021},
+      {"label":"BF16 학습 · 로그 평균","score":0.97170},
+      {"label":"조건 평균 · 추가 채점","score":0.97557},
+      {"label":"전체 데이터 재학습","score":0.97646}
+    ],
+    "extraInference":{"total":6714,"uncertain":298},
+    "note":"SSAFY AI 챌린지의 Public 기록. 단계 사이에 복수의 변경이 있어 그래프만으로 개별 인과를 단정하지 않습니다."
+  }
+}

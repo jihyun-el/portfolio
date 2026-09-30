@@ -1,0 +1,314 @@
+{
+  "author": "manu",
+  "method": "선택한 브랜치의 작성자 manu 커밋. 병합·문서·AI 공동작성 포함. 팀원의 별도 실행은 커밋 수에 나타나지 않습니다.",
+  "months": [
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07",
+    "2026-08",
+    "2026-09"
+  ],
+  "repositories": [
+    {
+      "id": "app",
+      "projectId": "classicmate",
+      "title": "모바일 앱",
+      "branch": "main",
+      "scopeNote": "출시 앱 main 이력",
+      "snapshot": "0d50b5a9227755878285e05aa3370ee8a56cfdfb",
+      "commits": 667,
+      "authorCommits": 636,
+      "firstDate": "2025-12-10",
+      "lastDate": "2026-05-24",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 34
+        },
+        {
+          "month": "2026-01",
+          "count": 66
+        },
+        {
+          "month": "2026-02",
+          "count": 76
+        },
+        {
+          "month": "2026-03",
+          "count": 252
+        },
+        {
+          "month": "2026-04",
+          "count": 147
+        },
+        {
+          "month": "2026-05",
+          "count": 61
+        },
+        {
+          "month": "2026-06",
+          "count": 0
+        },
+        {
+          "month": "2026-07",
+          "count": 0
+        },
+        {
+          "month": "2026-08",
+          "count": 0
+        },
+        {
+          "month": "2026-09",
+          "count": 0
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "0b3203e92cd88a0a31f1121cd065d2108b121d40",
+          "date": "2025-12-10",
+          "title": "앱 개발 이력 시작",
+          "description": "Flutter 앱의 첫 저장소 커밋. 초기팀 참여 시작일과는 구분합니다."
+        },
+        {
+          "sha": "5ee76da8f962a1a6aaac388af161fc2005420e4e",
+          "date": "2026-04-17",
+          "title": "계정 전환 시 필기 캐시 정리",
+          "description": "다른 계정에 이전 사용자의 필기가 이어지던 경계를 수정했습니다."
+        },
+        {
+          "sha": "30b020bf07532925217cabae93a6e6460389f200",
+          "date": "2026-04-25",
+          "title": "결제 지갑과 거래 스키마 배포",
+          "description": "인앱 결제와 잔액·소유권을 서버 기준으로 관리하는 스키마를 배포했습니다."
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "projectId": "classicmate",
+      "title": "악보 파이프라인",
+      "branch": "main",
+      "scopeNote": "MusicXML 변환·해설 파이프라인",
+      "snapshot": "87adab88d3f9143a3ee69430d7fef5f77e268dc5",
+      "commits": 64,
+      "authorCommits": 64,
+      "firstDate": "2025-12-31",
+      "lastDate": "2026-07-06",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 1
+        },
+        {
+          "month": "2026-01",
+          "count": 6
+        },
+        {
+          "month": "2026-02",
+          "count": 21
+        },
+        {
+          "month": "2026-03",
+          "count": 13
+        },
+        {
+          "month": "2026-04",
+          "count": 2
+        },
+        {
+          "month": "2026-05",
+          "count": 1
+        },
+        {
+          "month": "2026-06",
+          "count": 18
+        },
+        {
+          "month": "2026-07",
+          "count": 2
+        },
+        {
+          "month": "2026-08",
+          "count": 0
+        },
+        {
+          "month": "2026-09",
+          "count": 0
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "f0449ecaec72ad8ec5783f0ab90616bf4401ec0c",
+          "date": "2026-02-15",
+          "title": "가짜 기본값 주입 제거",
+          "description": "악보에서 얻지 못한 정보를 임의의 템포·박자·조성으로 채우던 처리를 수정했습니다."
+        },
+        {
+          "sha": "0fa909fc5aec02d4e4095ac8036ce12efcfb7fb5",
+          "date": "2026-03-23",
+          "title": "이조 악보의 페이지 역행 수정",
+          "description": "마디 기준으로 페이지를 배정해 커서가 이전 페이지로 뛰는 사례를 수정했습니다."
+        },
+        {
+          "sha": "5420a145650625e44d2adc94c64de46dc8ee0b07",
+          "date": "2026-06-30",
+          "title": "리팩터 전에 출력 스냅샷 고정",
+          "description": "4곡의 결정적 출력에 회귀 가드를 만든 뒤 패키지 구조를 변경했습니다."
+        }
+      ]
+    },
+    {
+      "id": "engine",
+      "projectId": "classicmate",
+      "title": "반주 엔진",
+      "branch": "main",
+      "scopeNote": "5~7월 개발, 8월 코드 대조 문서 포함",
+      "snapshot": "4ed6f3a3fdb04ed0ec95e5e7459bc3a14630fa07",
+      "commits": 296,
+      "authorCommits": 296,
+      "firstDate": "2026-05-16",
+      "lastDate": "2026-08-24",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 0
+        },
+        {
+          "month": "2026-01",
+          "count": 0
+        },
+        {
+          "month": "2026-02",
+          "count": 0
+        },
+        {
+          "month": "2026-03",
+          "count": 0
+        },
+        {
+          "month": "2026-04",
+          "count": 0
+        },
+        {
+          "month": "2026-05",
+          "count": 68
+        },
+        {
+          "month": "2026-06",
+          "count": 195
+        },
+        {
+          "month": "2026-07",
+          "count": 27
+        },
+        {
+          "month": "2026-08",
+          "count": 6
+        },
+        {
+          "month": "2026-09",
+          "count": 0
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "8408b4e44f6146bd290628068e13b98dcb5ff521",
+          "date": "2026-06-21",
+          "title": "VQT 앞단의 Rust 이식 검수",
+          "description": "Python 참조와 비교하며 온디바이스 앞단의 이식 경로를 마련했습니다."
+        },
+        {
+          "sha": "a4e1784ac2eef29b885b5710c53d1fffe97b21b0",
+          "date": "2026-06-23",
+          "title": "새 컬럼만 계산하는 증분 앞단",
+          "description": "창 전체 재계산을 줄이고 두 신호 처리를 한 패스로 융합했습니다."
+        },
+        {
+          "sha": "6ef44b0bfb67b8828878a6d7f53599dd3119a734",
+          "date": "2026-07-04",
+          "title": "가속기 호출 수 절반으로 축소",
+          "description": "한 창에서 두 프레임을 추출해 블록당 ANE 호출을 2회에서 1회로 줄였습니다."
+        }
+      ]
+    },
+    {
+      "id": "vqa",
+      "projectId": "ssafy-ai-challenge",
+      "title": "멀티모달 VQA",
+      "branch": "exp/manu",
+      "scopeNote": "팀 공통 실험·제출을 관리한 사용자 브랜치",
+      "snapshot": "d87877ff5464d49d814c0e54e32b94778e984f2b",
+      "commits": 187,
+      "authorCommits": 187,
+      "firstDate": "2026-09-21",
+      "lastDate": "2026-09-27",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 0
+        },
+        {
+          "month": "2026-01",
+          "count": 0
+        },
+        {
+          "month": "2026-02",
+          "count": 0
+        },
+        {
+          "month": "2026-03",
+          "count": 0
+        },
+        {
+          "month": "2026-04",
+          "count": 0
+        },
+        {
+          "month": "2026-05",
+          "count": 0
+        },
+        {
+          "month": "2026-06",
+          "count": 0
+        },
+        {
+          "month": "2026-07",
+          "count": 0
+        },
+        {
+          "month": "2026-08",
+          "count": 0
+        },
+        {
+          "month": "2026-09",
+          "count": 187
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "7d7e1eaf8a0de2deef10e75c009fc9bcafdf3201",
+          "date": "2026-09-22",
+          "title": "모델 크기 × 해상도 2×2 실험",
+          "description": "네 조건을 교차 비교해 해상도 효과와 모델 크기 효과를 구분했습니다."
+        },
+        {
+          "sha": "9b99ca1018ec992287d4be04070835690adf3012",
+          "date": "2026-09-26",
+          "title": "불확실한 298문항에 계산 집중",
+          "description": "모든 문항을 반복 처리하는 대신 추가 추론할 문항과 판단 규칙을 먼저 고정했습니다."
+        },
+        {
+          "sha": "5059fc6cfd8c332672477395821d7c5c7e79ac8d",
+          "date": "2026-09-27",
+          "title": "저장된 예측에서 답안 독립 재생성",
+          "description": "초반 다수결과 최종 결합을 다시 계산하고 CSV 해시를 대조하는 제출 묶음을 보강했습니다."
+        }
+      ]
+    }
+  ]
+}

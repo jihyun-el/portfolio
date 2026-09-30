@@ -6,8 +6,6 @@ export type Profile = {
   name: string;
   headline: string;
   introduction: string[];
-  updated: string;
-  skills: { label: string; description: string }[];
   experiences: { title: string; period: string; description: string }[];
   links: { label: string; url: string }[];
 };
@@ -25,10 +23,18 @@ export type Project = {
 };
 
 export type Writing = { slug: string; title: string; excerpt: string; body: string };
+export type StackGroup = { title: string; items: { name: string; description: string; projectId: string; part?: string; mode?: string }[] };
+export type Milestone = { sha: string; date: string; title: string; description: string };
+export type HistoryRepository = { id: string; projectId: string; title: string; branch: string; scopeNote: string; snapshot: string; commits: number; authorCommits: number; firstDate: string; lastDate: string; months: { month: string; count: number }[]; milestones: Milestone[] };
+export type History = { author: string; method: string; months: string[]; repositories: HistoryRepository[] };
+export type Metrics = { engine: { frontendBeforeMs: number; frontendAfterMs: number; computeMs: number; budgetMs: number; controlTicks: number; note: string }; vqa: { matrix: { size: string; pixels: number; score: number }[]; stages: { label: string; score: number }[]; extraInference: { total: number; uncertain: number }; note: string } };
 const directory = path.join(process.cwd(), "content");
 
 export const profile: Profile = JSON.parse(fs.readFileSync(path.join(directory, "profile.json"), "utf8"));
 export const projects: Project[] = JSON.parse(fs.readFileSync(path.join(directory, "projects.json"), "utf8"));
+export const stack: StackGroup[] = JSON.parse(fs.readFileSync(path.join(directory, "stack.json"), "utf8"));
+export const history: History = JSON.parse(fs.readFileSync(path.join(directory, "history.json"), "utf8"));
+export const metrics: Metrics = JSON.parse(fs.readFileSync(path.join(directory, "metrics.json"), "utf8"));
 
 export function sitePath(pathname: string) {
   return withBasePath(process.env.PAGES_BASE_PATH || "", pathname);

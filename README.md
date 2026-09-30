@@ -4,7 +4,7 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 
 현재 소개·카드·상세 글은 **근거를 바탕으로 준비한 1차 초안**이다. 공개 저장소는 [jihyun-el/portfolio](https://github.com/jihyun-el/portfolio), Pages 주소는 [jihyun-el.github.io/portfolio](https://jihyun-el.github.io/portfolio/)다. 개인 연락처·프로필 사진은 미정이라 표시하지 않았다.
 
-**첫 공개 상태:** 제출을 위해 로컬 정적 빌드 결과를 `gh-pages` 브랜치에 올려 배포했다. 현재 Pages source는 `gh-pages`의 루트다. 아래 Actions workflow는 준비돼 있으나 아직 실행 이력이 없어 자동 재배포는 확인 전이다. 다음 수정에서 Actions 활성화와 Source 전환을 마친 뒤 자동 배포를 검증한다. 콘텐츠는 계속 JSON·Markdown에서 수정하며, 생성된 `gh-pages` HTML을 직접 편집하지 않는다.
+첫 제출 버전은 `gh-pages`에 정적 결과물을 올려 공개했다. 이후 GitHub Actions의 성공 실행 이력을 확인하고 Pages Source를 **GitHub Actions**로 전환했다. `main`의 내용 수정은 같은 URL에 자동 배포한다. 생성된 HTML은 직접 편집하지 않는다.
 
 ## 수정할 파일
 
@@ -12,7 +12,10 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 
 | 바꾸려는 것 | 파일 |
 |---|---|
-| 이름·소개·기술·경험·공개 링크 | `content/profile.json` |
+| 이름·소개·경험·공개 링크 | `content/profile.json` |
+| 기술별 사용 설명·프로젝트 연결 | `content/stack.json` |
+| 월별 개발 활동·실제 커밋 이력 | `content/history.json` |
+| 엔진 성능·VQA 실험과 점수 그래프 | `content/metrics.json` |
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
 | 프로젝트 상세 글 | `content/projects/<프로젝트 id>.md` |
 | 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목` |
@@ -67,7 +70,11 @@ npm.cmd run preview
 
 ## 공개 후 계속 고치기
 
-**자동화 전환 후의 흐름:** 파일 편집 → commit → push → 자동 검증·빌드 → 재배포. GitHub 웹에서 JSON·Markdown을 편집하고 commit해도 같은 배포 흐름을 실행하도록 구성했다. PR은 정적 빌드·타입 검사만 하며 공개 사이트를 바꾸지 않는다. `main` 반영 후 배포한다. 현재의 첫 공개는 위의 `gh-pages` 결과물 방식이며 자동화는 검증 전이다.
+**파일 편집 → commit → push → 자동 검증·빌드 → 재배포.** GitHub 웹에서 JSON·Markdown을 편집하고 commit해도 같은 배포 흐름이 실행된다. PR은 정적 빌드·타입 검사만 하며 공개 사이트를 바꾸지 않는다. `main` 반영 후 배포한다. 이전 상태로 돌아가려면 해당 소스 커밋을 revert해 다시 push한다.
+
+`history.json`은 실제 프로젝트 브랜치에서 확인한 작성자 `manu`의 월별 커밋과 선정한 변경 이력이다. 병합·문서·AI 공동작성을 포함하므로 직접 작성 비율이나 전체 팀 기여 비율로 바꾸지 않는다. 엔진의 8월 커밋은 코드 대조 문서 정리다. 새 이력을 넣을 때는 실제 SHA·날짜·집계 범위를 먼저 확인한다.
+
+`metrics.json` 수치는 기록에서 확인한 조건과 함께 수정한다. 실기기 계산 시간은 입력→출력 전체 지연과 구분하고, VQA는 Public 점수로 표시한다. 네 실험 조건·0~1 점수 범위·월별 커밋 합계와 프로젝트 연결은 빌드 전에 검사한다. 비교 버튼과 도식은 `src/components/interactive-figures.tsx`, `project-figures.tsx`에서 관리한다.
 
 글이 늘어도 레이아웃 파일을 매번 수정하지 않는다. 내용은 `content/`, 화면은 `src/`, 정적 자산은 `public/`에서 관리한다. 관리자 로그인·DB 없이도 공개 후 계속 편집할 수 있는 구조다.
 

@@ -29,7 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <a className="skip-link" href="#main-content">본문으로 이동</a>
       <header className="site-header"><div className="header-inner">
         <Link className="wordmark" href="/">{profile.name}</Link>
-        <nav aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
+        <nav aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/#skills">기술</Link><Link href="/#commits">커밋</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
       </div></header>
       <main className="page-shell" id="main-content">{children}</main>
       <footer className="site-footer"><div className="footer-inner">
