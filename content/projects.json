@@ -1,0 +1,27 @@
+[
+  {
+    "id": "classicmate",
+    "title": "클래식메이트 — 악보 앱부터 반주 엔진까지",
+    "period": "2025.09 ~ 2026.07 · 초기팀 참여",
+    "role": "개발총괄 참여 · 앱·파이프라인·반주 엔진 설계와 개발",
+    "summary": "악보를 보고 연습하는 하나의 서비스를 만들었습니다. 모바일 앱, 악보 자산 파이프라인, 사람의 연주에 반응하는 온디바이스 반주 엔진을 설계하고 연결했습니다.",
+    "outcome": "iOS·Android 앱 출시. 반주 엔진은 iOS 실기기에 통합했으며 당시 사용자에게 출시되지 않았습니다.",
+    "skills": ["Python", "Dart", "Flutter", "Supabase", "PyTorch", "Core ML"],
+    "defaultOpen": true,
+    "parts": [
+      { "id": "engine", "title": "온디바이스 반주 엔진", "description": "세 시계 설계와 실기기 검증" },
+      { "id": "pipeline", "title": "악보 자산 파이프라인", "description": "MusicXML·12키 변환·LLM 해설" },
+      { "id": "app", "title": "모바일 앱", "description": "악보·필기·동기화·소유권" }
+    ]
+  },
+  {
+    "id": "ssafy-ai-challenge",
+    "title": "멀티모달 VQA 실험과 팀 운영",
+    "period": "2026.09.21 ~ 2026.09.28",
+    "role": "SSAFY AI 챌린지 · 5인 팀 A011 팀장",
+    "summary": "모델 크기와 이미지 해상도의 효과를 분리해 실험하고 VLM 파인튜닝·추론 결합을 진행했습니다. 팀원의 실험을 배분하고 공통 실행 환경을 관리했습니다.",
+    "outcome": "Public 0.70241 → 0.97646. SSAFY 교육생 대상 219팀 중 Public 리더보드 14위.",
+    "skills": ["Python", "VLM", "LoRA", "QLoRA", "앙상블"],
+    "defaultOpen": false
+  }
+]
