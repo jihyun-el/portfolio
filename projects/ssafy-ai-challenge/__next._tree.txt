@@ -1,0 +1,5 @@
+:HL["/portfolio/_next/static/chunks/1i3-gbcn6rx4i.css","style"]
+:HL["/portfolio/_next/static/media/Geist_Medium-s.p.3lt66yvu187v6.ttf","font",{"crossOrigin":"","type":"font/ttf"}]
+:HL["/portfolio/_next/static/media/Geist_SemiBold-s.p.26phtx80iycaw.ttf","font",{"crossOrigin":"","type":"font/ttf"}]
+:HL["/portfolio/_next/static/media/PretendardVariable-s.p.0ztvx5mb7lxp4.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"projects","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"ssafy-ai-challenge","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"WrxHaYNbzVUHgMZTE3NKn"}
