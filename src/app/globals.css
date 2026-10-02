@@ -328,57 +328,25 @@ figure figcaption strong { font-weight:800; } figure figcaption>span { font-size
 .slot-legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:10px; font-size:11px; color:var(--ink-2); }
 .slot-legend li { display:flex; align-items:center; gap:5px; } .slot-legend .slot { width:10px; height:10px; }
 
-/* Signal chain carousel */
-.flow-page { padding-block:clamp(48px,7vw,88px); }
+/* Signal chain controls */
 .chain-head { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom:28px; }
 .chain-head h2 { margin-top:10px; font-size:clamp(30px,4.2vw,52px); line-height:1.1; letter-spacing:-.04em; }
 .chain-play { width:auto!important; padding:0 14px; font-size:13px!important; }
-.chain-viewport { --gap:136px; container-type:inline-size; overflow:hidden; }
-.chain-track { display:flex; align-items:stretch; will-change:transform; }
-.chain-track.animate { transition:transform 1.4s cubic-bezier(.65,0,.35,1); }
-.chain-card { flex:0 0 calc(50cqw - var(--gap) / 2); display:flex; flex-direction:column; min-width:0; border:1px solid var(--ink); background:var(--paper); }
-.chain-card header { display:flex; align-items:baseline; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line); }
-.chain-card header span { font-size:12px; font-weight:700; letter-spacing:.12em; color:var(--ink-2); }
-.chain-card header strong { font-size:19px; font-weight:900; letter-spacing:-.02em; }
-.chain-card canvas { display:block; width:100%; height:300px; }
-.chain-card p { margin-top:auto; padding:10px 16px 12px; border-top:1px solid var(--line); font-size:12px; font-weight:500; color:var(--ink-2); }
-.chain-arrow { flex:0 0 var(--gap); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:0 12px; text-align:center; }
-.chain-arrow span { font-size:30px; font-weight:200; line-height:1; }
-.chain-arrow small { font-size:11px; font-weight:800; line-height:1.5; letter-spacing:-.01em; }
 .chain-segs { display:flex; gap:6px; margin-top:24px; }
 .chain-segs button { flex:1; padding:10px 0; border:0; background:none; cursor:pointer; }
 .chain-segs button::before { content:""; display:block; height:3px; background:var(--line); transition:background .3s; }
 .chain-segs button.on::before { background:var(--ink); }
-@media (max-width:760px) {
-  .chain-viewport { --gap:36px; }
-  .chain-card header { padding:10px; } .chain-card header strong { font-size:14px; }
-  .chain-card canvas { height:210px; } .chain-card p { padding:8px 10px; font-size:10px; }
-  .chain-arrow small { display:none; }
-}
 
 /* 3D signal chain: always a dark stage so additive light reads as glow */
-.chain3d .chain-viewport { position:relative; padding-block:24px; background:#050505; }
 .chain-gl { position:absolute; inset:0; z-index:1; width:100%; height:100%; pointer-events:none; }
-/* The bloom pass paints each scene opaquely, so the cards and their labels sit above the canvas. */
-.chain3d .chain-track { position:relative; z-index:2; }
-.chain3d .chain-card { background:transparent; border-color:#2b2b2b; color:#f2f2f2; }
-.chain3d .chain-card header,.chain3d .chain-card p { border-color:#1c1c1c; }
-.chain3d .chain-card header span { color:#7a7a7a; } .chain3d .chain-card p { color:#a6a6a6; }
-.chain-scene { position:relative; height:340px; }
-.scene-live { position:absolute; top:12px; right:14px; font-size:12px; font-weight:800; color:#f2f2f2; pointer-events:none; }
-.scene-label { position:absolute; font-size:11px; font-weight:600; letter-spacing:.04em; color:#8a8a8a; pointer-events:none; }
 .scene-tag { position:absolute; left:0; top:0; padding:3px 8px; border:1px solid rgba(242,242,242,.4); background:rgba(5,5,5,.78); color:#f2f2f2; font-size:11px; font-weight:800; letter-spacing:.01em; white-space:nowrap; pointer-events:none; transition:opacity .3s; }
 .scene-tag.side-up::after { content:""; position:absolute; left:50%; top:100%; width:1px; height:9px; background:rgba(242,242,242,.55); }
 .scene-tag.strong { background:#f2f2f2; color:#050505; border-color:#f2f2f2; }
 .scene-tag.faint { border-color:transparent; background:transparent; color:#9a9a9a; font-weight:700; }
-.chain3d .chain-arrow { color:#f2f2f2; }
 .cnn-glyph { width:108px; height:52px; }
 .cnn-kernel { animation:cnn-scan 2.4s ease-in-out infinite alternate; }
 @keyframes cnn-scan { 0% { transform:translate(0,0); } 50% { transform:translate(4px,27px); } 100% { transform:translate(7px,0); } }
-.chain-arrow b { font-size:12px; font-weight:900; line-height:1.4; }
-.chain-arrow.is-cnn b { font-size:18px; letter-spacing:.02em; }
-.chain-arrow small { font-weight:600; } .chain3d .chain-arrow small { color:#cfcfcf; }
-@media (max-width:760px) { .chain-scene { height:220px; } .scene-tag { font-size:9px; padding:2px 5px; } }
+@media (max-width:760px) { .scene-tag { font-size:9px; padding:2px 5px; } }
 
 /* 3D panorama: the stages stand in one row on the dark stage, with the processing steps between them */
 /* Holds the place of the panorama on the home page until three.js has loaded. */

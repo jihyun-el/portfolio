@@ -2,7 +2,7 @@
 // engine made of them. The engine's results were computed offline and stored in example-run.json; only those
 // results ship here, not the rules that produced them.
 import RUN from "@/lib/example-run.json";
-import { BEAT, LOOP, STATES, TOTAL, centOf, chordAt, clamp, fv, modBeat, singerU, voiceAt, wrapTime } from "@/lib/example-input";
+import { BEAT, LOOP, STATES, TOTAL, centOf, chordAt, clamp, modBeat, singerU, voiceAt, wrapTime } from "@/lib/example-input";
 
 export * from "@/lib/example-input";
 
@@ -48,7 +48,6 @@ export const observationAt = (t: number) => { const { r, i } = frameAt(t); retur
 export const predictedIndex = (t: number) => { const { r, i } = frameAt(t); return r.predicted[i]; };
 export const confirmedIndex = (t: number) => { const { r, i } = frameAt(t); return r.confirmed[i] - 1; };
 export const frozenFor = (t: number) => { const { r, i } = frameAt(t); return r.frozen[i] * HOP; };
-export const beliefFrozen = (t: number) => frozenFor(t) > 0;
 export const confirmAge = (t: number) => { const { r, i } = frameAt(t); return r.confirmAge[i] * HOP; };
 export const followerTempo = (t: number) => { const { r, i } = frameAt(t); return BEAT / r.psi[i]; };
 // Where probability is flowing: the moving centre (in states) and the share leaking to the next note.
@@ -98,7 +97,6 @@ export function tempoLayers(t: number, keep = 2): TempoLayer[] {
 }
 
 /* ---------- Signals the views draw from the accompaniment ---------- */
-export function accompSignal(tau: number) { const c = chordAt(accompU(tau)); return c.amp * c.notes.reduce((sum, m, i) => sum + Math.sin(2 * Math.PI * fv(m) * tau + i), 0) / c.notes.length; }
 
 // Pitch components (cents, amplitude) that light up one VQT column for each lane.
 export function vqtParts(tau: number, lane: "mic" | "ref"): [number, number][] {
