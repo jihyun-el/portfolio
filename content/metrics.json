@@ -5,7 +5,7 @@
     "computeMs": 4.5,
     "budgetMs": 10,
     "controlTicks": 9392,
-    "note": "개발 기록의 실기기 계산 시간. 마이크 입력부터 스피커 출력까지의 전체 지연과 구분합니다."
+    "note": "개발 기록에 남은 실기기 계산 시간(앞단·신경망)입니다."
   },
   "vqa": {
     "matrix": [
@@ -26,7 +26,7 @@
     ],
     "extraInference":{"total":6714,"uncertain":298},
     "leaderboard":{"rank":14,"teams":219,"private":{"seoul":1,"overall":3,"score":0.97855}},
-    "note":"점수 그래프는 SSAFY AI 챌린지의 Public 기록입니다. 단계 사이에 복수의 변경이 있어 그래프만으로 개별 인과를 단정하지 않습니다."
+    "note":"점수 그래프는 SSAFY AI 챌린지의 Public 기록입니다. 모델 크기와 해상도의 개별 효과는 2×2 실험으로 따로 쟀습니다."
   },
   "app": {"platforms":["iOS","Android"]},
   "pipeline": {"batchSongs":820,"defaultedSongs":674,"note":"템포 기본값 수정 전 배치에서 120BPM 기본값이 주입된 곡 수."}

@@ -270,6 +270,6 @@ export function BodyWindowCube({ window: w }: { window: BodyWindow }) {
       <li><i className="slot slot-lookahead" />미리 보기 {lastOut + 1}–{w.columns - 1}</li>
       {mode === "warmup" && <li><i className="slot slot-pad" />0 채움</li>}
     </ul>
-    <p className="figure-note">출력 칸 하나가 보는 범위는 {w.receptiveField}칸(과거 {firstFrame} + 자신 + 미리 보기 {w.lookahead})입니다. 창 모양이 고정이어야 가속기에서 돌아가므로 앞 {first}칸은 계산에 쓰이지 않아도 함께 넘깁니다. 점 밝기는 설명용 예시이며 실제 입력값이 아닙니다. {w.bins}빈은 {ROWS}줄로 줄여 그렸고, 실제 한 블록(약 {w.blockMs}ms)을 느리게 재생합니다. 드래그하거나 방향키로 돌려 볼 수 있습니다.</p>
+    <p className="figure-note">출력 칸 하나가 보는 범위는 {w.receptiveField}칸(과거 {firstFrame} + 자신 + 미리 보기 {w.lookahead})입니다. 창 모양이 고정이어야 가속기에서 돌아가므로 앞 {first}칸은 계산에 쓰이지 않아도 함께 넘깁니다. 점 밝기는 설명용 예시 값입니다. {w.bins}빈은 {ROWS}줄로 줄여 그렸고, 실제 한 블록(약 {w.blockMs}ms)을 느리게 재생합니다. 드래그하거나 방향키로 돌려 볼 수 있습니다.</p>
   </figure>;
 }

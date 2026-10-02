@@ -32,6 +32,6 @@ export function VqaMatrix({matrix}: {matrix: Metrics["vqa"]["matrix"]}) {
       return <td key={key}><button type="button" aria-pressed={selected===key} aria-label={`${size}, 추론 해상도 ${pixels} 제곱, Public ${row.score.toFixed(5)}`} onClick={()=>setSelected(key)}><strong>{row.score.toFixed(5)}</strong><span>{size==="4B" && pixels===512 ? "공통 출발점" : size==="8B" && pixels===768 ? "두 축 결합" : pixels===768 ? "해상도 변경" : "모델 변경"}</span></button></td>;
     })}</tr>)}</tbody></table>
     <div className="matrix-result" aria-live="polite"><span>{current.size} · {current.pixels}²</span><strong>출발점 대비 {delta>0 ? "+" : ""}{delta.toFixed(2)}%p</strong></div>
-    <p className="figure-note">4B·512² 대비 해상도 효과 +3.99%p, 모델 효과 +2.23%p. 두 효과의 겹침은 약 −0.03%p였습니다. 최종 답안은 이후 학습·결합을 더한 별도 결과입니다.</p>
+    <p className="figure-note">4B·512² 대비 해상도 효과 +3.99%p, 모델 효과 +2.23%p. 두 효과의 겹침은 약 −0.03%p였습니다. 최종 답안은 이 위에 학습과 결합을 더해 만들었습니다.</p>
   </figure>;
 }

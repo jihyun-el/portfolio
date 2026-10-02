@@ -10,7 +10,7 @@
       { "label": "App Store", "url": "https://apps.apple.com/kr/app/classicmate/id6759487996" },
       { "label": "Google Play", "url": "https://play.google.com/store/apps/details?id=app.classicmate" }
     ],
-    "outcome": "iOS·Android 앱 출시. 반주 엔진은 iOS 실기기에 통합했으며 당시 사용자에게 출시되지 않았습니다.",
+    "outcome": "iOS·Android 앱 출시. 반주 엔진은 iOS 실기기 통합까지 완료.",
     "skills": ["Python", "Dart", "Flutter", "Supabase", "PyTorch", "Core ML"],
     "defaultOpen": true,
     "parts": [
@@ -26,7 +26,7 @@
     "period": "2026.09.21 ~ 2026.09.28",
     "role": "SSAFY AI 챌린지 · 5인 팀 A011 팀장",
     "summary": "모델 크기와 이미지 해상도의 효과를 분리해 실험하고 VLM 파인튜닝·추론 결합을 진행했습니다. 팀원의 실험을 배분하고 공통 실행 환경을 관리했습니다.",
-    "outcome": "Public 0.70241 → 0.97646. 최종 Private 0.97855로 서울 1위 · 전체 3위 (Public 219팀 중 14위).",
+    "outcome": "Public 0.70241 → 0.97646. 최종 Private 0.97855로 219팀 중 3위 · 서울 캠퍼스 1위 (Public 14위에서 상승).",
     "skills": ["Python", "VLM", "LoRA", "QLoRA", "앙상블"],
     "defaultOpen": false
   }

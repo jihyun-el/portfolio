@@ -15,7 +15,7 @@
   "stats": ["release", "compute", "leaderboard"],
   "experiences": [
     { "title": "ClassicMate 초기팀 개발총괄", "period": "2025.09 ~ 2026.07", "description": "모바일 앱, 악보 자산 파이프라인, 반주 엔진을 개발했습니다. 초기팀 참여 경험입니다." },
-    { "title": "SSAFY 16기 AI 챌린지 A011 팀장", "period": "2026.09.21 ~ 2026.09.28", "description": "5인 팀의 가설 설계·실험 배분·공통 실행 환경·발표를 맡았습니다. Private 리더보드 서울 1위 · 전체 3위를 기록했습니다." }
+    { "title": "SSAFY 16기 AI 챌린지 A011 팀장", "period": "2026.09.21 ~ 2026.09.28", "description": "5인 팀의 가설 설계·실험 배분·공통 실행 환경·발표를 맡았습니다. Private 리더보드에서 219팀 중 3위 · 서울 캠퍼스 1위를 기록했습니다." }
   ],
   "links": [{"label":"GitHub","url":"https://github.com/jihyun-el"}]
 }
