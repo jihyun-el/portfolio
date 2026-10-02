@@ -1,26 +1,3 @@
-import type { Comparison, MetricView } from "@/lib/showcase";
-
-export function MetricGrid({ items }: { items: MetricView[] }) {
-  return <div className="metrics">{items.map((item) => <div className="metric" key={item.label}>
-    <b className="num">{item.value}{item.unit && <small>{item.unit}</small>}</b><span>{item.label}</span>
-  </div>)}</div>;
-}
-
-export function CompareBars({ compare }: { compare: Comparison }) {
-  const max = Math.max(compare.before, compare.after);
-  const format = (value: number) => `${value.toFixed(value % 1 ? compare.digits : 0)}${compare.unit}`;
-  const delta = compare.lowerIsBetter
-    ? `${Math.round((1 - compare.after / compare.before) * 100)}% 단축`
-    : `+${(compare.after - compare.before).toFixed(compare.deltaDigits ?? compare.digits)}`;
-  return <div><p className="sect-l">{compare.label}</p>
-    <div className="cmp num">
-      <span>이전</span><div className="tr"><div className="fl ghost" style={{ width: `${compare.before / max * 100}%` }} /></div><em>{format(compare.before)}</em>
-      <span>이후</span><div className="tr"><div className="fl" style={{ width: `${compare.after / max * 100}%` }} /></div><em>{format(compare.after)}</em>
-    </div>
-    <p className="delta num">{delta}</p>
-  </div>;
-}
-
 const counts = ["영", "한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉"];
 export const countWord = (value: number) => counts[value] ?? String(value);
 

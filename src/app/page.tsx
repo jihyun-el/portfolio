@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getWriting, profile, projects, sitePath } from "@/lib/content";
 import { buildNetwork, caseViews, statViews } from "@/lib/showcase";
 import { CommitActivity, CommitTimeline } from "@/components/history";
-import { NeuralMap, type MapStep } from "@/components/neural-map";
+import { NeuralMap } from "@/components/neural-map";
 import { ProjectSection } from "@/components/project-section";
 import { PageMap, type MapItem } from "@/components/page-map";
 import { DrawerHost, type DrawerPanel } from "@/components/drawer";
@@ -15,16 +15,6 @@ export default function HomePage() {
   const writing = getWriting();
   const network = buildNetwork();
   const parts = caseViews();
-  const counts = network.layers.map((ids) => ids.length);
-  const edgeCount = new Set(network.chains.flatMap((chain) => chain.slice(1).map((id, i) => `${chain[i]}>${id}`))).size;
-  const languages = network.layers[0].map((id) => network.nodes[id].label).join(" · ");
-  const steps: MapStep[] = [
-    { code: "L0", title: "입력층 · 언어", text: `직접 읽고 쓰는 언어 ${counts[0]}개(${languages})가 입력입니다. 다른 기술은 모두 이 언어 중 하나를 거쳐 썼습니다.` },
-    { code: "L1", title: "은닉층 · 기술", text: `언어 위에서 쓴 기술 ${counts[1]}개입니다. Rust 이식은 AI 에이전트가 구현하고 Python 참조 결과와 대조해 검수했습니다.` },
-    { code: "L2", title: "은닉층 · 작업", text: `기술이 실제 작업이 된 ${countWord(counts[2])} 부분입니다. 각 작업은 커밋과 검증 기록으로 이어집니다.` },
-    { code: "L3", title: "출력층 · 프로젝트", text: `모든 경로는 ${countWord(counts[3])} 프로젝트로 모입니다. ${projects.map((project) => project.short).join(" · ")}.` },
-    { code: "→", title: "탐색", text: "노드를 누르면 연결된 경로가 켜지고 상세가 열립니다." },
-  ];
   const outline: MapItem[] = [
     { id: "about", label: "첫 화면", level: 1 },
     ...projects.flatMap((project): MapItem[] => [
@@ -86,7 +76,7 @@ export default function HomePage() {
       </a>)}
     </section>
     <div id="projects">{projects.map((project, i) => <ProjectSection key={project.id} project={project} index={i} total={projects.length} parts={parts.filter((part) => part.projectId === project.id)} />)}</div>
-    <NeuralMap network={network} steps={steps} edgeCount={edgeCount} />
+    <NeuralMap network={network} />
     <section className="sec" id="commits"><div className="wrap">
       <div className="sec-h"><h2>개발 커밋</h2><p>저장소별 월간 커밋과 주요 변경</p></div>
       <CommitActivity />
