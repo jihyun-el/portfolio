@@ -165,8 +165,8 @@ svg.has-sel .lab:not(.on) { opacity:.2; }
 .part-scope { font-size:var(--fs-s); color:var(--ink-2); line-height:1.7; }
 .part-scope b { display:block; margin-bottom:4px; font-size:var(--fs-xs); font-weight:700; letter-spacing:.12em; color:var(--ink); }
 .read-row { display:flex; flex-wrap:wrap; gap:12px 24px; }
-.part-inside { margin-block:28px; }
-.pano-poster { display:flex; align-items:center; gap:18px; width:100%; min-height:180px; padding:24px 28px; border:0; background:radial-gradient(120% 140% at 20% 50%,#262626 0,#050505 60%); color:#f2f2f2; text-align:left; cursor:pointer; }
+.part-inside { margin:0 0 26px; }
+.pano-poster { display:flex; align-items:center; gap:20px; width:100%; min-height:clamp(220px,26vw,340px); padding:28px clamp(20px,3vw,40px); border:0; background-color:#050505; background-size:cover; background-position:center right; color:#f2f2f2; text-align:left; cursor:pointer; }
 .pano-poster b { display:block; font-size:var(--fs-l); font-weight:900; letter-spacing:-.02em; } .pano-poster span span { display:block; margin-top:4px; font-size:var(--fs-s); color:#a6a6a6; }
 .pano-play { display:grid; place-items:center; flex:none; width:56px; height:56px; border:1.5px solid #f2f2f2; border-radius:50%; font-size:18px; transition:transform .15s; }
 .pano-poster:hover .pano-play { transform:scale(1.08); background:#f2f2f2; color:#050505; }

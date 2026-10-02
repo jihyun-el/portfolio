@@ -7,7 +7,7 @@ export function Gain({ compare, compact = false }: { compare: Comparison; compac
   const format = (value: number) => `${value.toFixed(value % 1 ? compare.digits : 0)}${compare.unit}`;
   const badge = compare.lowerIsBetter
     ? `−${Math.round((1 - compare.after / compare.before) * 100)}%`
-    : `+${(compare.after - compare.before).toFixed(compare.deltaDigits ?? compare.digits)}`;
+    : compare.delta === "pp" ? `+${((compare.after - compare.before) * 100).toFixed(1)}%p` : `+${(compare.after - compare.before).toFixed(compare.digits)}`;
   return <figure className={`gain${compact ? " gain-compact" : ""}`}>
     <p className="gain-badge num"><b>{badge}</b><span>{compare.lowerIsBetter ? "단축" : "상승"}</span></p>
     <div className="gain-bars num" role="img" aria-label={`${compare.label}: ${format(compare.before)}에서 ${format(compare.after)}`}>

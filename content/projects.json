@@ -5,7 +5,7 @@
     "short": "ClassicMate",
     "period": "2025.09 ~ 2026.07 · 초기팀 참여",
     "role": "개발총괄 · 앱·파이프라인·반주 엔진 설계와 개발",
-    "summary": "악보를 보고 연습하는 하나의 서비스를 만들었습니다. 모바일 앱, 악보 자산 파이프라인, 사람의 연주에 반응하는 온디바이스 반주 엔진을 설계하고 연결했습니다.",
+    "summary": "클래식 연주자를 위한 연습/커뮤니티 서비스를 만들었습니다. 모바일 앱, 악보 자산 파이프라인, 사람의 연주에 반응하는 온디바이스 반주 엔진을 설계하고 연결했습니다.",
     "links": [
       { "label": "App Store", "url": "https://apps.apple.com/kr/app/classicmate/id6759487996" },
       { "label": "Google Play", "url": "https://play.google.com/store/apps/details?id=app.classicmate" }

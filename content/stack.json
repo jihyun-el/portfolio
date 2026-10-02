@@ -15,7 +15,7 @@
       {"name":"Rust","language":"Python","description":"AI 에이전트가 구현한 이식본을 Python 참조·골든 출력·실기기 측정으로 검수.","projectId":"classicmate","part":"engine","mode":"AI 구현 협업"}
     ]},
     {"title":"앱과 데이터","short":"앱·데이터","items":[
-      {"name":"Flutter","language":"Dart","description":"iOS·Android 악보 앱 출시. PDF 위 필기와 재생 UI 구현.","projectId":"classicmate","part":"app"},
+      {"name":"Flutter","language":"Dart","description":"iOS·Android 앱 출시. PDF 악보 위 필기와 재생 UI 구현.","projectId":"classicmate","part":"app"},
       {"name":"Supabase","language":"Dart","description":"인증·악보 자산·소유권·기기 간 동기화와 서버 결제 처리.","projectId":"classicmate","part":"app"},
       {"name":"PostgreSQL","language":"Dart","description":"거래 고유성 제약, 조건부 갱신, 지갑 원장과 서버 소유권 관리.","projectId":"classicmate","part":"app"}
     ]},

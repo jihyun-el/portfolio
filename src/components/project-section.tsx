@@ -2,6 +2,7 @@ import { sitePath, type Project } from "@/lib/content";
 import type { CaseView } from "@/lib/showcase";
 import { ProjectLinks } from "@/components/project-links";
 import { Gain } from "@/components/gain";
+import { SignalChainSection } from "@/components/signal-chain-section";
 
 // One project on the home page, set apart from the next by its own band and number.
 // Each part is one row: name, one sentence, one number. The row links to the part's page,
@@ -30,6 +31,7 @@ export function ProjectSection({ project, parts, index, total }: { project: Proj
           <div className="prow-fig">{part.compare ? <Gain compare={part.compare} compact /> : part.headline && <span className="prow-stat"><b className="num">{part.headline.value}{part.headline.unit && <small>{part.headline.unit}</small>}</b><span>{part.headline.label}</span></span>}</div>
           <div className="prow-go" aria-hidden="true">자세히 <i>→</i></div>
         </a>
+        {part.part === "engine" && <SignalChainSection poster={sitePath("/images/signal-chain-poster.jpg")} />}
       </li>)}</ol>
     </div>
   </section>;

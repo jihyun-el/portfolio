@@ -42,7 +42,7 @@
     "approach": "PDF 원본 좌표로 필기를 저장하고 페이지 단위 3-way merge로 기기 간 변경을 다뤘습니다. 결제는 외부 거래 ID의 유일성 제약과 조건부 갱신으로 중복 지급을 막았습니다.",
     "metrics": ["release"],
     "scope": {
-      "claim": "Flutter·Supabase로 개발한 악보 앱을 iOS·Android에 출시했습니다.",
+      "claim": "Flutter·Supabase로 개발한 ClassicMate 앱을 iOS·Android에 출시했습니다.",
       "limit": "결제 백엔드의 운영 배포와 실제 유료곡 판매 개시는 별개의 사실입니다."
     }
   },

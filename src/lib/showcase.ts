@@ -1,7 +1,7 @@
 import { cases, history, metrics, profile, projects, stack, type Case } from "@/lib/content";
 
 export type MetricView = { value: string; unit?: string; label: string };
-export type Comparison = { label: string; before: number; after: number; unit: string; digits: number; deltaDigits?: number; lowerIsBetter: boolean };
+export type Comparison = { label: string; before: number; after: number; unit: string; digits: number; delta?: "pp"; lowerIsBetter: boolean };
 export type CaseView = { id: string; projectId: string; part?: string; title: string; short: string; line: string; sub: string; tag: string; href: string; anchor: string; problem: string; approach: string; metrics: MetricView[]; headline?: MetricView; evidence: MetricView[]; compare?: Comparison; more?: Case["more"]; scope: Case["scope"] };
 export type StatView = MetricView & { context: string; anchor: string };
 export type NetNode = { id: string; layer: number; label: string; short: string; href: string; anchor?: string; text?: string; tag?: string; meta?: string; metrics?: MetricView[]; compare?: Comparison };
@@ -17,12 +17,12 @@ const metricViews: Record<string, () => MetricView> = {
   controlTicks: () => ({ value: ko(metrics.engine.controlTicks), unit: "틱", label: "Rust 이식 제어 출력 · Python 참조와 비트 동일" }),
   publicScore: () => ({ value: vqaLast.toFixed(5), label: `VQA Public 점수 · 베이스라인 ${vqaFirst.toFixed(5)}` }),
   leaderboard: () => ({ value: `${metrics.vqa.leaderboard.rank}위`, unit: ` / ${metrics.vqa.leaderboard.teams}팀`, label: "SSAFY AI 챌린지 Public 리더보드" }),
-  release: () => ({ value: metrics.app.platforms.join(" · "), label: "악보 앱 출시" }),
+  release: () => ({ value: metrics.app.platforms.join(" · "), label: "앱 출시" }),
   missingData: () => ({ value: `${ko(metrics.pipeline.defaultedSongs)} / ${ko(metrics.pipeline.batchSongs)}`, unit: "곡", label: "120BPM 기본값이 채워져 있던 곡 · 수정 전 배치" }),
 };
 const comparisons: Record<string, () => Comparison> = {
   frontend: () => ({ label: "앞단 계산 시간 · 창 전체 → 증분", before: metrics.engine.frontendBeforeMs, after: metrics.engine.frontendAfterMs, unit: "ms", digits: 1, lowerIsBetter: true }),
-  publicScore: () => ({ label: "Public 점수 · 제공 베이스라인 → 최종", before: vqaFirst, after: vqaLast, unit: "", digits: 5, deltaDigits: 3, lowerIsBetter: false }),
+  publicScore: () => ({ label: "Public 점수 · 제공 베이스라인 → 최종", before: vqaFirst, after: vqaLast, unit: "", digits: 5, delta: "pp", lowerIsBetter: false }),
 };
 
 export function metricView(key: string) {

@@ -7,7 +7,6 @@ import { ProjectSection } from "@/components/project-section";
 import { PageMap, type MapItem } from "@/components/page-map";
 import { DrawerHost, type DrawerPanel } from "@/components/drawer";
 import { Markdown } from "@/components/markdown";
-import { SignalChainSection } from "@/components/signal-chain-section";
 import { CaseSummary, Experiments, PartBody, PartFigures, ProjectBody, ProjectCommits, ProjectFigure } from "@/components/project-detail";
 import { countWord } from "@/components/showcase-parts";
 
@@ -19,7 +18,10 @@ export default function HomePage() {
     { id: "about", label: "첫 화면", level: 1 },
     ...projects.flatMap((project): MapItem[] => [
       { id: project.id, label: project.short, level: 1 },
-      ...parts.filter((part) => part.projectId === project.id).map((part): MapItem => ({ id: part.anchor, label: part.title, level: 2 })),
+      ...parts.filter((part) => part.projectId === project.id).flatMap((part): MapItem[] => [
+        { id: part.anchor, label: part.title, level: 2 },
+        ...(part.part === "engine" ? [{ id: "signal-chain", label: "소리가 들어와 반주가 되기까지", level: 3 } as MapItem] : []),
+      ]),
     ]),
     { id: "skills", label: "기술 스택", level: 1 },
     { id: "commits", label: "개발 커밋", level: 1 },
@@ -42,7 +44,6 @@ export default function HomePage() {
           const view = own.find((item) => item.part === part.id)!;
           return { key: `${project.id}/${part.id}`, group: project.id, kicker: `${project.short} · 파트 ${i + 1} / ${all.length}`, title: part.title, body: <>
             <CaseSummary part={view} />
-            {part.id === "engine" && <SignalChainSection />}
             <PartFigures partId={part.id} /><PartBody project={project} partId={part.id} />
           </> };
         }),
