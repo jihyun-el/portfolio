@@ -20,7 +20,7 @@
 | 파트별 한 줄(`line`, 홈)·문제·접근·근거 수치·검증 범위(서랍 맨 위 요약) | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
 | 프로젝트 상세 글 | `content/projects/<프로젝트 id>.md` |
-| 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목` |
+| 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목`. 둘째 줄에 `<!-- home: hidden -->`을 두면 홈 목록에서만 빠지고 글 주소는 남음 |
 | 이미지·음원·공개 PDF | `public/` — Markdown에서 `/파일명`으로 참조 |
 | 색·여백·모바일 스타일 | `src/app/globals.css` |
 | 홈 배치 | `src/app/page.tsx` |

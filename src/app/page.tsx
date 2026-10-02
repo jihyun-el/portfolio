@@ -84,8 +84,8 @@ export default function HomePage() {
       <CommitTimeline compact />
     </div></section>
     <section className="sec" id="writing"><div className="wrap">
-      <div className="sec-h"><h2>개발 기록</h2><p>판단을 남긴 글 {countWord(writing.length)} 편</p></div>
-      <div className="pr-grid">{writing.map((post, i) => <article className="reveal" key={post.slug} style={{ animationDelay: `${i * 0.1}s` }}>
+      <div className="sec-h"><h2>개발 기록</h2><p>판단을 남긴 글 {countWord(writing.filter((post) => post.onHome).length)} 편</p></div>
+      <div className="pr-grid">{writing.filter((post) => post.onHome).map((post, i) => <article className="reveal" key={post.slug} style={{ animationDelay: `${i * 0.1}s` }}>
         <h3><Link href={`/writing/${post.slug}/`}>{post.title}</Link></h3><p>{post.excerpt}</p>
         <Link className="read" href={`/writing/${post.slug}/`}>기록 읽기 →</Link>
       </article>)}</div>

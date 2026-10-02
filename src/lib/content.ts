@@ -29,7 +29,7 @@ export type Project = {
   parts?: { id: string; title: string; description: string }[];
 };
 
-export type Writing = { slug: string; title: string; excerpt: string; body: string };
+export type Writing = { slug: string; title: string; excerpt: string; body: string; onHome: boolean };
 export type Language = { name: string; description: string; projectId: string; part?: string };
 export type Technology = Language & { language: string; mode?: string };
 export type StackGroup = { title: string; short: string; items: Technology[] };
@@ -68,9 +68,11 @@ export function getWriting(): Writing[] {
       const markdown = fs.readFileSync(path.join(directory, "writing", name), "utf8");
       const heading = markdown.match(/^# (.+)\r?\n/);
       if (!heading) throw new Error(`${name}: add a # title on the first line`);
-      const body = markdown.slice(heading[0].length).trim();
+      // `<!-- home: hidden -->` keeps a post off the home list; its own page still exists.
+      const hidden = /<!--\s*home:\s*hidden\s*-->/;
+      const body = markdown.slice(heading[0].length).replace(hidden, "").trim();
       const excerpt = body.split(/\r?\n\r?\n/)[0].replace(/[*`]/g, "");
-      return { slug, title: heading[1], excerpt, body };
+      return { slug, title: heading[1], excerpt, body, onHome: !hidden.test(markdown) };
     });
 }
 
