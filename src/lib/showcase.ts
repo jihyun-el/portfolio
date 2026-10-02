@@ -32,6 +32,7 @@ export function metricView(key: string) {
 }
 
 const month = (date: string) => date.slice(0, 7).replace("-", ".");
+const span = (first: string, last: string) => month(first) === month(last) ? month(first) : `${month(first)} ~ ${month(last)}`;
 const caseHref = (item: Case) => `/projects/${item.projectId}/${item.part ? `#${item.part}` : ""}`;
 const caseFor = (entry: { name: string; projectId: string; part?: string }) => {
   const item = cases.find((candidate) => candidate.projectId === entry.projectId && candidate.part === entry.part);
@@ -48,7 +49,7 @@ export function caseViews(): CaseView[] {
     return {
       id: item.id, projectId: item.projectId, short: item.short, href: caseHref(item), anchor: `part-${item.id}`, problem: item.problem, approach: item.approach, scope: item.scope, more: item.more,
       title: item.title ?? part!.title, sub: item.sub ?? part!.description,
-      tag: `${month(repo.firstDate)} — ${month(repo.lastDate)} · ${ko(repo.authorCommits)}커밋`,
+      tag: `${span(repo.firstDate, repo.lastDate)} · ${ko(repo.authorCommits)}커밋`,
       metrics: [...item.metrics.map(metricView), { value: ko(repo.authorCommits), unit: "커밋", label: `${repo.title} · ${repo.branch} 브랜치 작성 커밋` }],
       evidence: item.metrics.filter((key) => !profile.stats.includes(key) && key !== item.compare).map(metricView),
       compare: item.compare ? comparisons[item.compare]() : undefined,

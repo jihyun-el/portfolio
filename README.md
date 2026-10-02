@@ -8,7 +8,7 @@
 
 ## 수정할 파일
 
-대표 프로젝트는 **클래식메이트 + VQA 두 개**다. 클래식메이트의 앱·파이프라인·엔진은 JSON의 `parts`와 `content/projects/classicmate-<part id>.md`에서 편집하며 한 상세 페이지의 각 절로 표시된다. 세 저장소를 별개 프로젝트 카드로 늘리지 않는다. 글꼴은 로컬 Pretendard Variable 하나를 쓴다.
+대표 프로젝트는 **ClassicMate + VQA 두 개**다. ClassicMate의 앱·파이프라인·엔진은 JSON의 `parts`와 `content/projects/classicmate-<part id>.md`에서 편집하며 한 상세 페이지의 각 절로 표시된다. 세 저장소를 별개 프로젝트 카드로 늘리지 않는다. 글꼴은 로컬 Pretendard Variable 하나를 쓴다.
 
 | 바꾸려는 것 | 파일 |
 |---|---|

@@ -4,7 +4,7 @@ import { history } from "@/lib/content";
 const level = (count: number) => count === 0 ? 0 : count < 10 ? 1 : count < 30 ? 2 : count < 60 ? 3 : 4;
 export function CommitActivity() {
   return <figure className="activity-figure">
-    <figcaption><strong>프로젝트별 개발 활동</strong><span>2025.12 — 2026.09</span></figcaption>
+    <figcaption><strong>프로젝트별 개발 활동</strong><span>{history.months[0].replace("-", ".")} ~ {history.months.at(-1)!.replace("-", ".")}</span></figcaption>
     <div className="activity-scroll"><table className="activity-table"><caption className="sr-only">작성자 {history.author}의 월별 커밋 수</caption>
       <thead><tr><th scope="col">저장소</th>{history.months.map((month) => <th scope="col" key={month}><span>{month.slice(5)}월</span></th>)}<th scope="col">커밋</th></tr></thead>
       <tbody>{history.repositories.map((repo) => <tr key={repo.id}><th scope="row"><Link href={`/projects/${repo.projectId}/#commits`}>{repo.title}</Link><span>{repo.branch}</span></th>
