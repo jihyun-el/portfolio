@@ -16,7 +16,7 @@ const metricViews: Record<string, () => MetricView> = {
   compute: () => ({ value: `${metrics.engine.computeMs} / ${metrics.engine.budgetMs}`, unit: "ms", label: "앞단·신경망 실기기 계산 · 10ms 처리 예산 안" }),
   controlTicks: () => ({ value: ko(metrics.engine.controlTicks), unit: "틱", label: "Rust 이식 제어 출력 · Python 참조와 비트 동일" }),
   publicScore: () => ({ value: vqaLast.toFixed(5), label: `VQA Public 점수 · 베이스라인 ${vqaFirst.toFixed(5)}` }),
-  leaderboard: () => ({ value: `${metrics.vqa.leaderboard.rank}위`, unit: ` / ${metrics.vqa.leaderboard.teams}팀`, label: "SSAFY AI 챌린지 Public 리더보드" }),
+  leaderboard: () => ({ value: `전체 ${metrics.vqa.leaderboard.private.overall}위`, unit: ` · 서울 ${metrics.vqa.leaderboard.private.seoul}위`, label: `SSAFY AI 챌린지 Private 리더보드 · Public ${metrics.vqa.leaderboard.rank}위 / ${metrics.vqa.leaderboard.teams}팀` }),
   release: () => ({ value: metrics.app.platforms.join(" · "), label: "앱 출시" }),
   missingData: () => ({ value: `${ko(metrics.pipeline.defaultedSongs)} / ${ko(metrics.pipeline.batchSongs)}`, unit: "곡", label: "120BPM 기본값이 채워져 있던 곡 · 수정 전 배치" }),
 };
