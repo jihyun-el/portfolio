@@ -4,6 +4,7 @@ import { buildNetwork, caseViews, statViews } from "@/lib/showcase";
 import { CommitActivity, CommitTimeline } from "@/components/history";
 import { NeuralMap, type MapStep } from "@/components/neural-map";
 import { ProjectSection } from "@/components/project-section";
+import { PageMap, type MapItem } from "@/components/page-map";
 import { countWord } from "@/components/showcase-parts";
 
 export default function HomePage() {
@@ -20,7 +21,22 @@ export default function HomePage() {
     { code: "L3", title: "출력층 · 프로젝트", text: `모든 경로는 ${countWord(counts[3])} 프로젝트로 모입니다. ${projects.map((project) => project.short).join(" · ")}.` },
     { code: "→", title: "탐색", text: "노드를 누르면 연결된 경로가 켜지고 상세가 열립니다." },
   ];
+  const outline: MapItem[] = [
+    { id: "about", label: "첫 화면", level: 1 },
+    ...projects.flatMap((project): MapItem[] => [
+      { id: project.id, label: project.short, level: 1 },
+      ...parts.filter((part) => part.projectId === project.id).flatMap((part): MapItem[] => [
+        { id: part.anchor, label: part.title, level: 2 },
+        ...(part.id === "engine" ? [{ id: "signal-chain", label: "소리가 들어와 반주가 되기까지", level: 3 } as MapItem] : []),
+      ]),
+    ]),
+    { id: "skills", label: "기술 스택", level: 1 },
+    { id: "commits", label: "개발 커밋", level: 1 },
+    { id: "writing", label: "개발 기록", level: 1 },
+    { id: "contact", label: "연락", level: 1 },
+  ];
   return <>
+    <PageMap items={outline} after="about" />
     <section className="wrap hero" id="about">
       <div>
         <p className="hero-id reveal"><b>{profile.name}</b><span>{profile.role}</span></p>
@@ -44,12 +60,12 @@ export default function HomePage() {
     <div id="projects">{projects.map((project) => <ProjectSection key={project.id} project={project} parts={parts.filter((part) => part.projectId === project.id)} />)}</div>
     <NeuralMap network={network} steps={steps} edgeCount={edgeCount} />
     <section className="sec" id="commits"><div className="wrap">
-      <div className="sec-h"><h2>개발 커밋</h2><p>작성자 manu의 저장소별 월간 커밋과 고른 변경</p></div>
+      <div className="sec-h"><h2>개발 커밋</h2><p>저장소별 월간 커밋과 주요 변경</p></div>
       <CommitActivity />
       <CommitTimeline compact />
     </div></section>
     <section className="sec" id="writing"><div className="wrap">
-      <div className="sec-h"><h2>개발 기록</h2><p>판단을 남긴 {countWord(writing.length)} 개의 글</p></div>
+      <div className="sec-h"><h2>개발 기록</h2><p>판단을 남긴 글 {countWord(writing.length)} 편</p></div>
       <div className="pr-grid">{writing.map((post, i) => <article className="reveal" key={post.slug} style={{ animationDelay: `${i * 0.1}s` }}>
         <h3><Link href={`/writing/${post.slug}/`}>{post.title}</Link></h3><p>{post.excerpt}</p>
         <Link className="read" href={`/writing/${post.slug}/`}>기록 읽기 ↗</Link>

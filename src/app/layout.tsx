@@ -20,10 +20,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <head><script dangerouslySetInnerHTML={{ __html: `try{const t=localStorage.getItem('portfolio-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch{}` }} /></head>
     <body className={pretendard.variable}>
       <a className="skip-link" href="#main-content">본문으로 이동</a>
-      <header className="wrap top">
+      <header className="topbar"><div className="wrap top">
         <Link className="brand" href="/"><b>{profile.name}</b><span>{profile.subtitle}</span></Link>
         <nav className="nav" aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/#skills">기술</Link><Link href="/#commits">커밋</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
-      </header>
+      </div></header>
       <main id="main-content">{children}</main>
       <footer className="contact" id="contact"><div className="wrap">
         <h2>읽어 주셔서 감사합니다.</h2>
