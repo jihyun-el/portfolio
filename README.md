@@ -1,10 +1,13 @@
 # 우지현 포트폴리오
 
-[Chanh Dai](https://github.com/ncdai/chanhdai.com)의 선·타이포그래피·다크 모드 구성을 바탕으로 만든 정적 포트폴리오다. 원본 앱의 코드는 이 저장소에 두지 않는다.
+ClassicMate와 멀티모달 VQA 두 프로젝트를 담은 정적 포트폴리오다. Next.js 정적 내보내기로 만들고 GitHub Pages로 배포한다.
 
-현재 소개·카드·상세 글은 **근거를 바탕으로 준비한 1차 초안**이다. 공개 저장소는 [jihyun-el/portfolio](https://github.com/jihyun-el/portfolio), Pages 주소는 [jihyun-el.github.io/portfolio](https://jihyun-el.github.io/portfolio/)다. 개인 연락처·프로필 사진은 미정이라 표시하지 않았다.
+공개 저장소는 [jihyun-el/portfolio](https://github.com/jihyun-el/portfolio), Pages 주소는 [jihyun-el.github.io/portfolio](https://jihyun-el.github.io/portfolio/)다. 이 주소는 제출한 지원서에 들어 있으므로 아래 경로는 바꾸거나 지우지 않는다. 바꿔야 하면 옛 주소에서 새 주소로 넘어가게 한다.
 
-첫 제출 버전은 `gh-pages`에 정적 결과물을 올려 공개했다. 이후 GitHub Actions의 성공 실행 이력을 확인하고 Pages Source를 **GitHub Actions**로 전환했다. `main`의 내용 수정은 같은 URL에 자동 배포한다. 생성된 HTML은 직접 편집하지 않는다.
+- `/`, `/projects/classicmate/`, `/projects/ssafy-ai-challenge/`
+- `/writing/`, `/writing/<글 slug>/`
+
+`main`에 push하면 같은 주소로 자동 배포된다. `gh-pages` 브랜치는 첫 제출 때 올린 정적 결과물이라 지우지 않는다. 생성된 HTML은 직접 편집하지 않는다.
 
 ## 수정할 파일
 
@@ -20,7 +23,7 @@
 | 파트별 한 줄(`line`, 홈)·문제·접근·근거 수치·검증 범위(서랍 맨 위 요약) | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
 | 프로젝트 상세 글 | `content/projects/<프로젝트 id>.md` |
-| 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목`. 둘째 줄에 `<!-- home: hidden -->`을 두면 홈 목록에서만 빠지고 글 주소는 남음 |
+| 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목`, 첫 문단은 홈 카드에 실리는 한 문장 요약. 목록은 파일 이름순. 둘째 줄에 `<!-- home: hidden -->`을 두면 홈 목록에서만 빠지고 글 주소는 남음 |
 | 이미지·음원·공개 PDF | `public/` — Markdown에서 `/파일명`으로 참조 |
 | 색·여백·모바일 스타일 | `src/app/globals.css` |
 | 홈 배치 | `src/app/page.tsx` |
@@ -29,7 +32,7 @@
 
 상세 글·기록은 일반 Markdown이다. JSX나 서버 코드를 글에 넣을 필요가 없다. 새 프로젝트를 추가할 때는 JSON 항목과 같은 id의 `.md` 파일을 함께 만든다. 새 기록 파일은 빌드할 때 자동으로 목록과 상세 페이지에 추가된다. 초안 메모는 `content/` 밖에 둔다. `content/` 안의 모든 글은 빌드 대상이다.
 
-`content/profile.json`의 `links`에는 예를 들어 `{"label":"GitHub","url":"https://github.com/본인계정"}`을 넣는다. 이름·URL이 확인된 공개 연락처만 추가한다. 작성·갱신 날짜는 화면에 표시하지 않는다.
+`content/profile.json`의 `links`에는 `{"label":"GitHub","url":"https://github.com/jihyun-el"}` 같은 형식으로 넣는다. 이름·URL이 확인된 공개 연락처만 추가한다. 작성·갱신 날짜는 화면에 표시하지 않는다.
 
 ## 로컬 편집과 미리보기
 
@@ -51,11 +54,11 @@ npm.cmd run preview
 
 정적 미리보기 주소는 `http://127.0.0.1:4173/`이다. 결과물은 `out/`에 생긴다. 생성된 HTML을 직접 고치지 않는다.
 
-일반 저장소 주소처럼 `/portfolio/` 하위에서 동작하는지도 확인할 수 있다.
+배포 전에는 실제 주소처럼 `/portfolio/` 하위에서 동작하는지 확인한다.
 
 ```powershell
 $env:PAGES_BASE_PATH = '/portfolio'
-$env:PAGES_SITE_URL = 'https://본인계정.github.io/portfolio'
+$env:PAGES_SITE_URL = 'https://jihyun-el.github.io/portfolio'
 npm.cmd run build
 npm.cmd run preview
 ```
@@ -84,8 +87,8 @@ npm.cmd run preview
 
 글이 늘어도 레이아웃 파일을 매번 수정하지 않는다. 내용은 `content/`, 화면은 `src/`, 정적 자산은 `public/`에서 관리한다. 관리자 로그인·DB 없이도 공개 후 계속 편집할 수 있는 구조다.
 
-## 빌드 범위와 출처
+## 빌드 범위와 라이선스
 
-현재 배포 앱은 [Next.js 정적 내보내기](https://nextjs.org/docs/app/guides/static-exports)를 사용하고, `out/`만 [GitHub Pages workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)에 전달한다. API·원본 컴포넌트 레지스트리·원작자의 추천사/후원/개인 프로필은 배포 앱에 포함하지 않았다. 내부 역량 보고서·비공개 저장소·운영 데이터는 빌드 입력이 아니다.
+배포 앱은 [Next.js 정적 내보내기](https://nextjs.org/docs/app/guides/static-exports)를 사용하고, `out/`만 [GitHub Pages workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)에 전달한다. 내부 역량 보고서·비공개 저장소·운영 데이터는 빌드 입력이 아니다.
 
-Chanh Dai의 MIT 고지는 `LICENSE`에 유지하고, 같은 고지를 `public/LICENSE`로 공개 사이트에도 싣는다. Pretendard 글꼴의 OFL 고지는 `public/fonts/Pretendard-LICENSE.txt`에 있다.
+`src/app/globals.css`의 도식 스타일 일부는 MIT 라이선스 코드를 고쳐 쓴 것이다. 그 원 고지를 `LICENSE`와 `public/LICENSE`에 두며, 해당 스타일이 남아 있는 동안 지우지 않는다. Pretendard 글꼴의 OFL 고지는 `public/fonts/Pretendard-LICENSE.txt`에 있다.

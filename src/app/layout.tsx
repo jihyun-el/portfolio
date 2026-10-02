@@ -28,7 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <footer className="contact" id="contact"><div className="wrap">
         <h2>읽어 주셔서 감사합니다.</h2>
         {profile.links.length > 0 && <div className="links">{profile.links.map((link) => <a key={link.url} href={link.url}><b>{link.label}</b>{link.url.replace(/^(https:\/\/|mailto:)/, "")}</a>)}</div>}
-        <div className="foot"><a href="https://github.com/ncdai/chanhdai.com">Chanh Dai 기반 · MIT</a><span>© 2026 {profile.name}</span></div>
+        <div className="foot"><span>© 2026 {profile.name}</span></div>
       </div></footer>
       <Reveal />
     </body>
