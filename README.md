@@ -76,7 +76,7 @@ npm.cmd run preview
 
 `history.json`은 실제 프로젝트 브랜치에서 확인한 작성자 `manu`의 월별 커밋과 선정한 변경 이력이다. 병합·문서·AI 공동작성을 포함하므로 직접 작성 비율이나 전체 팀 기여 비율로 바꾸지 않는다. 엔진의 8월 커밋은 코드 대조 문서 정리다. 새 이력을 넣을 때는 실제 SHA·날짜·집계 범위를 먼저 확인한다.
 
-`metrics.json` 수치는 기록에서 확인한 조건과 함께 수정한다. 실기기 계산 시간은 입력→출력 전체 지연과 구분하고, VQA는 Public 점수로 표시한다. 네 실험 조건·0~1 점수 범위·월별 커밋 합계와 프로젝트 연결은 빌드 전에 검사한다. 비교 버튼과 도식은 `src/components/interactive-figures.tsx`, `project-figures.tsx`에서 관리한다.
+`metrics.json` 수치는 기록에서 확인한 조건과 함께 수정한다. 실기기 계산 시간은 입력→출력 전체 지연과 구분하고, VQA 점수 그래프는 Public 기록이고, 순위·최종 Private 점수는 `leaderboard`에 Public과 Private(서울·전체)을 구분해 둔다. 네 실험 조건·0~1 점수 범위·월별 커밋 합계와 프로젝트 연결은 빌드 전에 검사한다. 비교 버튼과 도식은 `src/components/interactive-figures.tsx`, `project-figures.tsx`에서 관리한다.
 
 홈에서 프로젝트·파트·기록을 누르면 페이지를 옮기지 않고 오른쪽 서랍(`src/components/drawer.tsx`)에 상세가 열린다. 서랍과 상세 페이지(`/projects/…`, `/writing/…`)는 같은 조립(`src/components/project-detail.tsx`)을 쓰므로 내용은 한 곳만 고친다. 개선된 수치(이전 → 이후)는 `src/components/gain.tsx`가 강조 색으로 그린다. 사이트의 유일한 색은 개선에만 쓴다.
 
