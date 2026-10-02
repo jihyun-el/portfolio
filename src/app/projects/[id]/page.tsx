@@ -8,6 +8,7 @@ import { ClassicMateMap, EnginePerformance, OwnershipFlow, PipelineFlow, VqaProg
 import { ThreeClocks, VqaMatrix } from "@/components/interactive-figures";
 import { BlockContract, BodyWindowCube } from "@/components/contract-figures";
 import { CommitTimeline } from "@/components/history";
+import { ProjectLinks } from "@/components/project-links";
 
 const inlineFigures: Record<string, ReactNode> = {
   "block-contract": <BlockContract contract={contracts.engine} />,
@@ -34,7 +35,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const project = projects.find((item) => item.id === id);
   if (!project) notFound();
-  return <article className="article"><Link className="back-link" href="/#projects">프로젝트 목록</Link><header className="article-header"><p className="muted">{project.period}</p><h1>{project.title}</h1><p>{project.role}</p></header>
+  return <article className="article"><Link className="back-link" href="/#projects">프로젝트 목록</Link><header className="article-header"><p className="muted">{project.period}</p><h1>{project.title}</h1><p>{project.role}</p><ProjectLinks project={project} /></header>
     <nav className="part-nav" aria-label="프로젝트 구성">{project.parts?.map((part) => <a href={`#${part.id}`} key={part.id}>{part.title}</a>)}{id==="ssafy-ai-challenge" && <a href="#experiments">실험 비교</a>}<a href="#commits">커밋 이력</a></nav>
     {id === "classicmate" ? <ClassicMateMap /> : <VqaProgress />}
     <Markdown>{getProjectBody(id)}</Markdown>

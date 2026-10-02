@@ -3,6 +3,7 @@ import type { Project } from "@/lib/content";
 import type { CaseView } from "@/lib/showcase";
 import { CompareBars } from "@/components/showcase-parts";
 import { SignalChainSection } from "@/components/signal-chain-section";
+import { ProjectLinks } from "@/components/project-links";
 
 // One project on the home page: its head, then each part as a row of problem and approach.
 // The engine row carries the signal chain panorama, which shows that part from the inside.
@@ -14,6 +15,7 @@ export function ProjectSection({ project, parts }: { project: Project; parts: Ca
         <h2 id={`${project.id}-title`}>{project.title}</h2>
         <p className="project-role">{project.role}</p>
         <p className="project-sum">{project.summary}</p>
+        <ProjectLinks project={project} />
       </header>
       <div className="parts">{parts.map((part) => <article className="part" id={part.anchor} key={part.id} aria-labelledby={`${part.anchor}-title`}>
         <div className="part-h">

@@ -146,6 +146,7 @@ svg.has-sel .pulse { opacity:.25; }
 .project-h h2 { font-size:var(--h2); font-weight:900; letter-spacing:-.04em; line-height:1.15; }
 .project-role { font-size:var(--fs-s); color:var(--ink-2); }
 .project-sum { margin-top:8px; font-size:clamp(16px,1.5vw,18px); }
+.project-links { display:flex; flex-wrap:wrap; gap:12px 24px; margin-top:12px; }
 .parts { border-top:2px solid var(--ink); }
 .part { display:grid; grid-template-columns:minmax(0,250px) minmax(0,1fr) minmax(0,1fr); gap:22px clamp(24px,3.4vw,48px); padding-block:30px; border-bottom:1px solid var(--line); }
 .part-h h3 { font-size:var(--h4); font-weight:800; letter-spacing:-.02em; line-height:1.3; }

@@ -95,6 +95,7 @@ for (const project of projects) {
     if (typeof project[key] !== "string" || !project[key].trim()) throw new Error(`${project.id}: missing ${key}`);
   }
   if (!Array.isArray(project.skills) || typeof project.defaultOpen !== "boolean") throw new Error(`${project.id}: invalid skills/defaultOpen`);
+  for (const link of project.links ?? []) if (!link.label || !/^https:\/\//.test(link.url)) throw new Error(`${project.id}: project links need a label and an https URL`);
   if (!fs.existsSync(path.join(content, "projects", `${project.id}.md`))) throw new Error(`${project.id}: project Markdown missing`);
   const partIds = new Set();
   for (const part of project.parts || []) {

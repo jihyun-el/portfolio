@@ -25,6 +25,7 @@ export type Project = {
   outcome: string;
   skills: string[];
   defaultOpen: boolean;
+  links?: { label: string; url: string }[];
   parts?: { id: string; title: string; description: string }[];
 };
 
