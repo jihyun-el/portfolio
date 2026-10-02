@@ -88,6 +88,8 @@ for (const row of [...metrics.vqa.matrix, ...metrics.vqa.stages]) {
   if (!Number.isFinite(row.score) || row.score < 0 || row.score > 1) throw new Error("VQA score is outside 0–1");
 }
 if (metrics.vqa.stages.length < 2) throw new Error("VQA progress needs a starting and final result");
+const board = metrics.vqa.leaderboard;
+if ([board.publicRank, board.private?.rank, board.private?.regionRank].some(rank => !Number.isInteger(rank) || rank < 1 || rank > board.teams) || !board.private.region) throw new Error("VQA leaderboard ranks must be within the team count");
 const ids = new Set();
 for (const project of projects) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.id) || ids.has(project.id)) throw new Error(`Invalid or duplicate project ID: ${project.id}`);

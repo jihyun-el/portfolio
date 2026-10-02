@@ -8,7 +8,7 @@ export type NetNode = { id: string; layer: number; label: string; short: string;
 export type Network = { layers: string[][]; nodes: Record<string, NetNode>; chains: string[][] };
 
 const ko = (value: number) => value.toLocaleString("ko-KR");
-const vqaFirst = metrics.vqa.stages[0].score, vqaLast = metrics.vqa.stages.at(-1)!.score;
+const vqaFirst = metrics.vqa.stages[0].score, vqaLast = metrics.vqa.stages.at(-1)!.score, board = metrics.vqa.leaderboard;
 
 // Every number shown on the home page is read from metrics.json or history.json, never retyped.
 const metricViews: Record<string, () => MetricView> = {
@@ -16,7 +16,7 @@ const metricViews: Record<string, () => MetricView> = {
   compute: () => ({ value: `${metrics.engine.computeMs} / ${metrics.engine.budgetMs}`, unit: "ms", label: "앞단·신경망 실기기 계산 · 10ms 처리 예산 안" }),
   controlTicks: () => ({ value: ko(metrics.engine.controlTicks), unit: "틱", label: "Rust 이식 제어 출력 · Python 참조와 비트 동일" }),
   publicScore: () => ({ value: vqaLast.toFixed(5), label: `VQA Public 점수 · 베이스라인 ${vqaFirst.toFixed(5)}` }),
-  leaderboard: () => ({ value: `${metrics.vqa.leaderboard.rank}위`, unit: ` / ${metrics.vqa.leaderboard.teams}팀`, label: "SSAFY AI 챌린지 Public 리더보드" }),
+  leaderboard: () => ({ value: `${board.private.rank}위`, unit: ` / ${board.teams}팀`, label: `SSAFY AI 챌린지 Private 리더보드 · ${board.private.region} ${board.private.regionRank}위` }),
   release: () => ({ value: metrics.app.platforms.join(" · "), label: "앱 출시" }),
   missingData: () => ({ value: `${ko(metrics.pipeline.defaultedSongs)} / ${ko(metrics.pipeline.batchSongs)}`, unit: "곡", label: "120BPM 기본값이 채워져 있던 곡 · 수정 전 배치" }),
 };

@@ -40,8 +40,9 @@ export function OwnershipFlow() {
 }
 
 export function VqaProgress({compact=false}: {compact?: boolean}) {
+  const board=metrics.vqa.leaderboard;
   const stages=compact ? [metrics.vqa.stages[0],metrics.vqa.stages.at(-1)!] : metrics.vqa.stages;
   return <figure className="score-figure"><figcaption><strong>Public 점수 변화</strong><span>점수 범위 0 — 1</span></figcaption><ol className="score-bars">
     {stages.map((stage,i) => <li key={stage.label} className={i===stages.length-1 ? "is-final" : undefined}><div><span>{stage.label}</span><strong>{stage.score.toFixed(5)}</strong></div><div className="bar-track"><span className={`bar-fill ${i===stages.length-1 ? "bar-accent" : ""}`} style={{width:`${stage.score*100}%`}} /></div></li>)}
-    </ol><p className="figure-note">{compact ? "SSAFY 교육생 대상 219팀 중 Public 리더보드 14위." : metrics.vqa.note}</p></figure>;
+    </ol><p className="figure-note">{compact ? `SSAFY 교육생 대상 ${board.teams}팀 중 Private 리더보드 전체 ${board.private.rank}위·${board.private.region} ${board.private.regionRank}위 (Public ${board.publicRank}위).` : metrics.vqa.note}</p></figure>;
 }

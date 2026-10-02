@@ -26,7 +26,7 @@
     "period": "2026.09.21 ~ 2026.09.28",
     "role": "SSAFY AI 챌린지 · 5인 팀 A011 팀장",
     "summary": "모델 크기와 이미지 해상도의 효과를 분리해 실험하고 VLM 파인튜닝·추론 결합을 진행했습니다. 팀원의 실험을 배분하고 공통 실행 환경을 관리했습니다.",
-    "outcome": "Public 0.70241 → 0.97646. SSAFY 교육생 대상 219팀 중 Public 리더보드 14위.",
+    "outcome": "Public 0.70241 → 0.97646. SSAFY 교육생 대상 219팀 중 Private 리더보드 전체 3위·서울 1위 (Public 14위).",
     "skills": ["Python", "VLM", "LoRA", "QLoRA", "앙상블"],
     "defaultOpen": false
   }
