@@ -8,7 +8,7 @@ const projects = JSON.parse(fs.readFileSync(path.join(content, "projects.json"),
 const stack = JSON.parse(fs.readFileSync(path.join(content, "stack.json"), "utf8"));
 const history = JSON.parse(fs.readFileSync(path.join(content, "history.json"), "utf8"));
 const metrics = JSON.parse(fs.readFileSync(path.join(content, "metrics.json"), "utf8"));
-if (!profile.name || !profile.headline || !Array.isArray(profile.links)) throw new Error("Profile fields are missing");
+if (!profile.name || !profile.role || !profile.headline || !Array.isArray(profile.links)) throw new Error("Profile fields are missing");
 for (const link of profile.links) {
   if (!/^(https:\/\/|mailto:)/.test(link.url)) throw new Error(`Unsupported contact URL: ${link.url}`);
 }

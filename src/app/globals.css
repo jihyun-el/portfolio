@@ -42,6 +42,9 @@ button { font:inherit; color:inherit; }
 
 /* Hero */
 .hero { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:clamp(32px,5vw,72px); align-items:end; padding-block:clamp(48px,8vw,104px) 48px; }
+.hero-id { display:flex; align-items:baseline; gap:10px; margin-bottom:18px; font-size:var(--fs-l); }
+.hero-id b { font-weight:900; letter-spacing:-.02em; } .hero-id span { font-weight:500; color:var(--ink-2); }
+.hero-id span::before { content:"·"; margin-right:10px; color:var(--ink-3); }
 .hero h1 { font-size:var(--h1); line-height:1.1; letter-spacing:-.045em; }
 .hero h1 .l { display:block; }
 .lede { margin-top:28px; max-width:36em; font-size:clamp(16px,1.5vw,18px); color:var(--ink-2); }

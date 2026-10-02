@@ -5,6 +5,7 @@ import { withBasePath } from "../../scripts/paths.mjs";
 export type Profile = {
   name: string;
   subtitle: string;
+  role: string;
   headline: string;
   heroLines: string[];
   introduction: string[];

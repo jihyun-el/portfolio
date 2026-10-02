@@ -23,6 +23,7 @@ export default function HomePage() {
   return <>
     <section className="wrap hero" id="about">
       <div>
+        <p className="hero-id reveal"><b>{profile.name}</b><span>{profile.role}</span></p>
         <h1>{profile.heroLines.map((line, i) => <span key={line} className={`l reveal ${i === 0 ? "thin" : "black"}`} style={{ animationDelay: `${0.05 + i * 0.13}s` }}>{line}</span>)}</h1>
         {profile.introduction.map((paragraph, i) => <p key={paragraph} className={`lede reveal${i ? " lede-2" : ""}`} style={{ animationDelay: `${0.3 + i * 0.08}s` }}>{paragraph}</p>)}
         <div className="hero-actions reveal" style={{ animationDelay: ".45s" }}><a className="cta" href="#projects">프로젝트 보기 ↓</a><a className="cta ghost" href="#skills">기술 스택 ↓</a></div>
