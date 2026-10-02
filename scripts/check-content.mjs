@@ -73,7 +73,8 @@ for (const item of cases) {
   if (item.part ? !project.parts?.some(part => part.id === item.part) : !(item.title && item.sub)) throw new Error(`${item.id}: case needs a project part or its own title and sub`);
   if (!history.repositories.some(repo => repo.id === item.repo && repo.projectId === item.projectId)) throw new Error(`${item.id}: unknown history repository`);
   if (item.more && (!item.more.label || !item.more.href?.startsWith("/"))) throw new Error(`${item.id}: invalid extra link`);
-  if (!item.short || !item.problem || !item.approach || !item.scope?.claim || !item.scope?.limit) throw new Error(`${item.id}: incomplete case text`);
+  if (!item.short || !item.line || !item.problem || !item.approach || !item.scope?.claim || !item.scope?.limit) throw new Error(`${item.id}: incomplete case text`);
+  if (item.line.length > 60) throw new Error(`${item.id}: keep the home line to one short sentence`);
   if (!item.metrics.length || item.metrics.some(key => !metricKeys.has(key)) || (item.compare && !["frontend", "publicScore"].includes(item.compare))) throw new Error(`${item.id}: unknown metric key`);
   caseIds.add(item.id);
 }

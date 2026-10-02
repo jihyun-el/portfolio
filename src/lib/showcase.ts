@@ -2,7 +2,7 @@ import { cases, history, metrics, profile, projects, stack, type Case } from "@/
 
 export type MetricView = { value: string; unit?: string; label: string };
 export type Comparison = { label: string; before: number; after: number; unit: string; digits: number; deltaDigits?: number; lowerIsBetter: boolean };
-export type CaseView = { id: string; projectId: string; title: string; short: string; sub: string; tag: string; href: string; anchor: string; problem: string; approach: string; metrics: MetricView[]; evidence: MetricView[]; compare?: Comparison; more?: Case["more"]; scope: Case["scope"] };
+export type CaseView = { id: string; projectId: string; part?: string; title: string; short: string; line: string; sub: string; tag: string; href: string; anchor: string; problem: string; approach: string; metrics: MetricView[]; headline?: MetricView; evidence: MetricView[]; compare?: Comparison; more?: Case["more"]; scope: Case["scope"] };
 export type StatView = MetricView & { context: string; anchor: string };
 export type NetNode = { id: string; layer: number; label: string; short: string; href: string; anchor?: string; text?: string; tag?: string; meta?: string; metrics?: MetricView[]; compare?: Comparison };
 export type Network = { layers: string[][]; nodes: Record<string, NetNode>; chains: string[][] };
@@ -47,11 +47,13 @@ export function caseViews(): CaseView[] {
     const part = project.parts?.find((entry) => entry.id === item.part);
     const repo = history.repositories.find((entry) => entry.id === item.repo)!;
     return {
-      id: item.id, projectId: item.projectId, short: item.short, href: caseHref(item), anchor: `part-${item.id}`, problem: item.problem, approach: item.approach, scope: item.scope, more: item.more,
+      id: item.id, projectId: item.projectId, part: item.part, short: item.short, line: item.line, href: caseHref(item), anchor: `part-${item.id}`, problem: item.problem, approach: item.approach, scope: item.scope, more: item.more,
       title: item.title ?? part!.title, sub: item.sub ?? part!.description,
       tag: `${span(repo.firstDate, repo.lastDate)} · ${ko(repo.authorCommits)}커밋`,
       metrics: [...item.metrics.map(metricView), { value: ko(repo.authorCommits), unit: "커밋", label: `${repo.title} · ${repo.branch} 브랜치 작성 커밋` }],
       evidence: item.metrics.filter((key) => !profile.stats.includes(key) && key !== item.compare).map(metricView),
+      // The home row shows the comparison when there is one, otherwise the first number.
+      headline: item.compare ? undefined : item.metrics[0] ? metricView(item.metrics[0]) : undefined,
       compare: item.compare ? comparisons[item.compare]() : undefined,
     };
   });
