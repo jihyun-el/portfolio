@@ -28,7 +28,10 @@ export type Project = {
 };
 
 export type Writing = { slug: string; title: string; excerpt: string; body: string };
-export type StackGroup = { title: string; short: string; items: { name: string; description: string; projectId: string; part?: string; mode?: string }[] };
+export type Language = { name: string; description: string; projectId: string; part?: string };
+export type Technology = Language & { language: string; mode?: string };
+export type StackGroup = { title: string; short: string; items: Technology[] };
+export type Stack = { languages: Language[]; groups: StackGroup[] };
 export type Milestone = { sha: string; date: string; title: string; description: string };
 export type HistoryRepository = { id: string; projectId: string; title: string; branch: string; scopeNote: string; snapshot: string; commits: number; authorCommits: number; firstDate: string; lastDate: string; months: { month: string; count: number }[]; milestones: Milestone[] };
 export type History = { author: string; method: string; months: string[]; repositories: HistoryRepository[] };
@@ -41,7 +44,7 @@ const directory = path.join(process.cwd(), "content");
 
 export const profile: Profile = JSON.parse(fs.readFileSync(path.join(directory, "profile.json"), "utf8"));
 export const projects: Project[] = JSON.parse(fs.readFileSync(path.join(directory, "projects.json"), "utf8"));
-export const stack: StackGroup[] = JSON.parse(fs.readFileSync(path.join(directory, "stack.json"), "utf8"));
+export const stack: Stack = JSON.parse(fs.readFileSync(path.join(directory, "stack.json"), "utf8"));
 export const history: History = JSON.parse(fs.readFileSync(path.join(directory, "history.json"), "utf8"));
 export const metrics: Metrics = JSON.parse(fs.readFileSync(path.join(directory, "metrics.json"), "utf8"));
 export const cases: Case[] = JSON.parse(fs.readFileSync(path.join(directory, "cases.json"), "utf8"));

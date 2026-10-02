@@ -22,12 +22,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <a className="skip-link" href="#main-content">본문으로 이동</a>
       <header className="wrap top">
         <Link className="brand" href="/"><b>{profile.name}</b><span>{profile.subtitle}</span></Link>
-        <nav className="nav" aria-label="주 메뉴"><Link href="/#skills">기술</Link><Link href="/#projects">프로젝트</Link><Link href="/#commits">커밋</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
+        <nav className="nav" aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/#skills">기술</Link><Link href="/#commits">커밋</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
       </header>
       <main id="main-content">{children}</main>
       <footer className="contact" id="contact"><div className="wrap">
-        <p className="eyebrow">Contact</p>
-        <h2><span className="l thin">읽어 주셔서</span><span className="l black">감사합니다.</span></h2>
+        <h2>읽어 주셔서 감사합니다.</h2>
         {profile.links.length > 0 && <div className="links">{profile.links.map((link) => <a key={link.url} href={link.url}><b>{link.label}</b>{link.url.replace(/^(https:\/\/|mailto:)/, "")}</a>)}</div>}
         <div className="foot"><a href="https://github.com/ncdai/chanhdai.com">Chanh Dai 기반 · MIT</a><span>© 2026 {profile.name}</span></div>
       </div></footer>

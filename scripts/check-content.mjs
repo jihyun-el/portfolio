@@ -12,15 +12,19 @@ if (!profile.name || !profile.headline || !Array.isArray(profile.links)) throw n
 for (const link of profile.links) {
   if (!/^(https:\/\/|mailto:)/.test(link.url)) throw new Error(`Unsupported contact URL: ${link.url}`);
 }
-const technologies = new Set();
-for (const group of stack) {
-  if (!group.title || !Array.isArray(group.items) || !group.items.length) throw new Error("Stack group is incomplete");
-  for (const item of group.items) {
-    const project = projects.find(project => project.id === item.projectId);
-    if (!item.name || !item.description || technologies.has(item.name) || !project) throw new Error(`Invalid stack entry: ${item.name}`);
-    if (item.part && !project.parts?.some(part => part.id === item.part)) throw new Error(`Invalid stack project part: ${item.name}`);
-    technologies.add(item.name);
-  }
+// Languages are the roots of the tech map; every other technology names the language it was used through.
+if (!Array.isArray(stack.languages) || !stack.languages.length || !Array.isArray(stack.groups) || !stack.groups.length) throw new Error("stack.json needs languages and groups");
+const technologies = new Set(), languages = new Set(stack.languages.map(item => item.name));
+const stackEntries = [...stack.languages, ...stack.groups.flatMap(group => group.items ?? [])];
+for (const group of stack.groups) {
+  if (!group.title || !group.short || !Array.isArray(group.items) || !group.items.length) throw new Error(`Stack group is incomplete: ${group.title}`);
+  for (const item of group.items) if (!languages.has(item.language)) throw new Error(`${item.name}: language must be one of ${[...languages].join(", ")}`);
+}
+for (const item of stackEntries) {
+  const project = projects.find(project => project.id === item.projectId);
+  if (!item.name || !item.description || technologies.has(item.name) || !project) throw new Error(`Invalid stack entry: ${item.name}`);
+  if (item.part && !project.parts?.some(part => part.id === item.part)) throw new Error(`Invalid stack project part: ${item.name}`);
+  technologies.add(item.name);
 }
 const repositories = new Set();
 for (const repo of history.repositories) {
@@ -60,8 +64,7 @@ const metricKeys = new Set(["frontend", "compute", "controlTicks", "publicScore"
 const cases = JSON.parse(fs.readFileSync(path.join(content, "cases.json"), "utf8"));
 if (profile.heroLines?.join(" ") !== profile.headline) throw new Error("profile.heroLines must spell out the headline");
 if (!Array.isArray(profile.card) || profile.card.some(row => !row.label || !row.value)) throw new Error("Developer card rows need a label and value");
-if (!Array.isArray(profile.stats) || profile.stats.length !== 4 || profile.stats.some(key => !metricKeys.has(key))) throw new Error("Home stats need four known metric keys");
-for (const group of stack) if (!group.short) throw new Error(`Stack group needs a short label: ${group.title}`);
+if (!Array.isArray(profile.stats) || profile.stats.length !== 3 || profile.stats.some(key => !metricKeys.has(key))) throw new Error("Home stats need three known metric keys");
 for (const project of projects) if (!project.short) throw new Error(`${project.id}: missing short label`);
 const caseIds = new Set();
 for (const item of cases) {
@@ -74,9 +77,10 @@ for (const item of cases) {
   if (!item.metrics.length || item.metrics.some(key => !metricKeys.has(key)) || (item.compare && !["frontend", "publicScore"].includes(item.compare))) throw new Error(`${item.id}: unknown metric key`);
   caseIds.add(item.id);
 }
-for (const group of stack) for (const tech of group.items) {
+for (const tech of stackEntries) {
   if (!cases.some(item => item.projectId === tech.projectId && item.part === tech.part)) throw new Error(`No case covers technology ${tech.name}`);
 }
+for (const key of profile.stats) if (!cases.some(item => item.metrics.includes(key))) throw new Error(`Home stat ${key} belongs to no case`);
 const matrixKeys = new Set(metrics.vqa.matrix.map(row => `${row.size}-${row.pixels}`));
 if (metrics.vqa.matrix.length !== 4 || !["4B-512", "4B-768", "8B-512", "8B-768"].every(key => matrixKeys.has(key))) throw new Error("VQA matrix needs all four experiment conditions");
 for (const row of [...metrics.vqa.matrix, ...metrics.vqa.stages]) {

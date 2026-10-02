@@ -13,11 +13,11 @@
 | 바꾸려는 것 | 파일 |
 |---|---|
 | 이름·소개·경험·공개 링크 | `content/profile.json` |
-| 기술별 사용 설명·프로젝트 연결 | `content/stack.json` |
+| 기술 스택: 뿌리 언어(Python·Dart)와 기술마다 거친 언어·사용 설명·프로젝트 연결 | `content/stack.json` |
 | 월별 개발 활동·실제 커밋 이력 | `content/history.json` |
 | 엔진 성능·VQA 실험과 점수 그래프 | `content/metrics.json` |
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
-| 홈 대표 작업 슬라이드(문제·접근·수치·검증 범위) | `content/cases.json` |
+| 홈 프로젝트의 파트별 문제·접근·근거 수치·검증 범위 | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
 | 프로젝트 상세 글 | `content/projects/<프로젝트 id>.md` |
 | 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목` |

@@ -8,10 +8,10 @@ import { CompareBars, MetricGrid } from "@/components/showcase-parts";
 export type MapStep = { code: string; title: string; text: string };
 type Point = { x: number; y: number };
 
-const LAYER_NAMES = ["L0 · 기술", "L1 · 역량", "L2 · 작업", "L3 · 프로젝트"];
-const RADII = [[6, 8, 10, 13], [5, 7, 9, 11]];
+const LAYER_NAMES = ["L0 · 언어", "L1 · 기술", "L2 · 작업", "L3 · 프로젝트"];
+// The two languages are the roots, so the input layer is drawn as large as the output.
+const RADII = [[13, 6, 10, 13], [11, 5, 9, 11]];
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value));
-export const SHOW_CASE_EVENT = "portfolio:show-case";
 
 function layout(layers: string[][], width: number, height: number, vertical: boolean) {
   const points: Record<string, Point> = {};
@@ -116,10 +116,10 @@ export function NeuralMap({ network, steps, edgeCount }: { network: Network; ste
   };
 
   return <>
-    <section className="net" id="skills" ref={sectionRef} aria-label="기술에서 프로젝트까지 이어지는 신경망">
+    <section className="net" id="skills" ref={sectionRef} aria-label="언어에서 프로젝트까지 이어지는 기술 스택">
       <div className="wrap stage">
         <div className="cap">
-          <div><p className="eyebrow">Tech Map</p><h2><span className="thin">기술에서</span> <span className="black">프로젝트까지</span></h2></div>
+          <div><h2>기술 스택</h2><p className="cap-sub">언어에서 프로젝트까지</p></div>
           <p className="shape num">구조 <b>{network.layers.map((ids) => ids.length).join(" → ")}</b> · 연결 <b>{edgeCount}</b>개</p>
           <ol className="steps">
             <li className="bar" aria-hidden="true" style={{ height: `calc(${(progress / steps.length * 100).toFixed(1)}% - 8px)` }} />
@@ -129,7 +129,7 @@ export function NeuralMap({ network, steps, edgeCount }: { network: Network; ste
           <div className="hint-row"><p className="hint">노드를 눌러 상세 보기</p><a className="skip" href="#commits">건너뛰기 ↓</a></div>
         </div>
         <div className="canvas" ref={canvasRef}>
-          {size && <svg viewBox={`0 0 ${size.w} ${size.h}`} className={selected ? "has-sel" : undefined} onClick={() => setSelected(null)} role="group" aria-label="기술, 역량, 작업, 프로젝트로 이어지는 신경망. 노드를 선택하면 상세가 열립니다.">
+          {size && <svg viewBox={`0 0 ${size.w} ${size.h}`} className={selected ? "has-sel" : undefined} onClick={() => setSelected(null)} role="group" aria-label="언어, 기술, 작업, 프로젝트로 이어지는 신경망. 노드를 선택하면 상세가 열립니다.">
             <g>{edges.map((edge) => { const a = points[edge.from], b = points[edge.to]; return <line key={edge.key} x1={a.x} y1={a.y} x2={b.x} y2={b.y} className="edge-b" />; })}</g>
             <g>{edges.map((edge) => { const a = points[edge.from], b = points[edge.to]; return <line key={edge.key} x1={a.x} y1={a.y} x2={b.x} y2={b.y} pathLength={1} className={`edge-a${lit.links.has(edge.key) ? " on" : ""}`} style={{ strokeDashoffset: 1 - acts[edge.layer] }} />; })}</g>
             <g ref={dotsRef} />
@@ -145,7 +145,7 @@ export function NeuralMap({ network, steps, edgeCount }: { network: Network; ste
             <g>{!vertical && network.layers.map((ids, layer) => <text key={layer} x={points[ids[0]].x} y={size.h - 10} textAnchor="middle" className="layer-cap">{LAYER_NAMES[layer]}</text>)}
               {network.layers.flatMap((ids, layer) => ids.map((id, i) => {
                 const p = points[id], r = RADII[vertical ? 1 : 0][layer], item = network.nodes[id], on = lit.nodes.has(id);
-                if (vertical && layer === 0 && !on) return null;
+                if (vertical && layer === 1 && !on) return null;
                 const [x, y, anchor] = !vertical
                   ? layer === 0 ? [p.x - r - 10, p.y + 4.5, "end"] : layer === 3 ? [p.x + r + 12, p.y + 5, "start"] : [p.x, p.y - r - 10, "middle"]
                   : [p.x, layer === 3 ? p.y + r + 18 : i % 2 === 0 ? p.y - r - 8 : p.y + r + 15, "middle"];
@@ -163,13 +163,13 @@ export function NeuralMap({ network, steps, edgeCount }: { network: Network; ste
       {node.metrics && <MetricGrid items={node.metrics} />}
       {node.compare && <CompareBars compare={node.compare} />}
       {node.text && <p className="p-desc">{node.text}</p>}
-      {node.layer === 0 && <>{chips("역량", 1)}{chips("적용한 작업", 2)}</>}
-      {node.layer === 1 && <>{chips("묶은 기술", 0)}{chips("적용한 작업", 2)}</>}
-      {node.layer === 2 && <>{chips("사용한 기술", 0)}{chips("프로젝트", 3)}</>}
-      {node.layer === 3 && <>{chips("작업", 2)}{chips("사용한 기술", 0)}</>}
+      {node.layer === 0 && <>{chips("이 언어로 쓴 기술", 1)}{chips("적용한 작업", 2)}</>}
+      {node.layer === 1 && <>{chips("언어", 0)}{chips("적용한 작업", 2)}</>}
+      {node.layer === 2 && <>{chips("언어", 0)}{chips("사용한 기술", 1)}{chips("프로젝트", 3)}</>}
+      {node.layer === 3 && <>{chips("작업", 2)}{chips("사용한 기술", 1)}</>}
       <div className="p-actions">
-        {node.caseIndex !== undefined && <button type="button" className="cta" onClick={() => { setSelected(null); window.dispatchEvent(new CustomEvent(SHOW_CASE_EVENT, { detail: node.caseIndex })); }}>케이스 보기 →</button>}
-        {node.href && <Link className="cta ghost" href={node.href}>{node.layer === 0 ? "적용한 곳 읽기" : "설계와 검증 과정 읽기"} ↗</Link>}
+        {node.anchor && <a className="cta" href={`#${node.anchor}`} onClick={() => setSelected(null)}>위에서 작업 보기 ↑</a>}
+        {node.href && <Link className="cta ghost" href={node.href}>{node.layer < 2 ? "적용한 곳 읽기" : "설계와 검증 과정 읽기"} ↗</Link>}
       </div>
     </aside>}
   </>;

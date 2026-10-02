@@ -774,7 +774,7 @@ export function SignalChain3D() {
   return <section className="chain chain3d" aria-label="소리가 반주가 되기까지" ref={sectionRef}
     onMouseEnter={() => { held.current = true; }} onMouseLeave={() => { held.current = false; }}>
     <div className="chain-head">
-      <div><p className="eyebrow">Signal chain</p><h2><span className="thin">소리가 들어와</span> <span className="black">반주가 되기까지</span></h2></div>
+      <div><p className="chain-kicker">반주 엔진 안쪽</p><h4>소리가 들어와 반주가 되기까지</h4></div>
       <div className="ctrl">
         <button type="button" aria-label="이전 단계" onClick={() => go(-1)}>←</button>
         <p className="counter num">{pad(shown[0] + 1)} <span>→ {pad(shown[1] + 1)}</span></p>
