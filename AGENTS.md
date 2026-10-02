@@ -1,6 +1,7 @@
 # Personal portfolio app
 
-This is the deployed app. Root `src/` is preserved upstream reference.
+This repository is the deployed GitHub Pages app. It no longer carries the
+upstream chanhdai.com source; only its MIT notice remains.
 Read `README.md` for editing and commands. Read the relevant installed Next.js
 guide in `node_modules/next/dist/docs/` before changing framework behavior.
 
@@ -16,7 +17,8 @@ guide in `node_modules/next/dist/docs/` before changing framework behavior.
 - `history.json` records verified branch snapshots and author `manu` only.
   It includes merge/documentation/AI-assisted commits, not a hand-written ratio.
 - Keep authorship/update timestamps off the UI. Project and commit dates matter.
-- Preserve Chanh Dai's MIT and font OFL notices.
+- Preserve Chanh Dai's MIT notice (`LICENSE`, `public/LICENSE`) and the
+  Pretendard OFL notice.
 - Use local development at 127.0.0.1. Test the `/portfolio` base path before deploy.
 - Validate with `npm test`, `npm run build`, and `npm run check-types`.
 - Push/merge `main` to deploy through `.github/workflows/github-pages.yml`.

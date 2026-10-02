@@ -1,6 +1,6 @@
-# 우지현 포트폴리오 — GitHub Pages 앱
+# 우지현 포트폴리오
 
-Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그래피·다크 모드를 가져온 정적 포트폴리오다. 원본 패널 구현은 `src/components/panel.tsx`에 복사했으며 CSS는 정적 앱에 맞게 적용했다. 원본 전체 코드는 상위 `src/`에 보존돼 있다.
+[Chanh Dai](https://github.com/ncdai/chanhdai.com)의 선·타이포그래피·다크 모드 구성을 바탕으로 만든 정적 포트폴리오다. 원본 앱의 코드는 이 저장소에 두지 않는다.
 
 현재 소개·카드·상세 글은 **근거를 바탕으로 준비한 1차 초안**이다. 공개 저장소는 [jihyun-el/portfolio](https://github.com/jihyun-el/portfolio), Pages 주소는 [jihyun-el.github.io/portfolio](https://jihyun-el.github.io/portfolio/)다. 개인 연락처·프로필 사진은 미정이라 표시하지 않았다.
 
@@ -8,7 +8,7 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 
 ## 수정할 파일
 
-대표 프로젝트는 **클래식메이트 + VQA 두 개**다. 클래식메이트의 앱·파이프라인·엔진은 JSON의 `parts`와 `content/projects/classicmate-<part id>.md`에서 편집하며 한 상세 페이지의 각 절로 표시된다. 세 저장소를 별개 프로젝트 카드로 늘리지 않는다. 본문/한글은 로컬 Pretendard Variable, 헤딩의 Latin은 Geist를 사용한다.
+대표 프로젝트는 **클래식메이트 + VQA 두 개**다. 클래식메이트의 앱·파이프라인·엔진은 JSON의 `parts`와 `content/projects/classicmate-<part id>.md`에서 편집하며 한 상세 페이지의 각 절로 표시된다. 세 저장소를 별개 프로젝트 카드로 늘리지 않는다. 글꼴은 로컬 Pretendard Variable 하나를 쓴다.
 
 | 바꾸려는 것 | 파일 |
 |---|---|
@@ -17,12 +17,15 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 | 월별 개발 활동·실제 커밋 이력 | `content/history.json` |
 | 엔진 성능·VQA 실험과 점수 그래프 | `content/metrics.json` |
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
+| 홈 대표 작업 슬라이드(문제·접근·수치·검증 범위) | `content/cases.json` |
+| 엔진 입출력 계약 도식 | `content/contracts.json` |
 | 프로젝트 상세 글 | `content/projects/<프로젝트 id>.md` |
 | 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목` |
 | 이미지·음원·공개 PDF | `public/` — Markdown에서 `/파일명`으로 참조 |
 | 색·여백·모바일 스타일 | `src/app/globals.css` |
 | 홈 배치 | `src/app/page.tsx` |
-| 자동 배포 | 상위 `.github/workflows/github-pages.yml` |
+| 신호 흐름 파노라마의 예시 입력 | `src/lib/example-input.ts` |
+| 자동 배포 | `.github/workflows/github-pages.yml` |
 
 상세 글·기록은 일반 Markdown이다. JSX나 서버 코드를 글에 넣을 필요가 없다. 새 프로젝트를 추가할 때는 JSON 항목과 같은 id의 `.md` 파일을 함께 만든다. 새 기록 파일은 빌드할 때 자동으로 목록과 상세 페이지에 추가된다. 초안 메모는 `content/` 밖에 둔다. `content/` 안의 모든 글은 빌드 대상이다.
 
@@ -30,7 +33,7 @@ Chanh Dai의 패널 컴포넌트와 프로젝트 행 구성, 선·타이포그�
 
 ## 로컬 편집과 미리보기
 
-Node.js 24를 사용한다. 명령은 **이 `pages-site/` 폴더에서** 실행한다.
+Node.js 24를 사용한다. 명령은 저장소 루트에서 실행한다.
 
 ```powershell
 npm.cmd ci --ignore-scripts
@@ -59,12 +62,11 @@ npm.cmd run preview
 
 이때 미리보기는 `http://127.0.0.1:4173/portfolio/`다. 루트 주소로 돌아가려면 두 환경 변수를 비우고 다시 빌드한다.
 
-## 첫 공개 준비
+## 배포 설정
 
-1. **이 앱의 상위 저장소만** 본인 GitHub의 포트폴리오 저장소에 올린다. `pesonal_docs` 아카이브는 별도다. 원본 remote는 `upstream`, 본인 공개 저장소는 `origin`이다.
-2. 공개 저장소의 기본 브랜치는 `main`이다. 새 작업은 `codex/` 브랜치에서 진행하고 검증 후 `main`에 반영할 수 있다.
-3. GitHub 저장소 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 설정한다.
-4. **Actions → Portfolio GitHub Pages → Run workflow**로 첫 빌드를 실행한다. 이후 `main`에 콘텐츠나 앱 변경을 push하면 자동 재배포된다.
+1. GitHub 저장소 **Settings → Pages → Build and deployment → Source**는 **GitHub Actions**다.
+2. 기본 브랜치는 `main`이다. 새 작업은 브랜치에서 하고 검증한 뒤 `main`에 반영한다. `main` push가 곧 공개 사이트 재배포다.
+3. 수동 재배포는 **Actions → Portfolio GitHub Pages → Run workflow**로 한다.
 
 주소는 `<계정>.github.io` 이름의 저장소면 루트 주소, 다른 이름이면 `/<저장소명>/` 주소다. workflow가 Pages 설정에서 `base_path`와 실제 URL을 읽으므로 저장소 이름을 코드에 고정할 필요가 없다. GitHub Pages에 사용자 도메인을 설정한 경우에도 그 설정을 읽는다.
 
@@ -76,10 +78,12 @@ npm.cmd run preview
 
 `metrics.json` 수치는 기록에서 확인한 조건과 함께 수정한다. 실기기 계산 시간은 입력→출력 전체 지연과 구분하고, VQA는 Public 점수로 표시한다. 네 실험 조건·0~1 점수 범위·월별 커밋 합계와 프로젝트 연결은 빌드 전에 검사한다. 비교 버튼과 도식은 `src/components/interactive-figures.tsx`, `project-figures.tsx`에서 관리한다.
 
+신호 흐름 파노라마(`src/components/signal-chain-3d.tsx`)는 지어낸 예시 연주를 재생한다. 화면이 읽는 엔진 결과는 `src/lib/example-run.json`에 미리 계산해 둔 생성 데이터이며 직접 편집하지 않는다. three.js는 섹션이 화면 근처에 올 때만 불러온다.
+
 글이 늘어도 레이아웃 파일을 매번 수정하지 않는다. 내용은 `content/`, 화면은 `src/`, 정적 자산은 `public/`에서 관리한다. 관리자 로그인·DB 없이도 공개 후 계속 편집할 수 있는 구조다.
 
 ## 빌드 범위와 출처
 
 현재 배포 앱은 [Next.js 정적 내보내기](https://nextjs.org/docs/app/guides/static-exports)를 사용하고, `out/`만 [GitHub Pages workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)에 전달한다. API·원본 컴포넌트 레지스트리·원작자의 추천사/후원/개인 프로필은 배포 앱에 포함하지 않았다. 내부 역량 보고서·비공개 저장소·운영 데이터는 빌드 입력이 아니다.
 
-Chanh Dai의 MIT 고지는 상위 `LICENSE`에 유지한다. 공개 파일에도 같은 고지를 포함한다. Geist 글꼴의 OFL 고지는 `public/fonts/LICENSE.txt`, Pretendard 고지는 `public/fonts/Pretendard-LICENSE.txt`에 있다.
+Chanh Dai의 MIT 고지는 `LICENSE`에 유지하고, 같은 고지를 `public/LICENSE`로 공개 사이트에도 싣는다. Pretendard 글꼴의 OFL 고지는 `public/fonts/Pretendard-LICENSE.txt`에 있다.
