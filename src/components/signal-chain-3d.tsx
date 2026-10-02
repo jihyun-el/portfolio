@@ -810,6 +810,6 @@ export function SignalChain3D() {
       </div>
     </div>
     <div className="chain-segs">{OBJECTS.map((item, i) => <button type="button" key={item.title} className={i === current ? "on" : undefined} aria-label={`${i + 1}번 ${item.title}로 이동`} onClick={() => glideTo(i)} />)}</div>
-    <p className="figure-note">열 단계를 하나의 장면에 이어 놓았고, 단계 사이의 기호는 그 처리를 나타내며, 지나가는 신호가 셀수록 밝아지고 사건(확정, 입자필터 갱신, 화음 발화)이 나면 번쩍입니다. 전주 · 긴 숨 · 옥타브 실수 · 느려짐이 들어간 예시 연주이며 실제 입력값이 아닙니다. 5번 확률 분포만 실제 규칙(소리가 없으면 멈춤, 확정은 지나간 음, 뒤로 가지 않음)을 따르도록 그린 설명용 모형이고, 그 뒤의 템포 에이전트 · 플레이헤드 · 입자필터 · 밀당 · 결합 · 스케줄러는 실제 식으로 계산합니다. 세 시계 띠도 같은 계산에서 나옵니다. 6초마다 다음 단계로 넘어가고, 끌어서 옮길 수 있으며, 마우스를 올리면 멈춥니다.</p>
+    <p className="figure-note">반주 엔진의 열 단계를 한 장면에 이은 그림입니다. 단계 사이 기호는 처리를, 번쩍임은 확정·입자필터 갱신·화음 발화 같은 사건을 뜻합니다. 전주·긴 숨·옥타브 실수·느려짐을 넣은 예시 연주이며, 5번 확률 분포만 설명용 모형이고 나머지는 실제 식으로 계산합니다.</p>
   </section>;
 }

@@ -11,7 +11,7 @@ export function CompareBars({ compare }: { compare: Comparison }) {
   const format = (value: number) => `${value.toFixed(value % 1 ? compare.digits : 0)}${compare.unit}`;
   const delta = compare.lowerIsBetter
     ? `${Math.round((1 - compare.after / compare.before) * 100)}% 단축`
-    : `+${(compare.after - compare.before).toFixed(compare.digits)}`;
+    : `+${(compare.after - compare.before).toFixed(compare.deltaDigits ?? compare.digits)}`;
   return <div><p className="sect-l">{compare.label}</p>
     <div className="cmp num">
       <span>이전</span><div className="tr"><div className="fl ghost" style={{ width: `${compare.before / max * 100}%` }} /></div><em>{format(compare.before)}</em>
