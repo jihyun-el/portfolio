@@ -1,46 +1,62 @@
 import Link from "next/link";
-import { Panel, PanelContent, PanelHeader, PanelTitle, PanelTitleSup } from "@/components/panel";
-import { getWriting, profile, projects } from "@/lib/content";
-import { TechStack } from "@/components/stack";
+import { cases, getWriting, profile, projects, stack } from "@/lib/content";
+import { buildNetwork, caseViews, metricView } from "@/lib/showcase";
 import { CommitActivity, CommitTimeline } from "@/components/history";
-import { ClassicMateMap, VqaProgress } from "@/components/project-figures";
+import { NeuralMap, type MapStep } from "@/components/neural-map";
+import { CaseSlides } from "@/components/case-slides";
+import { SignalChainSection } from "@/components/signal-chain-section";
+import { countWord } from "@/components/showcase-parts";
 
 export default function HomePage() {
   const writing = getWriting();
+  const network = buildNetwork();
+  const counts = network.layers.map((ids) => ids.length);
+  const edgeCount = new Set(network.chains.flatMap((chain) => chain.slice(1).map((id, i) => `${chain[i]}>${id}`))).size;
+  const steps: MapStep[] = [
+    { code: "L0", title: "입력층 · 기술", text: `직접 쓰거나 검수한 기술 ${counts[0]}개입니다. Rust 이식은 AI 에이전트가 구현하고 참조 결과와 대조해 검수했습니다.` },
+    { code: "L1", title: "은닉층 · 역량", text: `기술을 쓰임새로 묶은 ${countWord(counts[1])} 갈래입니다. ${stack.map((group) => group.title).join(", ")}.` },
+    { code: "L2", title: "은닉층 · 작업", text: `역량이 실제 작업이 된 ${countWord(counts[2])} 부분입니다. 각 작업은 커밋과 검증 기록으로 이어집니다.` },
+    { code: "L3", title: "출력층 · 프로젝트", text: `모든 경로는 ${countWord(counts[3])} 프로젝트로 모입니다. ${projects.map((project) => project.short).join(" · ")}.` },
+    { code: "→", title: "탐색", text: "노드를 누르면 연결된 경로가 켜지고 상세가 열립니다." },
+  ];
   return <>
-    <section className="profile-block" aria-labelledby="profile-name">
-      <div className="profile-pattern" aria-hidden="true" />
-      <div className="profile-top"><div className="profile-mark" aria-hidden="true">우</div><span className="profile-location">대한민국 · Asia/Seoul</span></div>
-      <div className="profile-copy"><h1 id="profile-name">{profile.name}</h1><p className="headline">{profile.headline}</p></div>
+    <section className="wrap hero" id="about">
+      <div>
+        <p className="eyebrow reveal">Portfolio · 2026</p>
+        <h1>{profile.heroLines.map((line, i) => <span key={line} className={`l reveal ${i === 0 ? "thin" : "black"}`} style={{ animationDelay: `${0.05 + i * 0.13}s` }}>{line}</span>)}</h1>
+        {profile.introduction.map((paragraph, i) => <p key={paragraph} className={`lede reveal${i ? " lede-2" : ""}`} style={{ animationDelay: `${0.3 + i * 0.08}s` }}>{paragraph}</p>)}
+        <div className="hero-actions reveal" style={{ animationDelay: ".45s" }}><a className="cta" href="#projects">대표 작업 {cases.length}개 보기 ↓</a><a className="cta ghost" href="#skills">기술 맵 ↓</a></div>
+      </div>
+      <aside className="card reveal" style={{ animationDelay: ".4s" }} aria-label="개발자 카드">
+        <div className="card-h"><span>DEVELOPER CARD</span><span className="num">2026</span></div>
+        <dl>
+          {profile.card.map((row) => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+          {profile.experiences.map((experience) => <div key={experience.title}><dt>경험</dt><dd>{experience.title}<small className="num">{experience.period}</small></dd></div>)}
+        </dl>
+      </aside>
     </section>
-    <div className="stripe-divider" aria-hidden="true" />
-    <Panel id="about"><PanelHeader><PanelTitle>소개</PanelTitle></PanelHeader><PanelContent>
-      {profile.introduction.map((paragraph) => <p className="intro-paragraph" key={paragraph}>{paragraph}</p>)}
-      {profile.links.length > 0 && <div className="profile-links">{profile.links.map((link) => <a key={link.url} href={link.url}>{link.label}</a>)}</div>}
-    </PanelContent></Panel>
-    <div className="stripe-divider" aria-hidden="true" />
-    <Panel id="projects"><PanelHeader><PanelTitle>프로젝트<PanelTitleSup>({projects.length})</PanelTitleSup></PanelTitle></PanelHeader>
-      {projects.map((project) => <details className="project-item" key={project.id} open={project.defaultOpen}>
-        <summary><span className="project-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="m12 3 9 5v8l-9 5-9-5V8l9-5Zm0 9v9M3 8l9 4 9-4" /></svg></span><span className="project-heading"><span className="project-title">{project.title}</span><span className="project-period">{project.period}</span></span><span className="chevron" aria-hidden="true">⌄</span></summary>
-        <div className="project-body"><p className="project-role">{project.role}</p><p>{project.summary}</p><p className="outcome">{project.outcome}</p>
-          {project.id === "classicmate" ? <ClassicMateMap /> : <VqaProgress compact />}
-          <ul className="tags" aria-label="사용 기술">{project.skills.map((skill) => <li key={skill}>{skill}</li>)}</ul>
-          {project.parts && <ul className="project-parts">{project.parts.map((part) => <li key={part.id}><Link href={`/projects/${project.id}/#${part.id}`}><strong>{part.title}</strong><span>{part.description}</span><span className="part-arrow" aria-hidden="true">↗</span></Link></li>)}</ul>}
-          <Link className="read-link" href={`/projects/${project.id}/`}>설계와 검증 과정 읽기<span aria-hidden="true">↗</span></Link>
-        </div>
-      </details>)}
-    </Panel>
-    <div className="stripe-divider" aria-hidden="true" />
-    <Panel id="skills"><PanelHeader><PanelTitle>기술 스택</PanelTitle></PanelHeader><PanelContent><TechStack /></PanelContent></Panel>
-    <div className="stripe-divider" aria-hidden="true" />
-    <Panel id="commits"><PanelHeader><PanelTitle>개발 커밋</PanelTitle></PanelHeader><PanelContent><CommitActivity /><CommitTimeline compact /></PanelContent></Panel>
-    <div className="stripe-divider" aria-hidden="true" />
-    <Panel id="writing"><PanelHeader><PanelTitle>개발 기록</PanelTitle></PanelHeader>
-      {writing.map((post) => <Link className="writing-row" href={`/writing/${post.slug}/`} key={post.slug}><span><strong>{post.title}</strong><span className="writing-excerpt">{post.excerpt}</span></span><span aria-hidden="true">↗</span></Link>)}
-    </Panel>
-    <div className="stripe-divider" aria-hidden="true" />
-    <Panel id="experience"><PanelHeader><PanelTitle>경험</PanelTitle></PanelHeader><PanelContent>
-      {profile.experiences.map((experience) => <div className="experience-item" key={experience.title}><div><h3>{experience.title}</h3><span className="muted">{experience.period}</span></div><p>{experience.description}</p></div>)}
-    </PanelContent></Panel>
+    <section className="wrap stats" aria-label="요약 수치">
+      {profile.stats.map((key, i) => {
+        const stat = metricView(key), target = cases.find((item) => item.metrics.includes(key));
+        return <a className="stat reveal" key={key} href={target ? `#case-${target.id}` : "#projects"} style={{ animationDelay: `${i * 0.08}s` }}>
+          <b className="num">{stat.value}{stat.unit && <small>{stat.unit}</small>}</b><span>{stat.label}</span><i aria-hidden="true">케이스 보기 ↓</i>
+        </a>;
+      })}
+    </section>
+    <CaseSlides cases={caseViews()} />
+    <SignalChainSection />
+    <NeuralMap network={network} steps={steps} edgeCount={edgeCount} />
+    <section className="sec" id="commits"><div className="wrap">
+      <div className="sec-h"><div><p className="eyebrow">Commits</p><h2><span className="thin">설계가 코드로</span> <span className="black">바뀐 기록</span></h2></div></div>
+      <CommitActivity />
+      <CommitTimeline compact />
+    </div></section>
+    <section className="sec pr" id="writing"><div className="wrap">
+      <div className="sec-h"><div><p className="eyebrow">Writing</p><h2><span className="thin">판단을 남긴</span> <span className="black">{countWord(writing.length)} 개의 기록</span></h2></div></div>
+      <div className="pr-grid">{writing.map((post, i) => <article className="reveal" key={post.slug} style={{ animationDelay: `${i * 0.1}s` }}>
+        <h3><Link href={`/writing/${post.slug}/`}>{post.title}</Link></h3><p>{post.excerpt}</p>
+        <Link className="read" href={`/writing/${post.slug}/`}>기록 읽기 ↗</Link>
+      </article>)}</div>
+    </div></section>
   </>;
 }

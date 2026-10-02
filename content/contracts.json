@@ -1,0 +1,101 @@
+{
+  "engine": {
+    "lanes": { "app": "앱 · Swift", "engine": "엔진 · Rust" },
+    "stages": [
+      {
+        "id": "capture",
+        "owner": "app",
+        "name": "오디오 콜백",
+        "rate": "장치 SR",
+        "handoff": { "direction": "to-engine", "label": "마이크 + 직전 반주 · len" },
+        "input": "마이크 소리와 직전 블록에 엔진이 낸 반주 소리",
+        "output": "장치 샘플레이트의 모노 f32 두 줄, 같은 길이 len",
+        "rule": "블록 길이는 장치가 정합니다. 엔진은 어떤 길이든 받고, 결과가 블록을 나누는 방식에 의존하지 않아야 합니다."
+      },
+      {
+        "id": "resample-in",
+        "owner": "engine",
+        "name": "입력 리샘플",
+        "rate": "→ 32 kHz",
+        "input": "장치 샘플레이트 오디오",
+        "output": "모델용 32 kHz 오디오, 블록마다 길이가 조금씩 다름",
+        "rule": "48 kHz에서 512샘플 블록은 341.33샘플이 됩니다. 소수 위상을 다음 블록으로 넘겨 블록이 쌓여도 시간이 밀리지 않게 합니다."
+      },
+      {
+        "id": "features",
+        "owner": "engine",
+        "name": "피치 특징",
+        "rate": "10 ms 컬럼",
+        "input": "32 kHz 오디오",
+        "output": "10 ms마다 컬럼 하나 — 12채널 × 360빈",
+        "rule": "배음 6개를 마이크와 되먹임에 각각 적용해 12채널을 만듭니다. 새 컬럼만 계산하며 창 전체를 다시 계산한 값과 비트 동일해야 합니다."
+      },
+      {
+        "id": "body",
+        "owner": "app",
+        "name": "신경망 본체 추론",
+        "rate": "가속기",
+        "handoff": { "direction": "both", "label": "12×360×32 창 → 로짓 360×k" },
+        "input": "엔진이 조립한 12 × 360 × 32 창, f32",
+        "output": "프레임당 로짓 360개, 한 번에 1 또는 2프레임",
+        "rule": "블록 처리 중 같은 스레드에서 동기로 반환합니다. 쓴 프레임 수를 돌려주며, 기대와 다르면 엔진이 그 프레임을 균등값으로 채워 어긋남이 바로 드러나게 합니다."
+      },
+      {
+        "id": "follower",
+        "owner": "engine",
+        "name": "위치 추정 틱",
+        "rate": "10 ms 틱",
+        "input": "sigmoid를 거친 salience 360",
+        "output": "확정·예측 악보 위치와 템포",
+        "rule": "프레임 하나에 정확히 한 틱입니다. 이 블록에서 프레임이 0개면 0틱입니다."
+      },
+      {
+        "id": "accompanist",
+        "owner": "engine",
+        "name": "반주 제어 틱",
+        "rate": "10 ms 틱",
+        "input": "위치 추정 결과",
+        "output": "반주 위치(초)와 실현 템포(배속)",
+        "rule": "추정값을 그대로 재생 위치로 쓰지 않고, 반주 자신의 진행 기준을 유지한 채 조절합니다."
+      },
+      {
+        "id": "render",
+        "owner": "engine",
+        "name": "예약과 합성",
+        "rate": "44.1 kHz",
+        "input": "반주 위치 곡선",
+        "output": "44.1 kHz 반주 오디오",
+        "rule": "검출 지연을 숨기기 위해 음을 50 ms 앞당겨 예약합니다."
+      },
+      {
+        "id": "playback",
+        "owner": "app",
+        "name": "재생과 커서",
+        "rate": "장치 SR",
+        "handoff": { "direction": "to-app", "label": "len 샘플 + 위치·배속" },
+        "input": "44.1 kHz를 장치 샘플레이트로 되돌린 반주, 마지막 틱의 위치와 배속",
+        "output": "스피커 출력, 화면 커서",
+        "rule": "입력 길이와 출력 길이가 항상 같습니다. 남는 샘플은 다음 블록에 먼저 나갑니다. 이 출력이 다음 블록의 되먹임 입력이 됩니다."
+      }
+    ],
+    "threadRules": [
+      { "subject": "엔진 핸들", "rule": "오디오 스레드 하나가 직렬로만 다룹니다. 내부 잠금이 없습니다." },
+      { "subject": "추론 콜백", "rule": "같은 스레드에서 동기로 반환하고 예외를 경계 밖으로 던지지 않습니다." },
+      { "subject": "곡 교체", "rule": "부분 초기화 대신 새 핸들을 만들어 부품 사이의 어긋남을 구조적으로 막습니다." },
+      { "subject": "제어", "rule": "곡 선택·설정은 별도 브리지로 전달해 오디오 경로와 분리합니다." }
+    ],
+    "window": {
+      "channels": 12,
+      "mixChannels": 6,
+      "referenceChannels": 6,
+      "bins": 360,
+      "columns": 32,
+      "hopMs": 10,
+      "blockMs": 20,
+      "receptiveField": 27,
+      "lookahead": 2,
+      "outputSlots": [28, 29]
+    },
+    "note": "공개용으로 단계와 형태만 추렸습니다. 처리 시간은 위 실기기 기록을 따르며, 계약은 동작 규칙이지 추종 품질의 근거가 아닙니다."
+  }
+}

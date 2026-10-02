@@ -4,14 +4,19 @@ import { withBasePath } from "../../scripts/paths.mjs";
 
 export type Profile = {
   name: string;
+  subtitle: string;
   headline: string;
+  heroLines: string[];
   introduction: string[];
+  card: { label: string; value: string }[];
+  stats: string[];
   experiences: { title: string; period: string; description: string }[];
   links: { label: string; url: string }[];
 };
 
 export type Project = {
   id: string;
+  short: string;
   title: string;
   period: string;
   role: string;
@@ -23,11 +28,15 @@ export type Project = {
 };
 
 export type Writing = { slug: string; title: string; excerpt: string; body: string };
-export type StackGroup = { title: string; items: { name: string; description: string; projectId: string; part?: string; mode?: string }[] };
+export type StackGroup = { title: string; short: string; items: { name: string; description: string; projectId: string; part?: string; mode?: string }[] };
 export type Milestone = { sha: string; date: string; title: string; description: string };
 export type HistoryRepository = { id: string; projectId: string; title: string; branch: string; scopeNote: string; snapshot: string; commits: number; authorCommits: number; firstDate: string; lastDate: string; months: { month: string; count: number }[]; milestones: Milestone[] };
 export type History = { author: string; method: string; months: string[]; repositories: HistoryRepository[] };
-export type Metrics = { engine: { frontendBeforeMs: number; frontendAfterMs: number; computeMs: number; budgetMs: number; controlTicks: number; note: string }; vqa: { matrix: { size: string; pixels: number; score: number }[]; stages: { label: string; score: number }[]; extraInference: { total: number; uncertain: number }; note: string } };
+export type Metrics = { engine: { frontendBeforeMs: number; frontendAfterMs: number; computeMs: number; budgetMs: number; controlTicks: number; note: string }; vqa: { matrix: { size: string; pixels: number; score: number }[]; stages: { label: string; score: number }[]; extraInference: { total: number; uncertain: number }; leaderboard: { rank: number; teams: number }; note: string }; app: { platforms: string[] }; pipeline: { batchSongs: number; defaultedSongs: number; note: string } };
+export type Case = { id: string; projectId: string; part?: string; repo: string; title?: string; short: string; sub?: string; problem: string; approach: string; metrics: string[]; compare?: string; more?: { label: string; href: string }; scope: { claim: string; limit: string } };
+export type ContractStage = { id: string; owner: "app" | "engine"; name: string; rate: string; handoff?: { direction: "to-engine" | "to-app" | "both"; label: string }; input: string; output: string; rule: string };
+export type BodyWindow = { channels: number; mixChannels: number; referenceChannels: number; bins: number; columns: number; hopMs: number; blockMs: number; receptiveField: number; lookahead: number; outputSlots: number[] };
+export type Contracts = { engine: { lanes: { app: string; engine: string }; stages: ContractStage[]; threadRules: { subject: string; rule: string }[]; window: BodyWindow; note: string } };
 const directory = path.join(process.cwd(), "content");
 
 export const profile: Profile = JSON.parse(fs.readFileSync(path.join(directory, "profile.json"), "utf8"));
@@ -35,6 +44,8 @@ export const projects: Project[] = JSON.parse(fs.readFileSync(path.join(director
 export const stack: StackGroup[] = JSON.parse(fs.readFileSync(path.join(directory, "stack.json"), "utf8"));
 export const history: History = JSON.parse(fs.readFileSync(path.join(directory, "history.json"), "utf8"));
 export const metrics: Metrics = JSON.parse(fs.readFileSync(path.join(directory, "metrics.json"), "utf8"));
+export const cases: Case[] = JSON.parse(fs.readFileSync(path.join(directory, "cases.json"), "utf8"));
+export const contracts: Contracts = JSON.parse(fs.readFileSync(path.join(directory, "contracts.json"), "utf8"));
 
 export function sitePath(pathname: string) {
   return withBasePath(process.env.PAGES_BASE_PATH || "", pathname);

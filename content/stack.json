@@ -1,24 +1,24 @@
 [
-  {"title":"직접 쓰는 언어","items":[
+  {"title":"직접 쓰는 언어","short":"언어","items":[
     {"name":"Python","description":"모델 학습·실험, 반주 제어 참조 구현, 악보 변환 배치와 출력 대조.","projectId":"classicmate","part":"engine"},
     {"name":"Dart","description":"악보 뷰어, 필기 좌표, 계정 전환과 페이지 단위 동기화 로직.","projectId":"classicmate","part":"app"}
   ]},
-  {"title":"모델 학습과 평가","items":[
+  {"title":"모델 학습과 평가","short":"학습·평가","items":[
     {"name":"PyTorch","description":"반주 엔진의 입력 모델 설계·학습과 VLM의 학습·검증 실험.","projectId":"classicmate","part":"engine"},
     {"name":"QLoRA","description":"16GB GPU에서 4비트 VLM 학습으로 팀 공통 출발점 구성.","projectId":"ssafy-ai-challenge"},
     {"name":"LoRA","description":"A100에서 대형 VLM을 BF16으로 학습하고 보기 순서 섞기 적용.","projectId":"ssafy-ai-challenge"}
   ]},
-  {"title":"온디바이스 추론","items":[
+  {"title":"온디바이스 추론","short":"온디바이스","items":[
     {"name":"ONNX","description":"학습 모델의 이식·추론 경계를 다루고 출력과 실행 경로 대조.","projectId":"classicmate","part":"engine"},
     {"name":"Core ML","description":"iOS 신경망 가속기에서 본체 실행. 실기기 계산 시간·호출 횟수 검증.","projectId":"classicmate","part":"engine"},
     {"name":"Rust","description":"AI 에이전트가 구현한 이식본을 Python 참조·골든 출력·실기기 측정으로 검수.","projectId":"classicmate","part":"engine","mode":"AI 구현 협업"}
   ]},
-  {"title":"앱과 데이터","items":[
+  {"title":"앱과 데이터","short":"앱·데이터","items":[
     {"name":"Flutter","description":"iOS·Android 악보 앱 출시. PDF 위 필기와 재생 UI 구현.","projectId":"classicmate","part":"app"},
     {"name":"Supabase","description":"인증·악보 자산·소유권·기기 간 동기화와 서버 결제 처리.","projectId":"classicmate","part":"app"},
     {"name":"PostgreSQL","description":"거래 고유성 제약, 조건부 갱신, 지갑 원장과 서버 소유권 관리.","projectId":"classicmate","part":"app"}
   ]},
-  {"title":"악보 처리와 LLM","items":[
+  {"title":"악보 처리와 LLM","short":"악보·LLM","items":[
     {"name":"verovio","description":"MusicXML 조판·악보 좌표 추출. 네이티브 실패를 자식 프로세스로 격리.","projectId":"classicmate","part":"pipeline"},
     {"name":"music21","description":"12키 변환과 MIDI 생성. 악보 좌표와 연주 시간축 연결.","projectId":"classicmate","part":"pipeline"},
     {"name":"Gemini","description":"검색 기반 사실 수집, 곡 분석 구조화, 근거 필드가 있는 코칭 단계 분리.","projectId":"classicmate","part":"pipeline"}

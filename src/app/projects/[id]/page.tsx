@@ -2,10 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/components/markdown";
-import { getProjectBody, getProjectPartBody, projects, metrics } from "@/lib/content";
+import { Fragment, type ReactNode } from "react";
+import { getProjectBody, getProjectPartBody, projects, metrics, contracts } from "@/lib/content";
 import { ClassicMateMap, EnginePerformance, OwnershipFlow, PipelineFlow, VqaProgress } from "@/components/project-figures";
 import { ThreeClocks, VqaMatrix } from "@/components/interactive-figures";
+import { BlockContract, BodyWindowCube } from "@/components/contract-figures";
 import { CommitTimeline } from "@/components/history";
+
+const inlineFigures: Record<string, ReactNode> = {
+  "block-contract": <BlockContract contract={contracts.engine} />,
+  "body-window": <BodyWindowCube window={contracts.engine.window} />,
+};
+
+// Markdown stays plain text; `<!-- figure:name -->` places an interactive figure between paragraphs.
+function MarkdownWithFigures({ children }: { children: string }) {
+  return children.split(/<!--\s*figure:([a-z-]+)\s*-->/).map((part, i) => {
+    if (i % 2 === 0) return part.trim() ? <Markdown key={i}>{part}</Markdown> : null;
+    if (!(part in inlineFigures)) throw new Error(`Unknown figure marker: ${part}`);
+    return <Fragment key={i}>{inlineFigures[part]}</Fragment>;
+  });
+}
 
 export const dynamicParams = false;
 export function generateStaticParams() { return projects.map(({ id }) => ({ id })); }
@@ -26,7 +42,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     {project.parts?.map((part) => <section className="project-part-section" id={part.id} key={part.id}><h2>{part.title}</h2>
       {part.id === "engine" && <><ThreeClocks /><EnginePerformance /></>}
       {part.id === "pipeline" && <PipelineFlow />}{part.id === "app" && <OwnershipFlow />}
-      <Markdown>{getProjectPartBody(id, part.id)}</Markdown></section>)}
+      <MarkdownWithFigures>{getProjectPartBody(id, part.id)}</MarkdownWithFigures></section>)}
     <section className="project-part-section" id="commits"><h2>설계가 코드로 바뀐 기록</h2><CommitTimeline projectId={id} /></section>
   </article>;
 }

@@ -38,6 +38,45 @@ for (const key of ["frontendBeforeMs", "frontendAfterMs", "computeMs", "budgetMs
   if (!Number.isFinite(metrics.engine[key]) || metrics.engine[key] <= 0) throw new Error(`Invalid engine metric: ${key}`);
 }
 if (metrics.engine.computeMs > metrics.engine.budgetMs || metrics.engine.frontendAfterMs > metrics.engine.frontendBeforeMs) throw new Error("Engine chart ranges need review");
+const contract = JSON.parse(fs.readFileSync(path.join(content, "contracts.json"), "utf8")).engine;
+const stageIds = new Set();
+for (const stage of contract.stages) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stage.id) || stageIds.has(stage.id) || !["app", "engine"].includes(stage.owner)) throw new Error(`Invalid contract stage: ${stage.id}`);
+  for (const key of ["name", "rate", "input", "output", "rule"]) {
+    if (typeof stage[key] !== "string" || !stage[key].trim()) throw new Error(`${stage.id}: missing contract ${key}`);
+  }
+  if ((stage.owner === "app") !== Boolean(stage.handoff)) throw new Error(`${stage.id}: app stages and only app stages cross the engine boundary`);
+  if (stage.handoff && (!["to-engine", "to-app", "both"].includes(stage.handoff.direction) || !stage.handoff.label)) throw new Error(`${stage.id}: invalid handoff`);
+  stageIds.add(stage.id);
+}
+if (contract.stages[0].handoff?.direction !== "to-engine" || contract.stages.at(-1).handoff?.direction !== "to-app") throw new Error("Block contract must enter and leave through the app");
+const win = contract.window;
+if (win.mixChannels + win.referenceChannels !== win.channels || win.receptiveField > win.columns || win.lookahead >= win.receptiveField) throw new Error("Body window dimensions are inconsistent");
+if (win.outputSlots.some(slot => !Number.isInteger(slot) || slot - (win.receptiveField - 1 - win.lookahead) < 0 || slot + win.lookahead > win.columns - 1)) throw new Error("Output slot needs its full receptive field and lookahead inside the window");
+if (win.blockMs % win.hopMs !== 0 || win.blockMs / win.hopMs !== win.outputSlots.length) throw new Error("Frames per block must equal output slots per inference");
+if (!contract.stages.find(stage => stage.id === "body")?.handoff?.label.includes(`${win.channels}×${win.bins}×${win.columns}`)) throw new Error("Body handoff label must match the window shape");
+// Keys the home page knows how to render from metrics.json; keep in sync with src/lib/showcase.ts.
+const metricKeys = new Set(["frontend", "compute", "controlTicks", "publicScore", "leaderboard", "release", "missingData"]);
+const cases = JSON.parse(fs.readFileSync(path.join(content, "cases.json"), "utf8"));
+if (profile.heroLines?.join(" ") !== profile.headline) throw new Error("profile.heroLines must spell out the headline");
+if (!Array.isArray(profile.card) || profile.card.some(row => !row.label || !row.value)) throw new Error("Developer card rows need a label and value");
+if (!Array.isArray(profile.stats) || profile.stats.length !== 4 || profile.stats.some(key => !metricKeys.has(key))) throw new Error("Home stats need four known metric keys");
+for (const group of stack) if (!group.short) throw new Error(`Stack group needs a short label: ${group.title}`);
+for (const project of projects) if (!project.short) throw new Error(`${project.id}: missing short label`);
+const caseIds = new Set();
+for (const item of cases) {
+  const project = projects.find(entry => entry.id === item.projectId);
+  if (!/^[a-z0-9-]+$/.test(item.id) || caseIds.has(item.id) || !project) throw new Error(`Invalid case: ${item.id}`);
+  if (item.part ? !project.parts?.some(part => part.id === item.part) : !(item.title && item.sub)) throw new Error(`${item.id}: case needs a project part or its own title and sub`);
+  if (!history.repositories.some(repo => repo.id === item.repo && repo.projectId === item.projectId)) throw new Error(`${item.id}: unknown history repository`);
+  if (item.more && (!item.more.label || !item.more.href?.startsWith("/"))) throw new Error(`${item.id}: invalid extra link`);
+  if (!item.short || !item.problem || !item.approach || !item.scope?.claim || !item.scope?.limit) throw new Error(`${item.id}: incomplete case text`);
+  if (!item.metrics.length || item.metrics.some(key => !metricKeys.has(key)) || (item.compare && !["frontend", "publicScore"].includes(item.compare))) throw new Error(`${item.id}: unknown metric key`);
+  caseIds.add(item.id);
+}
+for (const group of stack) for (const tech of group.items) {
+  if (!cases.some(item => item.projectId === tech.projectId && item.part === tech.part)) throw new Error(`No case covers technology ${tech.name}`);
+}
 const matrixKeys = new Set(metrics.vqa.matrix.map(row => `${row.size}-${row.pixels}`));
 if (metrics.vqa.matrix.length !== 4 || !["4B-512", "4B-768", "8B-512", "8B-768"].every(key => matrixKeys.has(key))) throw new Error("VQA matrix needs all four experiment conditions");
 for (const row of [...metrics.vqa.matrix, ...metrics.vqa.stages]) {

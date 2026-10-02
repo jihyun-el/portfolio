@@ -3,16 +3,9 @@ import localFont from "next/font/local";
 import Link from "next/link";
 import { profile, getSiteUrl, sitePath } from "@/lib/content";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Reveal } from "@/components/reveal";
 import "./globals.css";
 
-const geist = localFont({
-  src: [
-    { path: "../../public/fonts/Geist-Medium.ttf", weight: "500" },
-    { path: "../../public/fonts/Geist-SemiBold.ttf", weight: "600" },
-  ],
-  variable: "--font-geist",
-  display: "swap",
-});
 const pretendard = localFont({ src: "../../public/fonts/PretendardVariable.woff2", variable: "--font-pretendard", weight: "100 900", display: "swap" });
 const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
@@ -25,17 +18,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="ko" suppressHydrationWarning>
     <head><script dangerouslySetInnerHTML={{ __html: `try{const t=localStorage.getItem('portfolio-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch{}` }} /></head>
-    <body className={`${geist.variable} ${pretendard.variable}`}>
+    <body className={pretendard.variable}>
       <a className="skip-link" href="#main-content">본문으로 이동</a>
-      <header className="site-header"><div className="header-inner">
-        <Link className="wordmark" href="/">{profile.name}</Link>
-        <nav aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/#skills">기술</Link><Link href="/#commits">커밋</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
-      </div></header>
-      <main className="page-shell" id="main-content">{children}</main>
-      <footer className="site-footer"><div className="footer-inner">
-        <span>{profile.name}</span>
-        <a href="https://github.com/ncdai/chanhdai.com">Chanh Dai 기반</a>
+      <header className="wrap top">
+        <Link className="brand" href="/"><b>{profile.name}</b><span>{profile.subtitle}</span></Link>
+        <nav className="nav" aria-label="주 메뉴"><Link href="/#skills">기술</Link><Link href="/#projects">프로젝트</Link><Link href="/#commits">커밋</Link><Link href="/writing/">기록</Link><ThemeToggle /></nav>
+      </header>
+      <main id="main-content">{children}</main>
+      <footer className="contact" id="contact"><div className="wrap">
+        <p className="eyebrow">Contact</p>
+        <h2><span className="l thin">읽어 주셔서</span><span className="l black">감사합니다.</span></h2>
+        {profile.links.length > 0 && <div className="links">{profile.links.map((link) => <a key={link.url} href={link.url}><b>{link.label}</b>{link.url.replace(/^(https:\/\/|mailto:)/, "")}</a>)}</div>}
+        <div className="foot"><a href="https://github.com/ncdai/chanhdai.com">Chanh Dai 기반 · MIT</a><span>© 2026 {profile.name}</span></div>
       </div></footer>
+      <Reveal />
     </body>
   </html>;
 }

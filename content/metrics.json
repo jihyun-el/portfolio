@@ -25,6 +25,9 @@
       {"label":"전체 데이터 재학습","score":0.97646}
     ],
     "extraInference":{"total":6714,"uncertain":298},
+    "leaderboard":{"rank":14,"teams":219},
     "note":"SSAFY AI 챌린지의 Public 기록. 단계 사이에 복수의 변경이 있어 그래프만으로 개별 인과를 단정하지 않습니다."
-  }
+  },
+  "app": {"platforms":["iOS","Android"]},
+  "pipeline": {"batchSongs":820,"defaultedSongs":674,"note":"템포 기본값 수정 전 배치에서 120BPM 기본값이 주입된 곡 수."}
 }

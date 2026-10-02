@@ -4,3 +4,6 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 .env*.local
+
+# private: engine generator and internal notes, never committed
+/private/

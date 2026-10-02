@@ -1,0 +1,62 @@
+[
+  {
+    "id": "engine",
+    "projectId": "classicmate",
+    "part": "engine",
+    "repo": "engine",
+    "short": "반주 엔진",
+    "problem": "위치 추정이 정확해도 그 추정치를 그대로 반주 재생에 반영하면 음악이 자연스럽게 이어지지 않을 수 있습니다. 추정이 흔들릴 때 반주까지 뛰면 연주자가 다시 맞출 기준도 사라집니다.",
+    "approach": "가수의 실제 진행, 모델이 추정한 위치, 반주가 재생 중인 위치를 분리했습니다. 앞단은 새 컬럼만 계산하는 증분 구조로 바꿔 10ms 처리 예산 안에 넣었습니다.",
+    "metrics": ["frontend", "compute", "controlTicks"],
+    "compare": "frontend",
+    "more": { "label": "입출력 계약 도식", "href": "/projects/classicmate/#io-contract" },
+    "scope": {
+      "claim": "Python 참조 구현과 Rust 이식의 제어 수학 출력을 틱 단위로 대조해 비트 동일함을 확인했습니다.",
+      "limit": "제어 수학의 동등성을 전체 파이프라인의 동등성으로 확대하지 않습니다."
+    }
+  },
+  {
+    "id": "pipeline",
+    "projectId": "classicmate",
+    "part": "pipeline",
+    "repo": "pipeline",
+    "short": "파이프라인",
+    "problem": "이조한 곡에서 커서가 이전 페이지로 돌아갔습니다. 악보에 없는 템포를 120BPM으로 채운 기본값은 곡 해설의 틀린 전제가 됐습니다.",
+    "approach": "verovio는 조판과 좌표를, music21은 MIDI와 연주 시간축을 맡도록 나눴습니다. 악보에 명시되지 않은 값은 결측으로 전달하도록 바꿨습니다.",
+    "metrics": ["missingData"],
+    "scope": {
+      "claim": "구조를 바꾸기 전에 4곡의 map·MIDI 이벤트열·12키 메타데이터를 golden 비교 대상으로 고정했습니다.",
+      "limit": "기존 동작 보존을 확인하는 비교이며 기존 결과 자체의 정확성을 보장하는 검증과는 구분합니다."
+    }
+  },
+  {
+    "id": "app",
+    "projectId": "classicmate",
+    "part": "app",
+    "repo": "app",
+    "short": "모바일 앱",
+    "problem": "화면 좌표로 필기를 저장하면 다른 기기에서 어긋납니다. 탈퇴·재가입 뒤에는 기기에 남은 캐시가 새 계정으로 올라가는 경로가 있었습니다.",
+    "approach": "PDF 원본 좌표로 필기를 저장하고 페이지 단위 3-way merge로 기기 간 변경을 다뤘습니다. 결제는 외부 거래 ID의 유일성 제약과 조건부 갱신으로 중복 지급을 막았습니다.",
+    "metrics": ["release"],
+    "scope": {
+      "claim": "Flutter·Supabase로 개발한 악보 앱을 iOS·Android에 출시했습니다.",
+      "limit": "결제 백엔드의 운영 배포와 실제 유료곡 판매 개시는 별개의 사실입니다."
+    }
+  },
+  {
+    "id": "vqa",
+    "projectId": "ssafy-ai-challenge",
+    "repo": "vqa",
+    "title": "멀티모달 VQA 실험",
+    "short": "VQA",
+    "sub": "SSAFY AI 챌린지 · 5인 팀 A011 팀장",
+    "problem": "모델 크기와 이미지 해상도를 함께 바꾸면 어느 변경이 점수를 올렸는지 구분할 수 없습니다.",
+    "approach": "4B/8B × 512²/768² 2×2 실험으로 효과를 구분하고, 같은 이미지가 학습과 검증에 나뉘지 않도록 이미지 단위로 분할했습니다. 팀원 4명에게 실험 축을 나눴습니다.",
+    "metrics": ["publicScore", "leaderboard"],
+    "compare": "publicScore",
+    "scope": {
+      "claim": "저장된 추론 결과를 결합해 최종 답안 두 개를 다시 만들었고 저장된 CSV와 SHA-256이 일치했습니다.",
+      "limit": "답안 결합의 재현이며 모델 재학습이나 GPU 추론 전체를 재실행한 결과는 아닙니다."
+    }
+  }
+]
