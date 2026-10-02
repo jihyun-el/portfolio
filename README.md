@@ -17,7 +17,7 @@
 | 월별 개발 활동·실제 커밋 이력 | `content/history.json` |
 | 엔진 성능·VQA 실험과 점수 그래프 | `content/metrics.json` |
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
-| 홈 프로젝트의 파트별 문제·접근·근거 수치·검증 범위 | `content/cases.json` |
+| 파트별 한 줄(`line`, 홈)·문제·접근·근거 수치·검증 범위(서랍 맨 위 요약) | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
 | 프로젝트 상세 글 | `content/projects/<프로젝트 id>.md` |
 | 개발 기록 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목` |
@@ -78,7 +78,9 @@ npm.cmd run preview
 
 `metrics.json` 수치는 기록에서 확인한 조건과 함께 수정한다. 실기기 계산 시간은 입력→출력 전체 지연과 구분하고, VQA는 Public 점수로 표시한다. 네 실험 조건·0~1 점수 범위·월별 커밋 합계와 프로젝트 연결은 빌드 전에 검사한다. 비교 버튼과 도식은 `src/components/interactive-figures.tsx`, `project-figures.tsx`에서 관리한다.
 
-신호 흐름 파노라마(`src/components/signal-chain-3d.tsx`)는 지어낸 예시 연주를 재생한다. 화면이 읽는 엔진 결과는 `src/lib/example-run.json`에 미리 계산해 둔 생성 데이터이며 직접 편집하지 않는다. three.js는 섹션이 화면 근처에 올 때만 불러온다.
+홈에서 프로젝트·파트·기록을 누르면 페이지를 옮기지 않고 오른쪽 서랍(`src/components/drawer.tsx`)에 상세가 열린다. 서랍과 상세 페이지(`/projects/…`, `/writing/…`)는 같은 조립(`src/components/project-detail.tsx`)을 쓰므로 내용은 한 곳만 고친다. 개선된 수치(이전 → 이후)는 `src/components/gain.tsx`가 강조 색으로 그린다. 사이트의 유일한 색은 개선에만 쓴다.
+
+신호 흐름 파노라마(`src/components/signal-chain-3d.tsx`)는 반주 엔진 서랍 안에서 눌러야 재생되며, 지어낸 예시 연주를 재생한다. 화면이 읽는 엔진 결과는 `src/lib/example-run.json`에 미리 계산해 둔 생성 데이터이며 직접 편집하지 않는다. three.js는 재생 버튼을 눌렀을 때만 불러온다.
 
 글이 늘어도 레이아웃 파일을 매번 수정하지 않는다. 내용은 `content/`, 화면은 `src/`, 정적 자산은 `public/`에서 관리한다. 관리자 로그인·DB 없이도 공개 후 계속 편집할 수 있는 구조다.
 

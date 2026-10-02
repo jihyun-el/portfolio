@@ -13,14 +13,13 @@ export function ClassicMateMap() {
   </figure>;
 }
 
+// The engine's time inside its 10ms budget. The before/after of the front end is the Gain
+// chart in the part summary above, so it is not repeated here.
 export function EnginePerformance() {
-  const engine=metrics.engine;
-  return <figure className="performance-figure"><figcaption><strong>반복 계산을 줄여 처리 예산 안으로</strong><span>실기기 기록 · ms</span></figcaption>
-    <div className="comparison-bars">{[{label:"창 전체 계산",value:engine.frontendBeforeMs},{label:"증분 계산 · 융합",value:engine.frontendAfterMs}].map((row,i) => <div className="comparison-row" key={row.label}>
-      <span>{row.label}</span><div className="bar-track"><div className={`bar-fill ${i===1 ? "bar-accent" : ""}`} style={{width:`${row.value/engine.frontendBeforeMs*100}%`}} /></div><strong>{i===1 ? "약 " : ""}{row.value}</strong>
-    </div>)}<div className="chart-scale"><span>0</span><span>{engine.frontendBeforeMs}ms</span></div></div>
-    <div className="budget-label"><span>앞단 + 신경망 본체</span><strong>약 {engine.computeMs} / {engine.budgetMs}ms</strong></div>
-    <div className="budget-track" role="img" aria-label={`10ms 처리 예산 중 약 ${engine.computeMs}ms 사용`}><span style={{width:`${engine.computeMs/engine.budgetMs*100}%`}} /><span className="budget-limit">10ms 예산</span></div>
+  const engine=metrics.engine, share=Math.round(engine.computeMs/engine.budgetMs*100);
+  return <figure className="performance-figure"><figcaption><strong>처리 예산 안에서 도는 계산</strong><span>실기기 기록 · ms</span></figcaption>
+    <div className="budget-label"><span>앞단 + 신경망 본체</span><strong>약 {engine.computeMs} / {engine.budgetMs}ms · 예산의 {share}%</strong></div>
+    <div className="budget-track" role="img" aria-label={`10ms 처리 예산 중 약 ${engine.computeMs}ms 사용`}><span style={{width:`${share}%`}} /><span className="budget-limit">10ms 예산</span></div>
     <p className="figure-note">{engine.note} 앞단의 증분 계산은 기존 창 전체 계산과 비트 동일하게 대조했습니다.</p>
   </figure>;
 }
@@ -43,6 +42,6 @@ export function OwnershipFlow() {
 export function VqaProgress({compact=false}: {compact?: boolean}) {
   const stages=compact ? [metrics.vqa.stages[0],metrics.vqa.stages.at(-1)!] : metrics.vqa.stages;
   return <figure className="score-figure"><figcaption><strong>Public 점수 변화</strong><span>점수 범위 0 — 1</span></figcaption><ol className="score-bars">
-    {stages.map((stage,i) => <li key={stage.label}><div><span>{stage.label}</span><strong>{stage.score.toFixed(5)}</strong></div><div className="bar-track"><span className={`bar-fill ${i===stages.length-1 ? "bar-accent" : ""}`} style={{width:`${stage.score*100}%`}} /></div></li>)}
+    {stages.map((stage,i) => <li key={stage.label} className={i===stages.length-1 ? "is-final" : undefined}><div><span>{stage.label}</span><strong>{stage.score.toFixed(5)}</strong></div><div className="bar-track"><span className={`bar-fill ${i===stages.length-1 ? "bar-accent" : ""}`} style={{width:`${stage.score*100}%`}} /></div></li>)}
     </ol><p className="figure-note">{compact ? "SSAFY 교육생 대상 219팀 중 Public 리더보드 14위." : metrics.vqa.note}</p></figure>;
 }

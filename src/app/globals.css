@@ -255,13 +255,11 @@ figure figcaption strong { font-weight:800; } figure figcaption>span { font-size
 .flow-node strong { font-size:var(--fs-s); font-weight:800; } .flow-node>span { font-size:11px; color:var(--ink-2); } .flow-node .flow-input { font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--ink); }
 .flow-node:hover { border-color:var(--ink); background:var(--wash); }
 .flow-arrow { text-align:center; font-size:20px; color:var(--ink-2); }
-.comparison-row { display:grid; grid-template-columns:132px 1fr 55px; align-items:center; gap:12px; margin:16px 0; font-size:12px; }
-.comparison-row strong { text-align:right; font-size:14px; font-weight:800; }
 .bar-track { height:8px; background:var(--wash); overflow:hidden; }
 .bar-fill { display:block; height:100%; min-width:1px; background:var(--ink-3); }
-.bar-accent { background:var(--ink); }
-.chart-scale { display:flex; justify-content:space-between; padding:0 67px 0 144px; font-size:10px; color:var(--ink-2); }
-.budget-label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:28px 0 10px; font-size:12px; }
+.bar-accent { background:var(--up); }
+.score-bars li.is-final strong { color:var(--up); font-size:15px; font-weight:900; }
+.budget-label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0 10px; font-size:12px; }
 .budget-label strong { font-size:15px; font-weight:800; }
 .budget-track { position:relative; display:flex; align-items:center; height:25px; background:var(--wash); border-right:2px solid var(--ink); }
 .budget-track>span:first-child { display:block; align-self:stretch; background:var(--ink); }
@@ -301,7 +299,7 @@ figure figcaption strong { font-weight:800; } figure figcaption>span { font-size
 .matrix-table button[aria-pressed="true"]>span { color:color-mix(in srgb,var(--paper) 70%,transparent); }
 .matrix-table button:hover { border-color:var(--ink); }
 .matrix-table strong { display:block; font-size:26px; font-weight:900; line-height:1.3; } .matrix-table button>span { display:block; margin-top:6px; font-size:11px; color:var(--ink-2); }
-.matrix-result { display:flex; justify-content:space-between; gap:16px; padding:16px 6px 0; font-size:12px; } .matrix-result strong { font-weight:800; }
+.matrix-result { display:flex; justify-content:space-between; gap:16px; padding:16px 6px 0; font-size:12px; } .matrix-result strong { font-weight:900; font-size:15px; color:var(--up); }
 
 /* Engine I/O contract and body window */
 .contract-figure,.cube-figure { margin:28px 0; padding:20px; border:1px solid var(--ink); }
@@ -507,8 +505,6 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
   .clock-arrow { right:calc(50% - 7px); top:100%; transform:rotate(90deg); }
   .feedback-loop svg { display:none; } .feedback-loop { margin-top:18px; }
   .pipeline-branches { grid-template-columns:1fr; gap:26px; }
-  .comparison-row { grid-template-columns:106px 1fr 42px; gap:8px; font-size:11px; } .comparison-row strong { font-size:13px; }
-  .chart-scale { padding-inline:114px 50px; }
   .matrix-table { border-spacing:3px; } .matrix-table th:first-child { width:27px; } .matrix-table strong { font-size:21px; }
   .matrix-result { flex-direction:column; gap:3px; }
   .activity-table { border-spacing:4px 8px; } .activity-table th:first-child { width:122px; }
