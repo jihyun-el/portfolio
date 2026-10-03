@@ -92,6 +92,23 @@ function segments(count: number) {
   const clear = (from: number) => { position.fill(0, from * 6); color.fill(0, from * 6); };
   return { object: lines, set, clear, commit, dispose: () => { geometry.dispose(); material.dispose(); } };
 }
+// A faint wall from a floor up to a curve, so a curve reads as part of its lane when several stand in depth.
+// Fill levels are linear, not encoded like the lines: they stay dark under the bloom threshold.
+function ribbon(count: number) {
+  const geometry = new THREE.BufferGeometry();
+  const position = new Float32Array(count * 6), color = new Float32Array(count * 6), index: number[] = [];
+  for (let i = 0; i < count - 1; i++) index.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+  geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(color, 3));
+  geometry.setIndex(index);
+  const material = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+  const mesh = new THREE.Mesh(geometry, material); mesh.frustumCulled = false;
+  const set = (i: number, x: number, top: number, floor: number, z: number, c: number) => {
+    position.set([x, top, z, x, floor, z], i * 6); color.fill(c, i * 6, i * 6 + 3); color.fill(0, i * 6 + 3, i * 6 + 6);
+  };
+  const commit = () => { geometry.getAttribute("position").needsUpdate = true; geometry.getAttribute("color").needsUpdate = true; };
+  return { object: mesh, set, commit, dispose: () => { geometry.dispose(); material.dispose(); } };
+}
 
 /* ---------- 01 Live audio: a waterfall of recent waveforms ---------- */
 // The melody sets each wave's pitch and loudness, but the drift across the screen runs on its own
@@ -407,45 +424,49 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
   } };
 };
 
-/* ---------- 08 The three clocks as tempos: each position differentiated once ---------- */
-// The three positions nearly coincide, so the clocks are drawn as speeds. The playhead's frame-to-frame speed is left
-// unsmoothed on purpose: it stalls while waiting for evidence and rushes when it arrives. The singer shows only while
-// singing.
+/* ---------- 08 The three clocks as tempos, one lane each in depth ---------- */
+// Each position differentiated once. The three tempos nearly coincide, so each clock stands in its own lane, from the
+// follower at the back through the accompaniment to the singer in front, with its own floor, its own 1× line and a
+// faint wall under its curve. The singer's tempo is the one inherent in its true position, so it runs on through rests.
+// The playhead's frame-to-frame speed is left unsmoothed on purpose: it stalls while waiting for evidence and rushes
+// when it arrives. Each lane's floor runs on past its right end into its name, so a name never sits on another lane.
 const HEAD_DT = 0.01;
 const headTempo = (t: number) => (playheadU(t) - playheadU(t - HEAD_DT)) / HEAD_DT * BEAT;
-const singing = (t: number) => { const v = voiceAt(singerU(t)); return v.pitch !== null && v.amp >= 0.05; };
+const LANES = [
+  { name: "추종", z: -1.05, line: 0.6, wall: 0.07, tempo: headTempo },
+  { name: "반주", z: -0.3, line: 0.65, wall: 0.09, tempo: accompTempo },
+  { name: "가수", z: 0.45, line: 0.65, wall: 0.09, tempo: singerTempo },
+];
 const accompView: Maker = (map, pixelRatio, stage) => {
   const root = new THREE.Group();
-  const N = 160, TOP = 2, Y = (r: number) => -1 + 2 * clamp(r / TOP);
-  const paths = segments((N - 1) * 2 + 6), glow = cloud(N * 2 + 1, map, pixelRatio);
-  root.add(paths.object, glow.object);
-  // Each name has an above and a below tag; the higher value takes the one above so the two never overlap.
-  const tags = tagger(stage, root);
-  const accTags = { up: tags.make("반주", "strong", "up"), down: tags.make("반주", "strong", "down") };
-  const headTags = { up: tags.make("추종", "", "up"), down: tags.make("추종", "", "down") };
+  const N = 160, HW = 1.5, TOP = 2, FLOOR = -0.85, Y = (r: number) => FLOOR + 1.6 * clamp(r / TOP), L = LANES.length, FRONT = LANES[L - 1].z;
+  const X = (k: number) => -HW + 2 * HW * k / (N - 1);
+  const walls = LANES.map(() => ribbon(N)), paths = segments(L * (N - 1) + L * 2 + 3), glow = cloud(L, map, pixelRatio);
+  walls.forEach((w) => root.add(w.object)); root.add(paths.object, glow.object);
+  const tags = tagger(stage, root), names = LANES.map((lane) => tags.make(lane.name, "faint", "right"));
   const ticks = [0, 1, 2].map((v) => ({ v, tag: tags.make(`${v}×`, "faint", "left") }));
-  return { root, dispose: () => { paths.dispose(); glow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
-    let s = 0, d = 0, prev: number[][] = [];
-    for (let k = 0; k < N; k++) {
-      const tau = t - (1 - k / (N - 1)) * SPAN, x = timeX(k, N);
-      const pts = [[x, Y(headTempo(tau)), -0.25], [x, Y(accompTempo(tau)), 0]];
-      if (k) { paths.set(s++, prev[0], pts[0], 0.45); paths.set(s++, prev[1], pts[1], 1); }
-      if (k % 3 === 0 && singing(tau)) glow.set(d++, x, Y(singerTempo(tau)), -0.5, 3.4, 0.6);
-      glow.set(d++, x, pts[1][1], 0, 3.6, 0.2 + 0.5 * (k / N) ** 1.5);
-      prev = pts;
-    }
-    const xn = timeX(N - 1, N), ya = Y(accompTempo(t)), yh = Y(headTempo(t));
-    glow.set(d++, xn, ya, 0, 26, 1);
-    paths.set(s++, [-1.7, Y(1), -0.1], [1.7, Y(1), -0.1], 0.22);
-    paths.set(s++, [-1.7, -1, 0], [1.7, -1, 0], 0.13);
-    paths.set(s++, [-1.7, -1, 0], [-1.7, 1, 0], 0.13);
-    paths.clear(s); glow.hide(d);
+  return { root, dispose: () => { walls.forEach((w) => w.dispose()); paths.dispose(); glow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
+    let s = 0;
+    LANES.forEach((lane, j) => {
+      let prev: number[] = [];
+      for (let k = 0; k < N; k++) {
+        const tau = t - (1 - k / (N - 1)) * SPAN, x = X(k), pt = [x, Y(lane.tempo(tau)), lane.z];
+        if (k) paths.set(s++, prev, pt, lane.line);
+        walls[j].set(k, x, pt[1], FLOOR, lane.z, lane.wall);
+        prev = pt;
+      }
+      walls[j].commit();
+      glow.set(j, HW, Y(lane.tempo(t)), lane.z, 12, 0.9);
+      paths.set(s++, [-HW, FLOOR, lane.z], [HW + 0.12, FLOOR, lane.z], 0.2);
+      paths.set(s++, [-HW, Y(1), lane.z], [HW, Y(1), lane.z], 0.24);
+      names[j]([HW + 0.12, FLOOR, lane.z], width, height);
+    });
+    paths.set(s++, [-HW, FLOOR, LANES[0].z], [-HW, FLOOR, FRONT], 0.16);
+    paths.set(s++, [HW, FLOOR, LANES[0].z], [HW, FLOOR, FRONT], 0.16);
+    paths.set(s++, [-HW, FLOOR, FRONT], [-HW, Y(TOP), FRONT], 0.16);
+    paths.clear(s);
     paths.commit(); glow.commit();
-    const headAbove = yh >= ya, xt = 1.35;
-    const acc = `반주 ${accompTempo(t).toFixed(2)}×`, head = `추종 ${headTempo(t).toFixed(2)}×`;
-    accTags.up(headAbove ? null : [xt, ya, 0], width, height, acc); accTags.down(headAbove ? [xt, ya, 0] : null, width, height, acc);
-    headTags.up(headAbove ? [xt, yh, -0.25] : null, width, height, head); headTags.down(headAbove ? null : [xt, yh, -0.25], width, height, head);
-    ticks.forEach(({ v, tag }) => tag([-1.7, Y(v), 0], width, height));
+    ticks.forEach(({ v, tag }) => tag([-HW, Y(v), FRONT], width, height));
   } };
 };
 
@@ -550,9 +571,9 @@ const OBJECTS: Stage[] = [
     legend: ["점 하나 = 템포 후보 하나", "아래 = 악보에서 미리 정한 밀당"],
     live: (t) => { const m = pfTempo(t), s = shapedTempo(t); return `반주 템포 = ${m.toFixed(2)} × 밀당 ${(s / m).toFixed(2)} = ${s.toFixed(2)}×`; } },
   { title: "세 시계의 템포", data: "세 위치를 한 번 미분한 속도 · 반주는 템포로 밀고 위치로 천천히 보정(실연 tau 1.5)", make: accompView,
-    pose: { target: [0, 0, -0.25], radius: 4.4, height: 0.45, base: -0.15 },
-    legend: ["점 = 가수(쉬면 없음) · 가는 선 = 추종(플레이헤드) · 빛 = 반주", "높이 = 템포 · 가운데 선 = 1×(악보 빠르기)", "연주 시간 →"],
-    live: (t) => `가수 ${singing(t) ? `${singerTempo(t).toFixed(2)}×` : "쉼"} · 추종 ${headTempo(t).toFixed(2)}× · 반주 ${accompTempo(t).toFixed(2)}×` },
+    pose: { target: [0.3, -0.45, -0.3], radius: 4.4, height: 1.3, base: 0.42, sway: 0.05 },
+    legend: ["앞 → 뒤: 가수(실제 위치에서 역산) · 반주 · 추종(플레이헤드)", "높이 = 템포 · 줄마다 가운데 선 = 1×(악보 빠르기)", "연주 시간 →"],
+    live: (t) => `가수 ${singerTempo(t).toFixed(2)}× · 추종 ${headTempo(t).toFixed(2)}× · 반주 ${accompTempo(t).toFixed(2)}×` },
   { title: "음 발화 일정", data: "위치가 음표 시작을 처음 넘는 틱에 발화 · 50ms 앞당김", make: scheduleView,
     pose: { target: [0, -0.2, 0], radius: 4.6, height: 1.25, base: -0.72 },
     legend: ["빛 커튼 = 반주 위치", "커튼을 지난 음표가 발화", "악보 →"] },
@@ -803,14 +824,13 @@ export function SignalChain3D() {
     </div>
     <div className="clock-strip">
       <p className="clock-title"><strong>세 개의 시계</strong><span>가수는 관측할 뿐 만들 수 없고, 추종기는 증거가 없으면 멈추고, 반주는 멈추지도 뒤로 가지도 튀지도 않습니다.</span></p>
-      <p className="clock-scene"><b ref={(el) => { statusRefs.current[0] = el; }} /><span ref={(el) => { statusRefs.current[1] = el; }} /></p>
+      <p className="clock-scene"><b ref={(el) => { statusRefs.current[0] = el; }} /><span ref={(el) => { statusRefs.current[1] = el; }} /><span className="clock-built">지금 보는 단계 {pad(shown[0] + 1)}·{pad(shown[1] + 1)} → {built.text}</span></p>
       <div className="clock-grid">
         <div className="clock-rows">
           {CLOCKS.map((clock, k) => <p key={clock.name} className={built.rows.includes(k) ? "is-built" : undefined}><i aria-hidden="true">{clock.mark}</i><b>{clock.name}</b><span ref={(el) => { statusRefs.current[k + 2] = el; }} /></p>)}
         </div>
         <canvas ref={stripRef} className="clock-track" aria-hidden="true" />
       </div>
-      <p className="clock-built">지금 보는 단계 {pad(shown[0] + 1)}·{pad(shown[1] + 1)} → {built.text}</p>
     </div>
     <div className="pano-wrap">
     <div className={`pano${dragging ? " is-dragging" : ""}`} ref={viewportRef} role="img" aria-label={shown.map((i) => `${pad(i + 1)} ${OBJECTS[i].title}: ${OBJECTS[i].data}`).join(" / ")}
