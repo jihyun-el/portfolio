@@ -6,7 +6,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { BEAT, BIN_CENTS, CHORDS, C_HI, C_LO, PF_PARTICLES, STATES, TOTAL, accompTempo, accompU, pfTempo, shapedTempo, anchorU, belief, beliefFlow, centOf, chordAt, clamp, confirmAge, coupleGain, engineEvents, recentEvents, type EngineEvents, confirmedIndex, followerTempo, frozenFor, hash, latestAnchor, modBeat, observationAt, phraseFactor, playheadU, predictedIndex, prepareFollower, salience, schedulerLead, singerU, tempoLayers, voiceAt, vqtParts } from "@/lib/example-score";
+import { BEAT, BIN_CENTS, CHORDS, C_HI, C_LO, PF_PARTICLES, STATES, TOTAL, accompTempo, accompU, pfTempo, shapedTempo, anchorU, belief, beliefFlow, centOf, chordAt, clamp, confirmAge, coupleGain, engineEvents, recentEvents, type EngineEvents, confirmedIndex, followerTempo, frozenFor, hash, latestAnchor, modBeat, observationAt, phraseFactor, playheadU, predictedIndex, prepareFollower, salience, schedulerLead, singerTempo, singerU, tempoLayers, voiceAt, vqtParts } from "@/lib/example-score";
 import { StepGlyph } from "@/components/step-glyphs";
 import { exampleTime } from "@/lib/example-clock";
 import { clockStates, drawStrip } from "@/lib/three-clocks";
@@ -407,28 +407,45 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
   } };
 };
 
-/* ---------- 08 Accompaniment position: three paths separated in depth ---------- */
-const accompView: Maker = (map, pixelRatio) => {
+/* ---------- 08 The three clocks as tempos: each position differentiated once ---------- */
+// The three positions nearly coincide, so the clocks are drawn as speeds. The playhead's frame-to-frame speed is left
+// unsmoothed on purpose: it stalls while waiting for evidence and rushes when it arrives. The singer shows only while
+// singing.
+const HEAD_DT = 0.01;
+const headTempo = (t: number) => (playheadU(t) - playheadU(t - HEAD_DT)) / HEAD_DT * BEAT;
+const singing = (t: number) => { const v = voiceAt(singerU(t)); return v.pitch !== null && v.amp >= 0.05; };
+const accompView: Maker = (map, pixelRatio, stage) => {
   const root = new THREE.Group();
-  const N = 160;
-  const paths = segments((N - 1) * 2 + 2), glow = cloud(N * 2 + 1, map, pixelRatio);
+  const N = 160, TOP = 2, Y = (r: number) => -1 + 2 * clamp(r / TOP);
+  const paths = segments((N - 1) * 2 + 6), glow = cloud(N * 2 + 1, map, pixelRatio);
   root.add(paths.object, glow.object);
-  return { root, dispose: () => { paths.dispose(); glow.dispose(); }, update: (t, wall) => {
-    const Y = scoreWindow(t);
+  // Each name has an above and a below tag; the higher value takes the one above so the two never overlap.
+  const tags = tagger(stage, root);
+  const accTags = { up: tags.make("반주", "strong", "up"), down: tags.make("반주", "strong", "down") };
+  const headTags = { up: tags.make("추종", "", "up"), down: tags.make("추종", "", "down") };
+  const ticks = [0, 1, 2].map((v) => ({ v, tag: tags.make(`${v}×`, "faint", "left") }));
+  return { root, dispose: () => { paths.dispose(); glow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
     let s = 0, d = 0, prev: number[][] = [];
     for (let k = 0; k < N; k++) {
       const tau = t - (1 - k / (N - 1)) * SPAN, x = timeX(k, N);
-      const pts = [[x, Y(playheadU(tau)), -0.25], [x, Y(accompU(tau)), 0]];
-      if (k) { paths.set(s++, prev[0], pts[0], 0.3); paths.set(s++, prev[1], pts[1], 1); }
-      if (k % 3 === 0) glow.set(d++, x, Y(singerU(tau)), -0.5, 2.4, 0.32);
+      const pts = [[x, Y(headTempo(tau)), -0.25], [x, Y(accompTempo(tau)), 0]];
+      if (k) { paths.set(s++, prev[0], pts[0], 0.45); paths.set(s++, prev[1], pts[1], 1); }
+      if (k % 3 === 0 && singing(tau)) glow.set(d++, x, Y(singerTempo(tau)), -0.5, 3.4, 0.6);
       glow.set(d++, x, pts[1][1], 0, 3.6, 0.2 + 0.5 * (k / N) ** 1.5);
       prev = pts;
     }
-    glow.set(d++, timeX(N - 1, N), Y(accompU(t)), 0, 26, 1);
+    const xn = timeX(N - 1, N), ya = Y(accompTempo(t)), yh = Y(headTempo(t));
+    glow.set(d++, xn, ya, 0, 26, 1);
+    paths.set(s++, [-1.7, Y(1), -0.1], [1.7, Y(1), -0.1], 0.22);
     paths.set(s++, [-1.7, -1, 0], [1.7, -1, 0], 0.13);
     paths.set(s++, [-1.7, -1, 0], [-1.7, 1, 0], 0.13);
     paths.clear(s); glow.hide(d);
     paths.commit(); glow.commit();
+    const headAbove = yh >= ya, xt = 1.35;
+    const acc = `반주 ${accompTempo(t).toFixed(2)}×`, head = `추종 ${headTempo(t).toFixed(2)}×`;
+    accTags.up(headAbove ? null : [xt, ya, 0], width, height, acc); accTags.down(headAbove ? [xt, ya, 0] : null, width, height, acc);
+    headTags.up(headAbove ? [xt, yh, -0.25] : null, width, height, head); headTags.down(headAbove ? null : [xt, yh, -0.25], width, height, head);
+    ticks.forEach(({ v, tag }) => tag([-1.7, Y(v), 0], width, height));
   } };
 };
 
@@ -532,9 +549,10 @@ const OBJECTS: Stage[] = [
     pose: { target: [0, -0.12, 0], radius: 4.5, height: 0.3, base: -0.1 },
     legend: ["점 하나 = 템포 후보 하나", "아래 = 악보에서 미리 정한 밀당"],
     live: (t) => { const m = pfTempo(t), s = shapedTempo(t); return `반주 템포 = ${m.toFixed(2)} × 밀당 ${(s / m).toFixed(2)} = ${s.toFixed(2)}×`; } },
-  { title: "반주 위치 곡선", data: "템포로 밀고 위치로 천천히 보정 · 실연 tau 1.5", make: accompView,
-    pose: { target: [0, 0, -0.25], radius: 4.5, height: 0.85, base: 0.45 },
-    legend: ["점 = 가수 · 가는 선 = 플레이헤드 · 빛 = 반주", "연주 시간 →", "멈추거나 뒤로 가지 않음"] },
+  { title: "세 시계의 템포", data: "세 위치를 한 번 미분한 속도 · 반주는 템포로 밀고 위치로 천천히 보정(실연 tau 1.5)", make: accompView,
+    pose: { target: [0, 0, -0.25], radius: 4.4, height: 0.45, base: -0.15 },
+    legend: ["점 = 가수(쉬면 없음) · 가는 선 = 추종(플레이헤드) · 빛 = 반주", "높이 = 템포 · 가운데 선 = 1×(악보 빠르기)", "연주 시간 →"],
+    live: (t) => `가수 ${singing(t) ? `${singerTempo(t).toFixed(2)}×` : "쉼"} · 추종 ${headTempo(t).toFixed(2)}× · 반주 ${accompTempo(t).toFixed(2)}×` },
   { title: "음 발화 일정", data: "위치가 음표 시작을 처음 넘는 틱에 발화 · 50ms 앞당김", make: scheduleView,
     pose: { target: [0, -0.2, 0], radius: 4.6, height: 1.25, base: -0.72 },
     legend: ["빛 커튼 = 반주 위치", "커튼을 지난 음표가 발화", "악보 →"] },
@@ -552,7 +570,8 @@ const SPACING = 5.2, FOV = 30, TILT = 0.16, GLIDE_MS = 1700, AUTOPLAY_MS = 6000;
 const stageX = (k: number) => (k - 1) * SPACING;
 // Wide screens show two stages side by side with the step between them in the middle; narrow ones show one stage.
 const pairs = (aspect: number) => aspect > 1.3;
-const stagesAcross = (aspect: number) => (pairs(aspect) ? clamp(aspect * 0.92, 1.95, 2.3) : 1.15);
+// A lone stage keeps a margin on both sides for the side buttons.
+const stagesAcross = (aspect: number) => (pairs(aspect) ? clamp(aspect * 0.92, 1.95, 2.3) : 1.32);
 // What is flowing out of each stage right now; the step symbol after the stage lights with it.
 const voiceLevel = (t: number) => { const v = voiceAt(singerU(t)); return v.pitch === null ? 0 : v.amp; };
 const LINK_LEVEL: ((t: number) => number)[] = [
@@ -793,6 +812,7 @@ export function SignalChain3D() {
       </div>
       <p className="clock-built">지금 보는 단계 {pad(shown[0] + 1)}·{pad(shown[1] + 1)} → {built.text}</p>
     </div>
+    <div className="pano-wrap">
     <div className={`pano${dragging ? " is-dragging" : ""}`} ref={viewportRef} role="img" aria-label={shown.map((i) => `${pad(i + 1)} ${OBJECTS[i].title}: ${OBJECTS[i].data}`).join(" / ")}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
       <canvas className="chain-gl" ref={canvasRef} aria-hidden="true" />
@@ -808,6 +828,10 @@ export function SignalChain3D() {
           {OBJECTS[o].legend && <p className="pano-legend">{OBJECTS[o].legend.join(" · ")}</p>}
         </div>)}
       </div>
+    </div>
+    {/* Side buttons sit over the scene but outside its image role, so they stay real, focusable controls. */}
+    <button type="button" className="pano-side is-prev" aria-label="이전 단계" onClick={() => go(-1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
+    <button type="button" className="pano-side is-next" aria-label="다음 단계" onClick={() => go(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
     </div>
     <div className="chain-segs">{OBJECTS.map((item, i) => <button type="button" key={item.title} className={i === current ? "on" : undefined} aria-label={`${i + 1}번 ${item.title}로 이동`} onClick={() => glideTo(i)} />)}</div>
     <p className="figure-note">반주 엔진의 열 단계를 한 장면에 이은 그림입니다. 단계 사이 기호는 처리를, 번쩍임은 확정·입자필터 갱신·화음 발화 같은 사건을 뜻합니다. 전주·긴 숨·옥타브 실수·느려짐을 넣은 예시 연주이며, 5번 확률 분포만 설명용 모형이고 나머지는 실제 식으로 계산합니다.</p>

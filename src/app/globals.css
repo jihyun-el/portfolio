@@ -214,7 +214,8 @@ svg.has-sel .lab:not(.on) { opacity:.2; }
 .contact .wrap { display:flex; flex-direction:column; gap:36px; padding-block:clamp(72px,10vw,128px) 40px; }
 .contact h2 { font-size:var(--h3); font-weight:800; line-height:1.2; letter-spacing:-.03em; }
 .links { display:flex; flex-wrap:wrap; gap:24px; font-size:var(--fs-s); font-weight:500; }
-.links a { text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--paper) 40%,transparent); } .links b { margin-right:8px; font-weight:800; }
+.links a { display:inline-flex; align-items:center; text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--paper) 40%,transparent); } .links b { margin-right:8px; font-weight:800; }
+.links svg { flex:none; width:18px; height:18px; margin-right:8px; }
 .foot { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; padding-top:20px; border-top:1px solid color-mix(in srgb,var(--paper) 22%,transparent); font-size:var(--fs-xs); opacity:.7; }
 .foot a { text-decoration:none; }
 
@@ -397,11 +398,19 @@ figure figcaption strong { font-weight:800; } figure figcaption>span { font-size
 .pano-hud-head em { font-size:12px; font-style:normal; font-weight:800; color:#f2f2f2; }
 .pano-hud .pano-legend { margin-top:2px; color:#8a8a8a; }
 .pano-cap.is-right { text-align:right; } .pano-cap.is-right .pano-hud-head { justify-content:flex-end; }
+/* Side buttons: centred on the scene above the caption band, always visible so touch screens can use them. */
+.pano-wrap { position:relative; }
+.pano-side { position:absolute; top:calc((100% - 136px) / 2); z-index:4; display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid rgba(242,242,242,.42); border-radius:50%; background:rgba(5,5,5,.55); color:#f2f2f2; cursor:pointer; transform:translateY(-50%); transition:background .2s,color .2s,border-color .2s; }
+.pano-side svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.pano-side:hover,.pano-side:focus-visible { background:#f2f2f2; border-color:#f2f2f2; color:#050505; }
+.pano-side.is-prev { left:14px; } .pano-side.is-next { right:14px; }
 .chain3d .clock-strip { border-bottom:0; }
 @media (max-width:760px) {
   .pano { height:460px; }
   .pano-title { font-size:13px; } .pano-step small { display:none; } .pano-step svg { width:64px; height:31px; }
   .pano-hud { height:150px; } .pano-cap { bottom:12px; } .pano-hud-head strong { font-size:16px; } .pano-hud p { font-size:11px; }
+  .pano-side { top:calc((100% - 150px) / 2); width:38px; height:38px; } .pano-side svg { width:19px; height:19px; }
+  .pano-side.is-prev { left:8px; } .pano-side.is-next { right:8px; }
 }
 
 /* Three clocks: the strip above the panorama shares its dark stage */
