@@ -235,8 +235,9 @@ button { font:inherit; color:inherit; }
 .prose p { margin:14px 0; } .prose a { text-decoration:underline; text-underline-offset:4px; } .prose strong { font-weight:800; }
 .prose ul,.prose ol { margin:14px 0; padding-left:24px; list-style:revert; }
 .prose code { font-size:.88em; padding:2px 4px; background:var(--wash); border:1px solid var(--line); }
-/* Code blocks hold formulas, so they are set in the text font and wrap. */
-.prose pre { overflow-x:auto; padding:14px 16px; background:var(--wash); line-height:1.8; white-space:pre-wrap; } .prose pre code { border:0; padding:0; font-family:var(--font); font-size:.95em; }
+.prose pre { overflow-x:auto; padding:16px; background:var(--wash); } .prose pre code { border:0; padding:0; }
+/* Display formulas (`$$…$$`, KaTeX) sit on the same wash as code and scroll sideways on narrow screens. */
+.prose .katex-display { margin:18px 0; padding:16px; background:var(--wash); overflow-x:auto; overflow-y:hidden; } .prose .katex-display>.katex { text-align:left; } .katex .hangul_fallback { font-family:var(--font); font-size:.85em; }
 .prose table { display:block; max-width:100%; overflow-x:auto; margin:24px 0; border-collapse:collapse; font-size:13px; }
 .prose th,.prose td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); } .prose th { font-weight:800; border-bottom:2px solid var(--ink); }
 .prose img { max-width:100%; height:auto; }
@@ -491,7 +492,7 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
   .project-h { grid-template-columns:1fr; } .project-no { flex-direction:row; align-items:baseline; gap:8px; width:max-content; } .project-no b { margin-top:10px; }
 }
 @media (max-width:760px) {
-  .unit-sec { grid-template-columns:1fr; } .unit-sec>h4 { padding-top:0; }
+  .unit-sec { grid-template-columns:minmax(0,1fr); } .unit-sec>h4 { padding-top:0; }
   .unit-h { grid-template-columns:1fr; }
   .work summary,.work-flat { grid-template-columns:minmax(0,1fr) 18px; }
   .work summary>span,.work-flat>span { grid-column:1/-1; }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { profile, getSiteUrl, sitePath } from "@/lib/content";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Reveal } from "@/components/reveal";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 // GitHub's mark (Octicons mark-github), shown before a GitHub link in the footer.

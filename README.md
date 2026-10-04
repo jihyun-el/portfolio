@@ -22,7 +22,7 @@ ClassicMate와 멀티모달 VQA 두 프로젝트를 담은 정적 포트폴리�
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
 | 카드의 스택 줄(`stack`, 없으면 `stack.json`에서 모음)·제일 어려웠던 것(`hardest`)·연결할 트러블슈팅 글(`troubles`)·결과 숫자(`results`)·홈에서 한 일을 라벨 한 줄로 접어 둘지(`fold`) | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
-| 카드의 개요·한 일·결과 | `content/projects/classicmate-<part id>.md`, `content/projects/ssafy-ai-challenge.md` — 첫 문단은 개요 한 줄, 그 뒤 `## 라벨`마다 한 일 하나. 라벨 아래 첫 문단은 카드에 보이는 한 줄(숫자는 `**굵게**`), 나머지는 눌렀을 때 펼쳐지는 상세. `## 결과`는 결과 칸으로 감. 도식은 `<!-- figure:이름 -->` |
+| 카드의 개요·한 일·결과 | `content/projects/classicmate-<part id>.md`, `content/projects/ssafy-ai-challenge.md` — 첫 문단은 개요 한 줄, 그 뒤 `## 라벨`마다 한 일 하나. 라벨 아래 첫 문단은 카드에 보이는 한 줄(숫자는 `**굵게**`), 나머지는 눌렀을 때 펼쳐지는 상세. `## 결과`는 결과 칸으로 감. 도식은 `<!-- figure:이름 -->`, 식은 `$$…$$`(문장 안에서는 `$…$`) |
 | ClassicMate 전체 개요 글 | `content/projects/classicmate.md` |
 | 트러블슈팅 글 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목`, 첫 문단은 홈 카드에 실리는 한 문장 요약. 목록은 파일 이름순. 둘째 줄에 `<!-- home: hidden -->`을 두면 홈 목록에서만 빠지고 글 주소는 남음 |
 | 이미지·음원·공개 PDF | `public/` — Markdown에서 `/파일명`으로 참조 |
@@ -92,4 +92,4 @@ npm.cmd run preview
 
 배포 앱은 [Next.js 정적 내보내기](https://nextjs.org/docs/app/guides/static-exports)를 사용하고, `out/`만 [GitHub Pages workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)에 전달한다. 내부 역량 보고서·비공개 저장소·운영 데이터는 빌드 입력이 아니다.
 
-`src/app/globals.css`의 도식 스타일 일부는 MIT 라이선스 코드를 고쳐 쓴 것이다. 그 원 고지를 `LICENSE`와 `public/LICENSE`에 두며, 해당 스타일이 남아 있는 동안 지우지 않는다. Pretendard 글꼴의 OFL 고지는 `public/fonts/Pretendard-LICENSE.txt`에 있다. 기술 스택의 단색 로고(`src/lib/brand-icons.json`)는 세 가지 출처다. 문자열로 적힌 것은 Simple Icons 16.34.0(CC0)의 SVG 경로다. `huggingface`는 Hugging Face가 배포하는 공식 로고 SVG를 선 그림으로 다시 칠한 것이다(얼굴을 검게 채우지 않음). `riverpod`는 Riverpod 저장소(MIT)의 `website/static/img/logo.svg`, `librosa`는 librosa 저장소(ISC)의 `docs/img/librosa_logo_dark.svg`에서 글자를 뺀 표식을 한 색으로 그린 것이다. `verovio`와 `music21`은 공식 벡터 로고가 없어 이 사이트용으로 그린 음표 그림이며 공식 로고가 아니다. 각 상표는 해당 소유자의 것이다. 로고를 추가할 때는 경로를 넣고 `content/stack.json` 항목의 `icon`에 이름을 적는다.
+`src/app/globals.css`의 도식 스타일 일부는 MIT 라이선스 코드를 고쳐 쓴 것이다. 그 원 고지를 `LICENSE`와 `public/LICENSE`에 두며, 해당 스타일이 남아 있는 동안 지우지 않는다. Pretendard 글꼴의 OFL 고지는 `public/fonts/Pretendard-LICENSE.txt`에 있다. 식은 빌드할 때 KaTeX(MIT)로 조판하며, KaTeX 글꼴(OFL)이 `out/`에 함께 들어간다. 기술 스택의 단색 로고(`src/lib/brand-icons.json`)는 세 가지 출처다. 문자열로 적힌 것은 Simple Icons 16.34.0(CC0)의 SVG 경로다. `huggingface`는 Hugging Face가 배포하는 공식 로고 SVG를 선 그림으로 다시 칠한 것이다(얼굴을 검게 채우지 않음). `riverpod`는 Riverpod 저장소(MIT)의 `website/static/img/logo.svg`, `librosa`는 librosa 저장소(ISC)의 `docs/img/librosa_logo_dark.svg`에서 글자를 뺀 표식을 한 색으로 그린 것이다. `verovio`와 `music21`은 공식 벡터 로고가 없어 이 사이트용으로 그린 음표 그림이며 공식 로고가 아니다. 각 상표는 해당 소유자의 것이다. 로고를 추가할 때는 경로를 넣고 `content/stack.json` 항목의 `icon`에 이름을 적는다.
