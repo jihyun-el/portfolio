@@ -8,7 +8,7 @@
       {"name":"PyTorch","icon":"pytorch","language":"Python","description":"반주 엔진의 입력 모델 설계·학습과 VLM의 학습·검증 실험.","projectId":"classicmate","part":"engine"},
       {"name":"Transformers","icon":"huggingface","language":"Python","description":"VLM과 프로세서 로딩, 4비트 로딩 설정, 학습률 스케줄 구성.","projectId":"ssafy-ai-challenge"},
       {"name":"PEFT (LoRA·QLoRA)","icon":"huggingface","language":"Python","description":"16GB GPU에서 4비트 VLM 학습으로 팀 공통 출발점 구성. A100에서 대형 VLM을 BF16으로 학습하고 보기 순서 섞기 적용.","projectId":"ssafy-ai-challenge"},
-      {"name":"Core ML","icon":"apple","language":"Python","description":"iOS 신경망 가속기에서 본체 실행. 실기기 계산 시간·호출 횟수 검증.","projectId":"classicmate","part":"engine"}
+      {"name":"Core ML","icon":"apple","language":"Python","description":"iOS 신경망 가속기에서 신경망 추론 실행. 실기기 계산 시간·호출 횟수 검증.","projectId":"classicmate","part":"engine"}
     ]},
     {"title":"DSP","tier":"sub","items":[
       {"name":"SciPy","icon":"scipy","language":"Python","description":"위치 추정의 확률 계산, 합성곱·창 함수·보간.","projectId":"classicmate","part":"engine"},
@@ -24,7 +24,7 @@
       {"name":"PostgreSQL","icon":"postgresql","language":"Dart","description":"거래 고유성 제약, 조건부 갱신, 지갑 원장과 서버 소유권 관리.","projectId":"classicmate","part":"app"}
     ]},
     {"title":"그 밖에 쓴 도구","tier":"tool","items":[
-      {"name":"Rust","icon":"rust","language":"Python","description":"AI 에이전트가 구현한 이식본을 Python 참조·골든 출력·실기기 측정으로 검수.","projectId":"classicmate","part":"engine","mode":"AI 구현 협업"},
+      {"name":"Rust","icon":"rust","language":"Python","description":"AI 에이전트가 구현한 이식본을 Python 참조·기준 출력·실기기 측정으로 검수.","projectId":"classicmate","part":"engine","mode":"AI 구현 협업"},
       {"name":"verovio","icon":"verovio","language":"Python","description":"MusicXML 조판·악보 좌표 추출. 네이티브 실패를 자식 프로세스로 격리.","projectId":"classicmate","part":"pipeline"},
       {"name":"music21","icon":"music21","language":"Python","description":"12키 변환과 MIDI 생성. 악보 좌표와 연주 시간축 연결.","projectId":"classicmate","part":"pipeline"}
     ]}

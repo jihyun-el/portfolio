@@ -21,11 +21,11 @@ export const CHORDS: [number, number[]][] = [C, G, C, G, Am, F, C, G, Em, C, Am,
 const SLIP_STATE = 11, SLIP_FROM = 0.4, SLIP_TO = 0.7;
 export const SCENES: { from: number; to: number; name: string; note: string }[] = [
   { from: 0, to: 4, name: "전주", note: "가수 없음 · 반주 혼자" },
-  { from: 4, to: 12, name: "노래", note: "세 시계가 함께 간다" },
-  { from: 12, to: 16, name: "긴 숨", note: "추종기는 멈추고 반주는 관성으로" },
+  { from: 4, to: 12, name: "노래", note: "세 위치가 함께 간다" },
+  { from: 12, to: 16, name: "긴 숨", note: "추정은 멈추고 반주는 자기 템포로" },
   { from: 16, to: 20.6, name: "노래", note: "다시 합류" },
   { from: 20.6, to: 21.8, name: "옥타브 실수", note: "악보와 안 맞는 소리는 증거가 아니다" },
-  { from: 21.8, to: 31, name: "노래", note: "세 시계가 함께 간다" },
+  { from: 21.8, to: 31, name: "노래", note: "세 위치가 함께 간다" },
   { from: 31, to: 40, name: "느려짐", note: "음마다 잰 템포로 따라 내려가지만 늦게 반영돼 반주가 조금 앞선다" },
   { from: 40, to: TOTAL, name: "후주", note: "반주 혼자 마무리" },
 ];

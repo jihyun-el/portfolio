@@ -4,7 +4,7 @@
 
 Flutter·Supabase로 개발한 앱을 **iOS·Android**에 출시
 
-2025년 9월부터 2026년 7월까지 ClassicMate 초기팀에서 개발총괄을 맡았습니다. Flutter·Supabase로 클래식 연습/커뮤니티 앱을 개발하고 iOS·Android에 출시했습니다. 초기팀에 풀타임으로 참여했고 앱의 Git 개발 기록은 2025년 12월부터입니다.
+2025년 9월부터 2026년 7월까지 ClassicMate 초기팀에서 개발총괄을 맡았습니다. Flutter·Supabase로 클래식 연습/커뮤니티 앱을 개발하고 iOS·Android에 출시했습니다. 초기팀에 풀타임으로 참여했고 앱의 Git 커밋 기록은 2025년 12월부터입니다.
 
 ## 필기 동기화
 

@@ -11,16 +11,16 @@ const vqaFirst = metrics.vqa.stages[0].score, vqaLast = metrics.vqa.stages.at(-1
 
 // Every number shown on the home page is read from metrics.json or history.json, never retyped.
 const metricViews: Record<string, () => MetricView> = {
-  frontend: () => ({ value: `${metrics.engine.frontendBeforeMs} → ${metrics.engine.frontendAfterMs}`, unit: "ms", label: "반주 엔진 앞단 실기기 계산 시간" }),
-  compute: () => ({ value: `${metrics.engine.computeMs} / ${metrics.engine.budgetMs}`, unit: "ms", label: "앞단·신경망 실기기 계산 · 10ms 처리 예산 안" }),
-  controlTicks: () => ({ value: ko(metrics.engine.controlTicks), unit: "틱", label: "Rust 이식 제어 출력 · Python 참조와 비트 동일" }),
+  frontend: () => ({ value: `${metrics.engine.frontendBeforeMs} → ${metrics.engine.frontendAfterMs}`, unit: "ms", label: "반주 엔진 전처리 실기기 계산 시간" }),
+  compute: () => ({ value: `${metrics.engine.computeMs} / ${metrics.engine.budgetMs}`, unit: "ms", label: "전처리·신경망 실기기 계산 · 10ms 처리 예산 안" }),
+  controlTicks: () => ({ value: ko(metrics.engine.controlTicks), unit: "프레임", label: "Rust 이식 제어 출력 · Python 참조와 비트 동일" }),
   publicScore: () => ({ value: vqaLast.toFixed(5), label: `VQA Public 점수 · 베이스라인 ${vqaFirst.toFixed(5)}` }),
   leaderboard: () => ({ value: `${metrics.vqa.leaderboard.private.overall}위`, unit: ` / ${metrics.vqa.leaderboard.teams}팀`, label: `SSAFY AI 챌린지 Private 리더보드 · 서울 캠퍼스 ${metrics.vqa.leaderboard.private.seoul}위 · Public ${metrics.vqa.leaderboard.rank}위에서 상승` }),
   release: () => ({ value: metrics.app.platforms.join(" · "), label: "앱 출시" }),
   missingData: () => ({ value: `${ko(metrics.pipeline.defaultedSongs)} / ${ko(metrics.pipeline.batchSongs)}`, unit: "곡", label: "120BPM 기본값이 채워져 있던 곡 · 수정 전 배치" }),
 };
 const comparisons: Record<string, () => Comparison> = {
-  frontend: () => ({ label: "앞단 계산 시간 · 창 전체 → 증분", before: metrics.engine.frontendBeforeMs, after: metrics.engine.frontendAfterMs, unit: "ms", digits: 1, lowerIsBetter: true }),
+  frontend: () => ({ label: "전처리 계산 시간 · 전체 재계산 → 증분", before: metrics.engine.frontendBeforeMs, after: metrics.engine.frontendAfterMs, unit: "ms", digits: 1, lowerIsBetter: true }),
 };
 
 export function metricView(key: string) {

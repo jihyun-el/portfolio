@@ -343,7 +343,7 @@ const anchorsView: Maker = (map, pixelRatio, stage) => {
   const N = 150, GRID = 8, NOW = 1.05, X = (t: number, tau: number) => -1.7 + (NOW + 1.7) * (1 - (t - tau) / SPAN);
   const lines = segments(N * 2 + GRID + 40), glow = cloud(N * 3 + 60 + 40, map, pixelRatio);
   root.add(lines.object, glow.object);
-  const tags = tagger(stage, root), headTag = tags.make("플레이헤드", "strong", "right"), anchorTag = tags.make("앵커 · 예측 음이 바뀐 순간", "", "left"), easeTag = tags.make("0.5초에 걸쳐 따라붙음"), singerTag = tags.make("가수", "faint", "down");
+  const tags = tagger(stage, root), headTag = tags.make("추정 위치", "strong", "right"), anchorTag = tags.make("기준점 · 예측 음이 바뀐 순간", "", "left"), easeTag = tags.make("0.5초에 걸쳐 따라붙음"), singerTag = tags.make("가수", "faint", "down");
   return { root, dispose: () => { lines.dispose(); glow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
     const Y = scoreWindow(t), now = singerU(t);
     let s = 0, d = 0;
@@ -388,7 +388,7 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
   const AX = (b: number) => -1.55 + 3.1 * b / TOTAL, AY = (f: number) => -0.74 + (f - 1) * 1.25;
   const dots = cloud(N * 2 + ARCH_N + 8, map, pixelRatio), lines = segments(28);
   root.add(lines.object, dots.object);
-  const tags = tagger(stage, root), medianTag = tags.make("추정 템포", "strong"), measureTag = tags.make("방금 잰 템포", "", "right"), archTag = tags.make("밀당", "faint", "right");
+  const tags = tagger(stage, root), medianTag = tags.make("추정 템포", "strong"), measureTag = tags.make("방금 잰 템포", "", "right"), archTag = tags.make("프레이즈", "faint", "right");
   const ticks = [0.8, 1, 1.2].map((v) => ({ v, tag: tags.make(`${v.toFixed(1)}×`, "faint", "down") }));
   return { root, dispose: () => { dots.dispose(); lines.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
     const [prev, cur] = tempoLayers(t, 2), since = t - cur.time;
@@ -419,7 +419,7 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
     lines.commit(); dots.commit();
     medianTag([nx, TOP + 0.04, 0.05], width, height, `추정 템포 ${m.toFixed(2)}×`);
     measureTag(rise > 0.05 && settle < 0.99 ? [mx, RULER + 0.45, 0] : null, width, height, `방금 잰 템포 ${cur.observed.toFixed(2)}×`);
-    archTag([AX(cursor), AY(f), 0], width, height, `밀당 ×${f.toFixed(2)}`);
+    archTag([AX(cursor), AY(f), 0], width, height, `프레이즈 ×${f.toFixed(2)}`);
     ticks.forEach(({ v, tag }) => tag([X(v), RULER - 0.06, 0], width, height));
   } };
 };
@@ -433,7 +433,7 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
 const HEAD_DT = 0.01;
 const headTempo = (t: number) => (playheadU(t) - playheadU(t - HEAD_DT)) / HEAD_DT * BEAT;
 const LANES = [
-  { name: "추종", z: -1.05, line: 0.6, wall: 0.07, tempo: headTempo },
+  { name: "추정", z: -1.05, line: 0.6, wall: 0.07, tempo: headTempo },
   { name: "반주", z: -0.3, line: 0.65, wall: 0.09, tempo: accompTempo },
   { name: "가수", z: 0.45, line: 0.65, wall: 0.09, tempo: singerTempo },
 ];
@@ -548,41 +548,41 @@ type Stage = { title: string; data: string; make: Maker; pose: Pose; legend?: st
 const OBJECTS: Stage[] = [
   { title: "라이브 오디오", data: "마이크 + 직전 반주 · 장치 SR 모노 f32 → 32 kHz", make: audioView,
     pose: { target: [0, -0.05, -1.7], radius: 5.3, height: 1.35, base: -0.25 },
-    legend: ["위 = 마이크", "아래 = 직전 반주(되먹임)"] },
-  { title: "피치 특징 (VQT)", data: "배음 6 × 마이크·되먹임 = 12채널 × 360빈 · 10ms마다 컬럼 1개", make: vqtView,
+    legend: ["위 = 마이크", "아래 = 직전 반주(참조)"] },
+  { title: "전처리 (VQT)", data: "배음 6 × 마이크·참조 반주 = 12채널 × 360빈 · 10ms마다 프레임 1개", make: vqtView,
     pose: { target: [0, -0.05, 0], radius: 5.1, height: 0.4, base: -0.2, sway: 0.08 },
-    legend: ["위 = 마이크 6채널", "아래 = 되먹임 6채널", "오른쪽 상자 = CNN 입력 창 · 최근 32칸", "시간 → 최신", "피치 ↑ 반음 한 줄"] },
-  { title: "음높이 salience", data: "CNN 로짓 360 → sigmoid · 한 창에서 2프레임 · 칸마다 0~1 독립", make: salienceView,
+    legend: ["위 = 마이크 6채널", "아래 = 참조 6채널", "오른쪽 상자 = CNN 입력 32프레임", "시간 → 최신", "피치 ↑ 반음 한 줄"] },
+  { title: "피치 분포", data: "CNN 로짓 360 → sigmoid · 한 입력에서 2프레임 · 빈마다 0~1 독립", make: salienceView,
     pose: { target: [0.3, 0.5, -0.3], radius: 4.3, height: 0.95, base: -0.35 },
     legend: ["C2 · C3 · C4 · C5 · C6 → 피치"],
     live: (t) => { const v = voiceAt(singerU(t)); if (v.pitch === null || v.amp < 0.05) return "쉼표 · 소리 없음"; const sal = salience(t); return `최대 ${Math.max(...sal).toFixed(2)} · 합 ${sal.reduce((a, x) => a + x, 0).toFixed(1)}`; } },
-  { title: "음표별 관측 점수", data: "음표마다 폭 75 cent 종 모양 창 · 쉼표 = 1 − 최대 salience", make: observationView,
+  { title: "음표별 우도", data: "음표마다 폭 75센트 가우시안 가중치 · 쉼표 = 1 − 분포 최댓값", make: observationView,
     pose: { target: [0, -0.15, 0], radius: 4.7, height: 0.7, base: -0.32 },
-    legend: ["뒤: 악보 음표 · 빛 = 가수 음높이", "앞: 음표별 점수 기둥", "같은 높이 음표는 같은 점수"] },
+    legend: ["뒤: 악보 음표 · 빛 = 가수 음높이", "앞: 음표별 우도 기둥", "같은 높이 음표는 같은 우도"] },
   { title: "지금 악보 어디쯤인가", data: "HSMM Forward · Poisson 지속시간 · 소리가 없으면 그대로 멈춤", make: beliefView,
     pose: { target: [0, -0.12, 0.05], radius: 4.2, height: 1.55, base: -0.18 },
     legend: ["빛 기둥 높이 = 그 음에 있을 확률", "바닥 = 악보 음표 · 앞줄 점선 = 쉼표", "악보 →"] },
-  { title: "계단을 매끄러운 위치로", data: "예측 음이 바뀌면 앵커 · 확정마다 템포 갱신 · 0.5초에 걸쳐 수렴", make: anchorsView,
+  { title: "계단을 매끄러운 위치로", data: "예측 음이 바뀌면 기준점 · 확정마다 템포 갱신 · 0.5초에 걸쳐 수렴", make: anchorsView,
     pose: { target: [0, 0, 0], radius: 4.4, height: 0.45, base: -0.3 },
-    legend: ["계단 = 앵커 · 점선 = 목표선 · 빛 = 플레이헤드 · 점 = 가수", "연주 시간 → · 악보 위치 ↑"],
-    live: (t) => `추종 템포 ${followerTempo(t).toFixed(2)}×` },
-  { title: "얼마나 빠르게 따라갈까", data: "입자필터: 음이 지날 때만 후보 갱신(실제 1000개, 그림 150개) · 중앙값 × 밀당(평균 1)", make: tempoView,
+    legend: ["계단 = 기준점 · 점선 = 목표선 · 빛 = 추정 위치 · 점 = 가수", "연주 시간 → · 악보 위치 ↑"],
+    live: (t) => `확정에서 잰 템포 ${followerTempo(t).toFixed(2)}×` },
+  { title: "얼마나 빠르게 따라갈까", data: "입자필터: 음이 지날 때만 후보 갱신(실제 1000개, 그림 150개) · 중앙값 × 프레이즈 곡선(평균 1)", make: tempoView,
     pose: { target: [0, -0.12, 0], radius: 4.5, height: 0.3, base: -0.1 },
-    legend: ["점 하나 = 템포 후보 하나", "아래 = 악보에서 미리 정한 밀당"],
-    live: (t) => { const m = pfTempo(t), s = shapedTempo(t); return `반주 템포 = ${m.toFixed(2)} × 밀당 ${(s / m).toFixed(2)} = ${s.toFixed(2)}×`; } },
-  { title: "세 시계의 템포", data: "세 위치를 한 번 미분한 속도 · 반주는 템포로 밀고 위치로 천천히 보정(실연 tau 1.5)", make: accompView,
+    legend: ["점 하나 = 템포 후보 하나", "아래 = 악보에서 미리 정한 프레이즈 템포 곡선"],
+    live: (t) => { const m = pfTempo(t), s = shapedTempo(t); return `반주 템포 = ${m.toFixed(2)} × 프레이즈 ${(s / m).toFixed(2)} = ${s.toFixed(2)}×`; } },
+  { title: "세 위치의 템포", data: "세 위치를 한 번 미분한 속도 · 반주는 템포로 진행하고 위치로 천천히 보정(실시간 연주 tau 1.5)", make: accompView,
     pose: { target: [0.3, -0.45, -0.3], radius: 4.4, height: 1.3, base: 0.42, sway: 0.05 },
-    legend: ["앞 → 뒤: 가수(실제 위치에서 역산) · 반주 · 추종(플레이헤드)", "높이 = 템포 · 줄마다 가운데 선 = 1×(악보 빠르기)", "연주 시간 →"],
-    live: (t) => `가수 ${singerTempo(t).toFixed(2)}× · 추종 ${headTempo(t).toFixed(2)}× · 반주 ${accompTempo(t).toFixed(2)}×` },
-  { title: "음 발화 일정", data: "위치가 음표 시작을 처음 넘는 틱에 발화 · 50ms 앞당김", make: scheduleView,
+    legend: ["앞 → 뒤: 가수(실제 위치에서 역산) · 반주 · 추정", "높이 = 템포 · 줄마다 가운데 선 = 1×(악보 빠르기)", "연주 시간 →"],
+    live: (t) => `가수 ${singerTempo(t).toFixed(2)}× · 추정 ${headTempo(t).toFixed(2)}× · 반주 ${accompTempo(t).toFixed(2)}×` },
+  { title: "음 재생 예약", data: "재생 위치가 음표 시작을 처음 넘는 프레임에 재생 · 50ms 앞당김", make: scheduleView,
     pose: { target: [0, -0.2, 0], radius: 4.6, height: 1.25, base: -0.72 },
-    legend: ["빛 커튼 = 반주 위치", "커튼을 지난 음표가 발화", "악보 →"] },
+    legend: ["빛 커튼 = 재생 위치", "커튼을 지난 음표가 재생", "악보 →"] },
   { title: "반주 오디오와 커서", data: "44.1 kHz 합성 → 장치 SR · 위치·배속 → 화면 커서", make: outputView,
     pose: { target: [0, -0.1, -1.3], radius: 5.3, height: 1.2, base: -0.25 },
     legend: ["반주 오디오", "아래 = 악보 위 화면 커서"],
     live: (t) => `반주 속도 ${accompTempo(t).toFixed(2)}×` },
 ];
-const STEPS = ["VQT 앞단 · 새 컬럼만 계산", "CNN 본체 · 인과 2D 합성곱 14층", "관측 모델 · 종 모양 창", "HSMM Forward · Poisson 지속시간", "확정 규칙 · 템포 에이전트 · 플레이헤드", "입자필터 · 앵커를 넘을 때만", "결합 · 상보 필터", "스케줄러 · 50ms 앞당김", "합성 · 44.1 kHz", "되먹임 · 다음 블록의 입력"];
+const STEPS = ["VQT 전처리 · 새 프레임만 계산", "CNN · 인과 2D 합성곱 14층", "관측 모델 · 가우시안 가중치", "HSMM Forward · Poisson 지속시간", "확정 규칙 · 템포 갱신 · 추정 위치", "입자필터 · 기준점을 넘을 때만", "결합 · 상보 필터", "스케줄러 · 50ms 앞당김", "합성 · 44.1 kHz", "참조 반주 · 다음 블록의 입력"];
 
 /* ---------- The panorama: one row of stages with the processing steps between them ---------- */
 // The last stage is repeated before the first and the first three after the last, so the camera wraps without a jump.
@@ -617,11 +617,11 @@ const FLASH = 0.18;
 
 // The three clocks, and which of them the stage in view builds: listening and locating make the follower clock,
 // anchors and tempo bridge it to the accompaniment, and the last stages are the accompaniment clock.
-const CLOCKS = [{ name: "가수", mark: "○" }, { name: "추종기", mark: "■" }, { name: "반주", mark: "◆" }];
+const CLOCKS = [{ name: "가수", mark: "○" }, { name: "추정", mark: "■" }, { name: "반주", mark: "◆" }];
 const BUILDS = [
-  { upTo: 4, rows: [1], text: "추종기의 시계를 만든다 · 들은 소리로 악보 위치를 찾는다" },
-  { upTo: 6, rows: [1, 2], text: "두 시계를 잇는다 · 앵커와 템포가 반주로 넘어간다" },
-  { upTo: 9, rows: [2], text: "반주의 시계를 만든다 · 멈추지 않고 따라붙는다" },
+  { upTo: 4, rows: [1], text: "추정 위치를 만든다 · 들은 소리로 악보 위치를 찾는다" },
+  { upTo: 6, rows: [1, 2], text: "추정을 반주로 잇는다 · 기준점과 템포가 반주로 넘어간다" },
+  { upTo: 9, rows: [2], text: "재생 위치를 만든다 · 멈추지 않고 따라붙는다" },
 ];
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -823,7 +823,7 @@ export function SignalChain3D() {
       </div>
     </div>
     <div className="clock-strip">
-      <p className="clock-title"><strong>세 개의 시계</strong><span>가수는 관측할 뿐 만들 수 없고, 추종기는 증거가 없으면 멈추고, 반주는 멈추지도 뒤로 가지도 튀지도 않습니다.</span></p>
+      <p className="clock-title"><strong>세 위치</strong><span>가수 위치는 관측만 하고, 추정 위치는 증거가 없으면 멈추고, 재생 위치는 멈추지도 뒤로 가지도 튀지도 않습니다.</span></p>
       <p className="clock-scene"><b ref={(el) => { statusRefs.current[0] = el; }} /><span ref={(el) => { statusRefs.current[1] = el; }} /><span className="clock-built">지금 보는 단계 {pad(shown[0] + 1)}·{pad(shown[1] + 1)} → {built.text}</span></p>
       <div className="clock-grid">
         <div className="clock-rows">
@@ -854,6 +854,6 @@ export function SignalChain3D() {
     <button type="button" className="pano-side is-next" aria-label="다음 단계" onClick={() => go(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
     </div>
     <div className="chain-segs">{OBJECTS.map((item, i) => <button type="button" key={item.title} className={i === current ? "on" : undefined} aria-label={`${i + 1}번 ${item.title}로 이동`} onClick={() => glideTo(i)} />)}</div>
-    <p className="figure-note">반주 엔진의 열 단계를 한 장면에 이은 그림입니다. 단계 사이 기호는 처리를, 번쩍임은 확정·입자필터 갱신·화음 발화 같은 사건을 뜻합니다. 전주·긴 숨·옥타브 실수·느려짐을 넣은 예시 연주이며, 5번 확률 분포만 설명용 모형이고 나머지는 실제 식으로 계산합니다.</p>
+    <p className="figure-note">반주 엔진의 열 단계를 한 장면에 이은 그림입니다. 단계 사이 기호는 처리를, 번쩍임은 확정·입자필터 갱신·화음 재생 같은 사건을 뜻합니다. 전주·긴 숨·옥타브 실수·느려짐을 넣은 예시 연주이며, 5번 확률 분포만 설명용 모형이고 나머지는 실제 식으로 계산합니다.</p>
   </section>;
 }

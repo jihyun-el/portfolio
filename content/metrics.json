@@ -5,7 +5,7 @@
     "computeMs": 4.5,
     "budgetMs": 10,
     "controlTicks": 9392,
-    "note": "개발 기록에 남은 실기기 계산 시간(앞단·신경망)입니다."
+    "note": "실기기에서 측정한 계산 시간(전처리·신경망)입니다."
   },
   "vqa": {
     "matrix": [

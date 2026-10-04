@@ -8,7 +8,7 @@ export function BlockContract({ contract }: { contract: Contracts["engine"] }) {
   const current = contract.stages.find(stage => stage.id === selected)!;
   return <figure className="contract-figure" id="io-contract"><figcaption><strong>한 블록이 지나가는 길</strong><span>단계를 눌러 입출력 계약 보기</span></figcaption>
     <div className="lane-heads" aria-hidden="true"><span>{contract.lanes.app}</span><span>경계</span><span>{contract.lanes.engine}</span></div>
-    <div className="contract-path"><span className="loop-label" aria-hidden="true">되먹임</span><ol>
+    <div className="contract-path"><span className="loop-label" aria-hidden="true">참조 반주</span><ol>
       {contract.stages.map((stage, i) => {
         const node = <button type="button" className="contract-node" aria-pressed={selected === stage.id} onClick={() => setSelected(stage.id)}>
           <span className="contract-step">{i + 1}</span><strong>{stage.name}</strong>
@@ -161,7 +161,7 @@ function drawCube(ctx: CanvasRenderingContext2D, width: number, height: number, 
   label("최신 →", [x1, y0 - 0.14, z1], colors.ink2, "right");
   label(`피치 ${w.bins}빈`, [x0 - 0.08, 0, z1], colors.ink2, "right");
   label(`마이크 ${w.mixChannels}`, [x0 - 0.08, y1 + 0.1, (zOf(0) + zOf(w.mixChannels - 1)) / 2], colors.ink2, "right");
-  label(`되먹임 ${w.referenceChannels}`, [x0 - 0.08, y1 + 0.1, (zOf(w.mixChannels) + zOf(w.channels - 1)) / 2], colors.ink2, "right");
+  label(`참조 반주 ${w.referenceChannels}`, [x0 - 0.08, y1 + 0.1, (zOf(w.mixChannels) + zOf(w.channels - 1)) / 2], colors.ink2, "right");
   label(`로짓 ${w.bins} × ${w.outputSlots.length}`, [x1 + 0.57, y1 + 0.16, 0], colors.ink);
 }
 
@@ -237,23 +237,23 @@ export function BodyWindowCube({ window: w }: { window: BodyWindow }) {
   const frames = emittedFrames(newest, w);
   const real = newest + 1, firstFrame = w.receptiveField - 1 - w.lookahead;
   const status = mode === "steady"
-    ? `새 컬럼 ${perBlock}개가 들어오면 창이 ${perBlock}칸 밀립니다. 가속기 호출 1회로 ${w.outputSlots.join("·")}번 칸의 프레임 ${frames.length}개를 함께 꺼냅니다.`
+    ? `새 프레임 ${perBlock}개가 들어오면 입력이 ${perBlock}칸 밀립니다. 가속기 호출 1회로 ${w.outputSlots.join("·")}번 칸의 출력 ${frames.length}개를 함께 꺼냅니다.`
     : frames.length === 0
-      ? `실제 컬럼 ${real}개. 왼쪽 ${Math.max(0, w.columns - real)}칸은 0으로 채웁니다. 출력 칸의 수용 영역 ${w.receptiveField}칸이 차기 전이라 방출하지 않습니다.`
+      ? `실제 프레임 ${real}개. 왼쪽 ${Math.max(0, w.columns - real)}칸은 0으로 채웁니다. 출력 칸의 수용영역 ${w.receptiveField}칸이 차기 전이라 출력하지 않습니다.`
       : frames.includes(firstFrame)
-        ? `실제 컬럼 ${real}개. 첫 방출은 프레임 ${firstFrame}부터입니다. 곡 시작 ${firstFrame}프레임(약 ${firstFrame * w.hopMs}ms)은 내보내지 않습니다.`
-        : `실제 컬럼 ${real}개. 블록마다 프레임 ${frames.join("·")}을 방출합니다.`;
+        ? `실제 프레임 ${real}개. 첫 출력은 프레임 ${firstFrame}부터입니다. 곡 시작 ${firstFrame}프레임(약 ${firstFrame * w.hopMs}ms)은 출력하지 않습니다.`
+        : `실제 프레임 ${real}개. 블록마다 프레임 ${frames.join("·")}을 출력합니다.`;
   const role = (slot: number): Role => frameAt(newest, slot, w) < 0 ? "pad" : slotRole(slot, w);
   const first = Math.min(...w.outputSlots) - firstFrame, lastOut = Math.max(...w.outputSlots);
 
-  return <figure className="cube-figure"><figcaption><strong>신경망 본체가 받는 창</strong><span>{w.channels} × {w.bins} × {w.columns} · f32</span></figcaption>
+  return <figure className="cube-figure"><figcaption><strong>신경망이 받는 입력</strong><span>{w.channels} × {w.bins} × {w.columns} · f32</span></figcaption>
     <div className="cube-controls">
       <div className="segmented" aria-label="보기 선택">{([["steady", "정상 동작"], ["warmup", "곡 시작 직후"]] as const).map(([id, text]) =>
         <button key={id} type="button" aria-pressed={mode === id} onClick={() => chooseMode(id)}>{text}</button>)}</div>
       <button type="button" className="play-button" onClick={() => setPlaying(!playing)}>{playing ? "일시정지" : "재생"}</button>
     </div>
     <canvas ref={canvasRef} className="cube-canvas" tabIndex={0} role="img"
-      aria-label={`${w.channels}채널, ${w.bins}빈, ${w.columns}컬럼 입력 창을 점으로 그린 도식. 오른쪽에서 새 컬럼이 들어오고 ${w.outputSlots.join("·")}번 칸이 출력 프레임이 됩니다. 방향키로 회전합니다.`}
+      aria-label={`${w.channels}채널, ${w.bins}빈, ${w.columns}프레임 입력을 점으로 그린 도식. 오른쪽에서 새 프레임이 들어오고 ${w.outputSlots.join("·")}번 칸이 출력 프레임이 됩니다. 방향키로 회전합니다.`}
       onPointerDown={event => { const sim = simRef.current; sim.dragging = true; sim.lastX = event.clientX; sim.lastY = event.clientY; event.currentTarget.setPointerCapture(event.pointerId); }}
       onPointerMove={event => { const sim = simRef.current; if (!sim.dragging) return; rotate((event.clientX - sim.lastX) * 0.006, event.pointerType === "mouse" ? (event.clientY - sim.lastY) * 0.006 : 0); sim.lastX = event.clientX; sim.lastY = event.clientY; }}
       onPointerUp={() => { simRef.current.dragging = false; }} onPointerCancel={() => { simRef.current.dragging = false; }}
@@ -264,12 +264,12 @@ export function BodyWindowCube({ window: w }: { window: BodyWindow }) {
     <p className="cube-status">{status}</p>
     <div className="slot-ruler" style={{ gridTemplateColumns: `repeat(${w.columns},minmax(0,1fr))` }} aria-hidden="true">{Array.from({ length: w.columns }, (_, slot) => <span key={slot} className={`slot slot-${role(slot)}`} />)}</div>
     <ul className="slot-legend">
-      <li><i className="slot slot-outside" />수용 영역 밖 0–{first - 1}</li>
+      <li><i className="slot slot-outside" />수용영역 밖 0–{first - 1}</li>
       <li><i className="slot slot-context" />과거 문맥 {first}–{Math.min(...w.outputSlots) - 1}</li>
       <li><i className="slot slot-output" />출력 {w.outputSlots.join("·")}</li>
       <li><i className="slot slot-lookahead" />미리 보기 {lastOut + 1}–{w.columns - 1}</li>
       {mode === "warmup" && <li><i className="slot slot-pad" />0 채움</li>}
     </ul>
-    <p className="figure-note">출력 칸 하나가 보는 범위는 {w.receptiveField}칸(과거 {firstFrame} + 자신 + 미리 보기 {w.lookahead})입니다. 창 모양이 고정이어야 가속기에서 돌아가므로 앞 {first}칸은 계산에 쓰이지 않아도 함께 넘깁니다. 점 밝기는 설명용 예시 값입니다. {w.bins}빈은 {ROWS}줄로 줄여 그렸고, 실제 한 블록(약 {w.blockMs}ms)을 느리게 재생합니다. 드래그하거나 방향키로 돌려 볼 수 있습니다.</p>
+    <p className="figure-note">출력 칸 하나가 보는 범위는 {w.receptiveField}칸(과거 {firstFrame} + 자신 + 미리 보기 {w.lookahead})입니다. 입력 크기가 고정이어야 가속기에서 실행되므로 앞 {first}칸은 계산에 쓰이지 않아도 함께 넘깁니다. 점 밝기는 설명용 예시 값입니다. {w.bins}빈은 {ROWS}줄로 줄여 그렸고, 실제 한 블록(약 {w.blockMs}ms)을 느리게 재생합니다. 드래그하거나 방향키로 돌려 볼 수 있습니다.</p>
   </figure>;
 }

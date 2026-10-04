@@ -14,7 +14,7 @@
     "skills": ["Python", "Dart", "Flutter", "Supabase", "PyTorch", "Core ML"],
     "defaultOpen": true,
     "parts": [
-      { "id": "engine", "title": "온디바이스 반주 엔진", "description": "세 시계 설계와 실기기 검증" },
+      { "id": "engine", "title": "온디바이스 반주 엔진", "description": "피치 모델 학습 · 악보 추종 · 실기기 추론" },
       { "id": "pipeline", "title": "악보 자산 파이프라인", "description": "MusicXML·12키 변환·LLM 해설" },
       { "id": "app", "title": "모바일 앱", "description": "악보·필기·동기화·소유권" }
     ]

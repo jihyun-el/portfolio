@@ -10,7 +10,7 @@ export function clockStates(t: number) {
   const singer = scene.name === "전주" ? "아직 부르지 않음" : scene.name === "후주" ? "노래 끝" : v.pitch === null || v.amp < 0.25 ? "쉼 · 소리 없음" : v.pitch !== written ? "옥타브가 튐" : "노래 중";
   const follower = frozenFor(t) > 0.08 ? "증거 없음 · 멈춤" : "듣고 따라감";
   const speed = `${accompTempo(t).toFixed(2)}×`;
-  const accomp = !singerSeen(t) ? `혼자 진행 ${speed}` : coupleGain(t) < 0.2 ? `관성으로 진행 ${speed}` : `따라붙는 중 ${speed}`;
+  const accomp = !singerSeen(t) ? `혼자 진행 ${speed}` : coupleGain(t) < 0.2 ? `자기 템포로 진행 ${speed}` : `따라붙는 중 ${speed}`;
   return { scene, singer, follower, accomp };
 }
 

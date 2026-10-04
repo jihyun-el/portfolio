@@ -18,9 +18,9 @@ export function ClassicMateMap() {
 export function EnginePerformance() {
   const engine=metrics.engine, share=Math.round(engine.computeMs/engine.budgetMs*100);
   return <figure className="performance-figure"><figcaption><strong>처리 예산 안에서 도는 계산</strong><span>실기기 기록 · ms</span></figcaption>
-    <div className="budget-label"><span>앞단 + 신경망 본체</span><strong>약 {engine.computeMs} / {engine.budgetMs}ms · 예산의 {share}%</strong></div>
+    <div className="budget-label"><span>전처리 + 신경망 추론</span><strong>약 {engine.computeMs} / {engine.budgetMs}ms · 예산의 {share}%</strong></div>
     <div className="budget-track" role="img" aria-label={`10ms 처리 예산 중 약 ${engine.computeMs}ms 사용`}><span style={{width:`${share}%`}} /><span className="budget-limit">10ms 예산</span></div>
-    <p className="figure-note">{engine.note} 앞단의 증분 계산은 기존 창 전체 계산과 비트 동일하게 대조했습니다.</p>
+    <p className="figure-note">{engine.note} 전처리의 증분 계산은 전체를 다시 계산한 값과 비트 단위로 같습니다.</p>
   </figure>;
 }
 
