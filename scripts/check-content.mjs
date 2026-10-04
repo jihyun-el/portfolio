@@ -80,7 +80,7 @@ for (const item of cases) {
   if (!/^[a-z0-9-]+$/.test(item.id) || caseIds.has(item.id) || !project) throw new Error(`Invalid case: ${item.id}`);
   if (item.part ? !project.parts?.some(part => part.id === item.part) : !item.title) throw new Error(`${item.id}: case needs a project part or its own title`);
   if (!history.repositories.some(repo => repo.id === item.repo && repo.projectId === item.projectId)) throw new Error(`${item.id}: unknown history repository`);
-  if (!item.short) throw new Error(`${item.id}: missing short label`);
+  if (!item.short || ![undefined, true, false].includes(item.fold)) throw new Error(`${item.id}: missing short label or invalid fold`);
   if (item.stack && (!Array.isArray(item.stack) || !item.stack.length)) throw new Error(`${item.id}: stack must list at least one technology`);
   for (const hard of item.hardest ?? []) if (!hard.title || !hard.body) throw new Error(`${item.id}: a hardest item needs a title and a body`);
   for (const slug of item.troubles ?? []) if (!fs.existsSync(path.join(content, "writing", `${slug}.md`))) throw new Error(`${item.id}: unknown writing ${slug}`);

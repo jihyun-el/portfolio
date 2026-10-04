@@ -20,7 +20,7 @@ ClassicMate와 멀티모달 VQA 두 프로젝트를 담은 정적 포트폴리�
 | 월별 개발 활동·실제 커밋 이력 | `content/history.json` |
 | 엔진 성능·VQA 실험과 점수 그래프 | `content/metrics.json` |
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
-| 카드의 스택 줄(`stack`, 없으면 `stack.json`에서 모음)·제일 어려웠던 것(`hardest`)·연결할 트러블슈팅 글(`troubles`)·결과 숫자(`results`) | `content/cases.json` |
+| 카드의 스택 줄(`stack`, 없으면 `stack.json`에서 모음)·제일 어려웠던 것(`hardest`)·연결할 트러블슈팅 글(`troubles`)·결과 숫자(`results`)·홈에서 한 일을 라벨 한 줄로 접어 둘지(`fold`) | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
 | 카드의 개요·한 일·결과 | `content/projects/classicmate-<part id>.md`, `content/projects/ssafy-ai-challenge.md` — 첫 문단은 개요 한 줄, 그 뒤 `## 라벨`마다 한 일 하나. 라벨 아래 첫 문단은 카드에 보이는 한 줄(숫자는 `**굵게**`), 나머지는 눌렀을 때 펼쳐지는 상세. `## 결과`는 결과 칸으로 감. 도식은 `<!-- figure:이름 -->` |
 | ClassicMate 전체 개요 글 | `content/projects/classicmate.md` |

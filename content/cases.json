@@ -26,6 +26,7 @@
     "part": "pipeline",
     "repo": "pipeline",
     "short": "악보 파이프라인",
+    "fold": true,
     "troubles": ["missing-data"],
     "metrics": ["missingData"]
   },
@@ -35,6 +36,7 @@
     "part": "app",
     "repo": "app",
     "short": "모바일 앱",
+    "fold": true,
     "metrics": ["release"],
     "results": ["release"]
   },
