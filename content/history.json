@@ -1,6 +1,6 @@
 {
   "author": "manu",
-  "method": "선택한 브랜치의 작성자 manu 커밋. 병합·문서·AI 공동작성 포함.",
+  "method": "저장소의 모든 브랜치에서 센 작성자 manu의 커밋. main과 내용이 같은 커밋은 한 번만 셈. 병합·문서·AI 공동작성 포함.",
   "months": [
     "2025-12",
     "2026-01",
@@ -18,13 +18,33 @@
       "id": "app",
       "projectId": "classicmate",
       "title": "모바일 앱",
-      "branch": "main",
-      "scopeNote": "출시 앱 main 이력",
+      "branch": "main 외 2개",
+      "branches": [
+        {
+          "name": "main",
+          "snapshot": "0d50b5a9227755878285e05aa3370ee8a56cfdfb",
+          "commits": 667,
+          "authorCommits": 636
+        },
+        {
+          "name": "feat/follower-mode",
+          "snapshot": "61cd85526c74f868db925fc068ea30a7bdfee0da",
+          "commits": 8,
+          "authorCommits": 8
+        },
+        {
+          "name": "demo/review",
+          "snapshot": "ec6873016bb70bb850597ebe3156d641807cb711",
+          "commits": 9,
+          "authorCommits": 9
+        }
+      ],
+      "scopeNote": "출시 앱 main 이력과 main에 없는 브랜치 2개",
       "snapshot": "0d50b5a9227755878285e05aa3370ee8a56cfdfb",
-      "commits": 667,
-      "authorCommits": 636,
+      "commits": 684,
+      "authorCommits": 653,
       "firstDate": "2025-12-10",
-      "lastDate": "2026-05-24",
+      "lastDate": "2026-07-06",
       "months": [
         {
           "month": "2025-12",
@@ -36,7 +56,7 @@
         },
         {
           "month": "2026-02",
-          "count": 76
+          "count": 85
         },
         {
           "month": "2026-03",
@@ -56,7 +76,7 @@
         },
         {
           "month": "2026-07",
-          "count": 0
+          "count": 8
         },
         {
           "month": "2026-08",
@@ -85,6 +105,12 @@
           "date": "2026-05-04",
           "title": "Apple 결제 서명 검증 자체 구현",
           "description": "결제는 성공했는데 음표가 충전되지 않던 장애에서, 서버 런타임에 없는 인증서 기능을 피해 jose·pkijs로 서명 검증을 다시 구현했습니다."
+        },
+        {
+          "sha": "f9c57ae5e8cb213b8bf2bd911f6691ecf7f3225d",
+          "date": "2026-07-06",
+          "title": "반주 엔진 앱 연동",
+          "description": "앱에 연결한 반주 엔진을 반주 화면에서 제어하도록 상태 모델과 화면 제어를 붙였습니다. 같은 날 네이티브 브릿지와 네이티브 오디오 결선을 함께 넣었습니다."
         }
       ]
     },
@@ -166,11 +192,25 @@
       "id": "engine",
       "projectId": "classicmate",
       "title": "반주 엔진",
-      "branch": "main",
+      "branch": "main 외 1개",
+      "branches": [
+        {
+          "name": "main",
+          "snapshot": "4ed6f3a3fdb04ed0ec95e5e7459bc3a14630fa07",
+          "commits": 296,
+          "authorCommits": 296
+        },
+        {
+          "name": "feat/voicing-relabel",
+          "snapshot": "57bb0a5ff91d3f8ce05bf787718af535af62dcf4",
+          "commits": 4,
+          "authorCommits": 4
+        }
+      ],
       "scopeNote": "5~7월 개발, 8월 코드 대조 문서 포함",
       "snapshot": "4ed6f3a3fdb04ed0ec95e5e7459bc3a14630fa07",
-      "commits": 296,
-      "authorCommits": 296,
+      "commits": 300,
+      "authorCommits": 300,
       "firstDate": "2026-05-16",
       "lastDate": "2026-08-24",
       "months": [
@@ -200,7 +240,7 @@
         },
         {
           "month": "2026-06",
-          "count": 195
+          "count": 199
         },
         {
           "month": "2026-07",

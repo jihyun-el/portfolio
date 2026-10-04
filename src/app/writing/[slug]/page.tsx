@@ -14,5 +14,5 @@ export default async function WritingDetailPage({ params }: { params: Promise<{ 
   const { slug } = await params;
   const post = getWriting().find((item) => item.slug === slug);
   if (!post) notFound();
-  return <article className="article"><Link className="back-link" href="/writing/">개발 기록 목록</Link><header className="article-header"><h1>{post.title}</h1></header><Markdown>{post.body}</Markdown></article>;
+  return <article className="article"><Link className="back-link" href="/writing/">트러블슈팅 목록</Link><header className="article-header"><h1>{post.title}</h1></header><Markdown>{post.body}</Markdown></article>;
 }
