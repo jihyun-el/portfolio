@@ -1,18 +1,23 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 
-// three.js is large and the panorama moves on its own, so it stays a still poster until
-// the reader asks for it. It sits on the home page right under the engine row.
-const SignalChain3D = dynamic(() => import("@/components/signal-chain-3d").then((m) => m.SignalChain3D), { ssr: false, loading: () => <div className="pano-poster is-loading" aria-hidden="true" /> });
+// The panorama sits open under the engine card and plays on its own. three.js is large, so it is
+// fetched when the reader comes near; until then, and without JavaScript, a still of the first
+// scene holds its place.
+const still = <div className="pano-poster" aria-hidden="true" />;
+const SignalChain3D = dynamic(() => import("@/components/signal-chain-3d").then((m) => m.SignalChain3D), { ssr: false, loading: () => still });
 
 export function SignalChainSection({ poster }: { poster: string }) {
-  const [play, setPlay] = useState(false);
-  return <div className="part-inside" id="signal-chain">
-    {play ? <SignalChain3D /> : <button type="button" className="pano-poster" style={{ backgroundImage: `linear-gradient(90deg,rgba(5,5,5,.92) 0,rgba(5,5,5,.6) 38%,rgba(5,5,5,.1) 75%),url(${poster})` }} onClick={() => setPlay(true)}>
-      <span className="pano-play" aria-hidden="true">▶</span>
-      <span><b>소리가 들어와 반주가 되기까지</b><span>반주 엔진의 열 단계를 한 장면으로 재생합니다 · 예시 연주</span></span>
-    </button>}
+  const [near, setNear] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const seen = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setNear(true); seen.disconnect(); } }, { rootMargin: "1600px 0px" });
+    seen.observe(ref.current!);
+    return () => seen.disconnect();
+  }, []);
+  return <div className="part-inside" id="signal-chain" ref={ref} style={{ "--poster": `url(${poster})` } as CSSProperties}>
+    {near ? <SignalChain3D /> : still}
   </div>;
 }

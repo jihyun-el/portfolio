@@ -162,13 +162,8 @@ button { font:inherit; color:inherit; }
 .gain:not(.gain-compact) .gain-bars { font-size:var(--fs-s); } .gain:not(.gain-compact) .gain-bars i { height:14px; }
 .read-row { display:flex; flex-wrap:wrap; gap:12px 24px; }
 .part-inside { margin:0; padding:16px 0; border-top:1px solid var(--line); }
-.unit .pano-poster:not(.is-loading) { min-height:108px; padding:18px clamp(16px,2.4vw,28px); }
-.unit .pano-play { width:44px; height:44px; font-size:14px; }
-.pano-poster { display:flex; align-items:center; gap:20px; width:100%; min-height:clamp(220px,26vw,340px); padding:28px clamp(20px,3vw,40px); border:0; background-color:#050505; background-size:cover; background-position:center right; color:#f2f2f2; text-align:left; cursor:pointer; }
-.pano-poster b { display:block; font-size:var(--fs-l); font-weight:900; letter-spacing:-.02em; } .pano-poster span span { display:block; margin-top:4px; font-size:var(--fs-s); color:#a6a6a6; }
-.pano-play { display:grid; place-items:center; flex:none; width:56px; height:56px; border:1.5px solid #f2f2f2; border-radius:50%; font-size:18px; transition:transform .15s; }
-.pano-poster:hover .pano-play { transform:scale(1.08); background:#f2f2f2; color:#050505; }
-.pano-poster.is-loading { min-height:500px; cursor:default; }
+/* The panorama's place before three.js arrives: a still of its first scene, about as tall as the open panorama. */
+.pano-poster { min-height:855px; background:#050505 var(--poster) center / 100% auto no-repeat; }
 .ctrl { display:flex; align-items:center; gap:14px; }
 .ctrl button { width:48px; height:48px; border:1px solid var(--ink); background:var(--paper); font-size:18px; font-weight:700; cursor:pointer; }
 .ctrl button:hover { background:var(--ink); color:var(--paper); }
@@ -530,6 +525,7 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
   .project-h { grid-template-columns:1fr; } .project-no { flex-direction:row; align-items:baseline; gap:8px; width:max-content; } .project-no b { margin-top:10px; }
 }
 @media (max-width:760px) {
+  .pano-poster { min-height:815px; }
   .unit-sec { grid-template-columns:minmax(0,1fr); } .unit-sec>h4 { padding-top:0; }
   .unit-h { grid-template-columns:1fr; }
   .work summary,.work-flat { grid-template-columns:minmax(0,1fr) 18px; }
@@ -541,6 +537,7 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
 }
 @media (max-width:600px) {
   .stats { grid-template-columns:1fr; }
+  .pano-poster { min-height:1000px; }
   .mirror-panes { grid-template-columns:1fr; }
   .idea-flow { grid-template-columns:1fr; gap:26px; } .idea-flow li+li::before { content:"↓"; left:0; top:-26px; width:100%; height:26px; line-height:26px; transform:none; } .idea-flow li.is-bonus::before { content:"+"; }
   :root { --bar-h:56px; }
