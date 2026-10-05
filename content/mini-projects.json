@@ -1,0 +1,11 @@
+[
+  {
+    "id": "mirror-pose",
+    "title": "거울 한 장으로 3D 자세",
+    "period": "2025.07 · 2주",
+    "program": "인텔 AI For Future Workforce",
+    "summary": "카메라 두 대 없이 3D 관절을 얻으려고, 거울에 비친 모습을 두 번째 시점으로 썼습니다.",
+    "tags": ["Ultralytics", "OpenCV", "SciPy"],
+    "thumb": "mirror-pose"
+  }
+]

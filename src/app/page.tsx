@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getWriting, profile, projects, sitePath } from "@/lib/content";
+import { getWriting, miniProjects, profile, projects, sitePath } from "@/lib/content";
 import { caseViews, statViews } from "@/lib/showcase";
 import { CommitActivity, CommitTimeline } from "@/components/history";
 import { StackSection } from "@/components/stack-section";
+import { MiniProjectBody, MiniProjects, miniTag } from "@/components/mini-projects";
 import { ProjectSection } from "@/components/project-section";
 import { PageMap, type MapItem } from "@/components/page-map";
 import { DrawerHost, type DrawerPanel } from "@/components/drawer";
@@ -26,6 +27,7 @@ export default function HomePage() {
     ]),
     { id: "writing", label: "트러블슈팅", level: 1 },
     { id: "skills", label: "기술 스택", level: 1 },
+    { id: "mini", label: "미니 프로젝트", level: 1 },
     { id: "commits", label: "개발 커밋", level: 1 },
     { id: "contact", label: "연락", level: 1 },
   ];
@@ -47,6 +49,7 @@ export default function HomePage() {
       ];
     }),
     ...writing.map((post): DrawerPanel => ({ key: `writing/${post.slug}`, group: "writing", kicker: "트러블슈팅", title: post.title, body: <Markdown>{post.body}</Markdown> })),
+    ...miniProjects.map((item): DrawerPanel => ({ key: `mini/${item.id}`, group: "mini", kicker: `미니 프로젝트 · ${miniTag(item)}`, title: item.title, body: <MiniProjectBody item={item} /> })),
   ];
   const routes: Record<string, string> = { "classicmate#io-contract": "classicmate/engine" };
   for (const project of projects) for (const part of project.parts ?? []) routes[`${project.id}#${part.id}`] = `${project.id}/${part.id}`;
@@ -85,6 +88,7 @@ export default function HomePage() {
       </article>)}</div>
     </div></section>
     <StackSection units={parts} />
+    <MiniProjects />
     <section className="sec" id="commits"><div className="wrap">
       <div className="sec-h"><h2>개발 커밋</h2><p>저장소별 월간 커밋과 주요 변경</p></div>
       <CommitActivity />

@@ -13,6 +13,22 @@ export function ClassicMateMap() {
   </figure>;
 }
 
+// How the mirror project's question led to its idea: each step is the reason for the next.
+export function MirrorIdeaFlow() {
+  const steps = [
+    { kicker: "필요", title: "3D 시점이 필요하다", note: "관절 각도를 재려면 관절의 3D 좌표가 있어야 함" },
+    { kicker: "방법", title: "카메라가 두 대면 된다", note: "두 시점이면 3D를 계산할 수 있음" },
+    { kicker: "제약", title: "두 대는 쓰기 불편하다", note: "사용자가 카메라 두 대를 세우고 맞춰야 함" },
+    { kicker: "발상", title: "거울 앞에 세운다", note: "거울상이 두 번째 시점이 됨", mark: "is-answer" },
+    { kicker: "부수 효과", title: "거울은 이미 있다", note: "운동·재활 공간에는 전신 거울이 있음", mark: "is-bonus" },
+  ];
+  return <figure className="diagram-figure"><figcaption>카메라 한 대로 3D를 얻기까지</figcaption>
+    <ol className="idea-flow">{steps.map((step) => <li key={step.kicker} className={step.mark}>
+      <span className="flow-input">{step.kicker}</span><strong>{step.title}</strong><span>{step.note}</span>
+    </li>)}</ol>
+  </figure>;
+}
+
 // The engine's time inside its 10ms budget. The before/after of the front end is the Gain
 // chart in the part summary above, so it is not repeated here.
 export function EnginePerformance() {

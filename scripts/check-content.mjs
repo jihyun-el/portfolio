@@ -12,6 +12,20 @@ if (!profile.name || !profile.role || !Array.isArray(profile.links)) throw new E
 for (const link of profile.links) {
   if (!/^(https:\/\/|mailto:)/.test(link.url)) throw new Error(`Unsupported contact URL: ${link.url}`);
 }
+// A mini project is one card: a title, when and where, one sentence and its tools, plus its text in content/mini/<id>.md.
+// `thumb` names a card picture in src/components/mini-projects.tsx.
+const miniProjects = JSON.parse(fs.readFileSync(path.join(content, "mini-projects.json"), "utf8"));
+const miniThumbs = new Set(["mirror-pose"]), miniIds = new Set();
+if (!Array.isArray(miniProjects)) throw new Error("mini-projects.json must be a list");
+for (const item of miniProjects) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id) || miniIds.has(item.id)) throw new Error(`Invalid or duplicate mini project ID: ${item.id}`);
+  for (const key of ["title", "period", "program", "summary"]) {
+    if (typeof item[key] !== "string" || !item[key].trim()) throw new Error(`${item.id}: missing ${key}`);
+  }
+  if (!Array.isArray(item.tags) || !item.tags.length || (item.thumb && !miniThumbs.has(item.thumb))) throw new Error(`${item.id}: needs tags and a known thumb name`);
+  if (!fs.existsSync(path.join(content, "mini", `${item.id}.md`))) throw new Error(`${item.id}: mini project Markdown missing`);
+  miniIds.add(item.id);
+}
 // Every technology names the language it was used through; a unit's stack line lists languages first.
 if (!Array.isArray(stack.languages) || !stack.languages.length || !Array.isArray(stack.groups) || !stack.groups.length) throw new Error("stack.json needs languages and groups");
 const technologies = new Set(), languages = new Set(stack.languages.map(item => item.name));
@@ -24,9 +38,10 @@ for (const language of stack.languages) if (!stack.groups.some(group => group.ti
 const brandIcons = JSON.parse(fs.readFileSync(path.join(root, "src/lib/brand-icons.json"), "utf8"));
 for (const item of stackEntries) {
   if (item.icon && !brandIcons[item.icon]) throw new Error(`${item.name}: no logo named ${item.icon} in src/lib/brand-icons.json`);
+  // A technology belongs to a main project's unit, or to a mini project (`mini`), never both.
   const project = projects.find(project => project.id === item.projectId);
-  if (!item.name || !item.description || technologies.has(item.name) || !project) throw new Error(`Invalid stack entry: ${item.name}`);
-  if (item.part && !project.parts?.some(part => part.id === item.part)) throw new Error(`Invalid stack project part: ${item.name}`);
+  if (!item.name || !item.description || technologies.has(item.name) || Boolean(project) === miniIds.has(item.mini)) throw new Error(`Invalid stack entry: ${item.name}`);
+  if (item.part && !project?.parts?.some(part => part.id === item.part)) throw new Error(`Invalid stack project part: ${item.name}`);
   technologies.add(item.name);
 }
 const repositories = new Set();
@@ -101,7 +116,7 @@ for (const item of cases) {
   caseIds.add(item.id);
 }
 for (const tech of stackEntries) {
-  if (!cases.some(item => item.projectId === tech.projectId && item.part === tech.part)) throw new Error(`No case covers technology ${tech.name}`);
+  if (!tech.mini && !cases.some(item => item.projectId === tech.projectId && item.part === tech.part)) throw new Error(`No case covers technology ${tech.name}`);
 }
 for (const key of profile.stats) if (!cases.some(item => item.metrics.includes(key))) throw new Error(`Home stat ${key} belongs to no case`);
 const matrixKeys = new Set(metrics.vqa.matrix.map(row => `${row.size}-${row.pixels}`));
@@ -129,7 +144,7 @@ for (const project of projects) {
     if (!fs.existsSync(path.join(content, "projects", `${project.id}-${part.id}.md`))) throw new Error(`${project.id}: missing part Markdown ${part.id}`);
   }
 }
-for (const folder of ["projects", "writing"]) {
+for (const folder of ["projects", "writing", "mini"]) {
   for (const name of fs.readdirSync(path.join(content, folder))) {
     if (!name.endsWith(".md")) continue;
     const text = fs.readFileSync(path.join(content, folder, name), "utf8");

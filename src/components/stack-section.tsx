@@ -18,7 +18,8 @@ function Logo({ icon }: { icon?: string }) {
 // The tech stack in three sizes, so the main field reads first: large cells for the main field,
 // compact lists for the other fields, one line for the remaining tools.
 export function StackSection({ units }: { units: CaseView[] }) {
-  const unitOf = (entry: { projectId: string; part?: string }) => units.find((unit) => unit.projectId === entry.projectId && unit.part === entry.part)!;
+  // Where a technology was used: a unit of a main project, or the mini project section.
+  const unitOf = (entry: { projectId?: string; part?: string; mini?: string }) => entry.mini ? { anchor: "mini", short: "미니 프로젝트" } : units.find((unit) => unit.projectId === entry.projectId && unit.part === entry.part)!;
   // A language leads the group it is mostly used in.
   const groups = stack.groups.map((group) => ({ ...group, items: [...stack.languages.filter((language) => language.group === group.title).map((language) => ({ ...language, mode: undefined })), ...group.items] }));
   const tier = (name: string) => groups.filter((group) => group.tier === name);

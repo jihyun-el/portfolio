@@ -14,6 +14,10 @@
       {"name":"SciPy","icon":"scipy","language":"Python","description":"위치 추정의 확률 계산, 합성곱·창 함수·보간.","projectId":"classicmate","part":"engine"},
       {"name":"librosa","icon":"librosa","language":"Python","description":"오디오 로딩과 리샘플링, CQT 특징 추출, DTW 정렬.","projectId":"classicmate","part":"engine"}
     ]},
+    {"title":"Vision","tier":"sub","items":[
+      {"name":"Ultralytics","icon":"ultralytics","language":"Python","description":"YOLO11-pose로 사진 속 실제 사람과 거울상의 관절 17개 검출.","mini":"mirror-pose"},
+      {"name":"OpenCV","icon":"opencv","language":"Python","description":"검출한 관절 좌표의 렌즈 왜곡 보정, 업로드 이미지 디코딩과 크기 변환.","mini":"mirror-pose"}
+    ]},
     {"title":"LLM","tier":"sub","items":[
       {"name":"Gemini API","icon":"googlegemini","language":"Python","description":"검색 기반 사실 수집, 곡 분석 구조화, 근거 필드가 있는 코칭 단계 분리.","projectId":"classicmate","part":"pipeline"}
     ]},

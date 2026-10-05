@@ -6,6 +6,7 @@ ClassicMate와 멀티모달 VQA 두 프로젝트를 담은 정적 포트폴리�
 
 - `/`, `/projects/classicmate/`, `/projects/ssafy-ai-challenge/`
 - `/writing/`, `/writing/<글 slug>/`
+- `/mini/<미니 프로젝트 id>/`
 
 `main`에 push하면 같은 주소로 자동 배포된다. `gh-pages` 브랜치는 첫 제출 때 올린 정적 결과물이라 지우지 않는다. 생성된 HTML은 직접 편집하지 않는다.
 
@@ -16,12 +17,14 @@ ClassicMate와 멀티모달 VQA 두 프로젝트를 담은 정적 포트폴리�
 | 바꾸려는 것 | 파일 |
 |---|---|
 | 이름·소개·경험·공개 링크 | `content/profile.json` |
-| 기술 스택: 언어(Python·Dart)와 기술마다 거친 언어·사용 설명·프로젝트 연결. 묶음의 `tier`가 크기를 정함 — `main`은 큰 칸, `sub`는 작은 목록, `tool`은 이름만 한 줄 | `content/stack.json` |
+| 기술 스택: 언어(Python·Dart)와 기술마다 거친 언어·사용 설명·프로젝트 연결(대표 프로젝트는 `projectId`·`part`, 미니 프로젝트는 `mini`). 묶음의 `tier`가 크기를 정함 — `main`은 큰 칸, `sub`는 작은 목록, `tool`은 이름만 한 줄 | `content/stack.json` |
 | 월별 개발 활동·실제 커밋 이력 | `content/history.json` |
 | 엔진 성능·VQA 실험과 점수 그래프 | `content/metrics.json` |
 | 프로젝트 카드·순서·접힘 초기 상태 | `content/projects.json` |
 | 카드의 스택 줄(`stack`, 없으면 `stack.json`에서 모음)·제일 어려웠던 것(`hardest`)·연결할 트러블슈팅 글(`troubles`)·결과 숫자(`results`)·홈에서 한 일을 라벨 한 줄로 접어 둘지(`fold`) | `content/cases.json` |
 | 엔진 입출력 계약 도식 | `content/contracts.json` |
+| 미니 프로젝트 카드: 제목·기간·과정 이름·소개 한 문장·기술 이름. `thumb`은 카드 그림의 이름(`src/components/mini-projects.tsx`에 등록) | `content/mini-projects.json` |
+| 미니 프로젝트 본문(카드를 누르면 서랍에 열림) | `content/mini/<id>.md` — 제목 없이 본문만. 도식은 `<!-- figure:이름 -->` |
 | 카드의 개요·한 일·결과 | `content/projects/classicmate-<part id>.md`, `content/projects/ssafy-ai-challenge.md` — 첫 문단은 개요 한 줄, 그 뒤 `## 라벨`마다 한 일 하나. 라벨 아래 첫 문단은 카드에 보이는 한 줄(숫자는 `**굵게**`), 나머지는 눌렀을 때 펼쳐지는 상세. `## 결과`는 결과 칸으로 감. 도식은 `<!-- figure:이름 -->`, 식은 `$$…$$`(문장 안에서는 `$…$`) |
 | ClassicMate 전체 개요 글 | `content/projects/classicmate.md` |
 | 트러블슈팅 글 추가 | `content/writing/<영문-slug>.md` — 첫 줄은 `# 글 제목`, 첫 문단은 홈 카드에 실리는 한 문장 요약. 목록은 파일 이름순. 둘째 줄에 `<!-- home: hidden -->`을 두면 홈 목록에서만 빠지고 글 주소는 남음 |

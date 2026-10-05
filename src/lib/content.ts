@@ -28,7 +28,8 @@ export type Project = {
 };
 
 export type Writing = { slug: string; title: string; excerpt: string; body: string; onHome: boolean };
-export type StackEntry = { name: string; icon?: string; description: string; projectId: string; part?: string };
+// A technology belongs to a unit of a main project (`projectId`, `part`) or to a mini project (`mini`).
+export type StackEntry = { name: string; icon?: string; description: string; projectId?: string; part?: string; mini?: string };
 export type Language = StackEntry & { group: string };
 export type Technology = StackEntry & { language: string; mode?: string };
 export type StackGroup = { title: string; tier: "main" | "sub" | "tool"; items: Technology[] };
@@ -43,6 +44,7 @@ export type UnitDoc = { overview: string; work: UnitWork[]; result?: UnitWork };
 export type ContractStage = { id: string; owner: "app" | "engine"; name: string; rate: string; handoff?: { direction: "to-engine" | "to-app" | "both"; label: string }; input: string; output: string; rule: string };
 export type BodyWindow = { channels: number; mixChannels: number; referenceChannels: number; bins: number; columns: number; hopMs: number; blockMs: number; receptiveField: number; lookahead: number; outputSlots: number[] };
 export type Contracts = { engine: { lanes: { app: string; engine: string }; stages: ContractStage[]; threadRules: { subject: string; rule: string }[]; window: BodyWindow; note: string } };
+export type MiniProject = { id: string; title: string; period: string; program: string; summary: string; tags: string[]; thumb?: string };
 const directory = path.join(process.cwd(), "content");
 
 export const profile: Profile = JSON.parse(fs.readFileSync(path.join(directory, "profile.json"), "utf8"));
@@ -52,6 +54,7 @@ export const history: History = JSON.parse(fs.readFileSync(path.join(directory, 
 export const metrics: Metrics = JSON.parse(fs.readFileSync(path.join(directory, "metrics.json"), "utf8"));
 export const cases: Case[] = JSON.parse(fs.readFileSync(path.join(directory, "cases.json"), "utf8"));
 export const contracts: Contracts = JSON.parse(fs.readFileSync(path.join(directory, "contracts.json"), "utf8"));
+export const miniProjects: MiniProject[] = JSON.parse(fs.readFileSync(path.join(directory, "mini-projects.json"), "utf8"));
 
 export function sitePath(pathname: string) {
   return withBasePath(process.env.PAGES_BASE_PATH || "", pathname);
@@ -86,6 +89,11 @@ export function getProjectPartBody(id: string, part: string) {
   const project = projects.find((item) => item.id === id);
   if (!project?.parts?.some((item) => item.id === part)) throw new Error(`Unknown project part: ${id}/${part}`);
   return fs.readFileSync(path.join(directory, "projects", `${id}-${part}.md`), "utf8");
+}
+
+export function getMiniBody(id: string) {
+  if (!miniProjects.some((item) => item.id === id)) throw new Error(`Unknown mini project: ${id}`);
+  return fs.readFileSync(path.join(directory, "mini", `${id}.md`), "utf8");
 }
 
 // A unit is a project part, or a whole project that has no parts. Its Markdown is one overview

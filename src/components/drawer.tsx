@@ -29,8 +29,9 @@ export function DrawerHost({ panels, basePath, routes }: { panels: DrawerPanel[]
       const anchor = fragment && key !== `${id}/${fragment}` ? fragment : null;
       return byKey.current.has(key) ? [key, anchor] : null;
     }
-    const post = path.match(/^\/writing\/([a-z0-9-]+)\/?$/);
-    return post && byKey.current.has(`writing/${post[1]}`) ? [`writing/${post[1]}`, null] : null;
+    // A troubleshooting post or a mini project: the drawer key is the page address itself.
+    const page = path.match(/^\/((?:writing|mini)\/[a-z0-9-]+)\/?$/);
+    return page && byKey.current.has(page[1]) ? [page[1], null] : null;
   }, [basePath, routes]);
 
   const open = useCallback((key: string, anchor: string | null) => {
