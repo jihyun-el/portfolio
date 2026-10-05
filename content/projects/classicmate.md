@@ -4,7 +4,7 @@
 
 | 부분 | 하는 일 | 스택 |
 |---|---|---|
-| [반주 엔진](#engine) | 가수의 노래를 마이크로 받아 악보 위 위치를 10ms마다 추정하고, 그 위치에 맞춰 피아노 반주를 재생 | Python · PyTorch · Core ML · Rust |
+| [반주 엔진](#engine) | 노래에서 가수의 악보 위치를 10ms마다 추정. 템포는 위치가 음표를 넘어간 간격에서 사후에 계산하고, 피아노 반주는 그 템포로 진행 | Python · PyTorch · Core ML · Rust |
 | [악보 파이프라인](#pipeline) | MusicXML에서 12개 조의 PDF 악보·반주 MIDI·커서 좌표와 곡 해설을 생성 | Python · verovio · music21 · Gemini API |
 | [모바일 앱](#app) | 악보 열람과 필기, MIDI 반주, 기기 간 동기화, 인앱 결제 | Dart · Flutter · Supabase |
 
