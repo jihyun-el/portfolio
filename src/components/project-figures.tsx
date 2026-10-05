@@ -104,7 +104,7 @@ export function VqaSolution() {
       <li><div className="sol-stage"><b>Submission</b><span>최종 답안 두 개</span></div><div className="sol-body">
         <div className="sol-two">
           <div className="sol-answer is-final"><b>답안 1 · Ensemble + 초반 모델 7개의 다수결 한 표</b><p>Public {metrics.vqa.stages.at(-1)!.score.toFixed(5)} · Private {metrics.vqa.leaderboard.private.score.toFixed(5)}</p></div>
-          <div className="sol-answer"><b>답안 2 · Ensemble</b><p>Public 0.97616 · 미리 정한 규칙만 사용</p></div>
+          <div className="sol-answer"><b>답안 2 · Ensemble</b><p>Public 0.97616 · Private 0.97795 · 미리 정한 규칙만 사용</p></div>
         </div>
       </div></li>
     </ol>
