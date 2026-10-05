@@ -16,7 +16,7 @@
         "body": "위치 추정, 템포 추정, 둘의 결합 구조를 2026년 5월 16일부터 6월 10일까지 실험으로 정했습니다. 칼만 필터, 결합 HMM, 위치·템포 결합 상태공간, 모드 전환 필터(IMM)를 구현해 측정과 청취로 비교하고 폐기했습니다. IMM은 세 모드의 확률이 33/33/33으로 나왔습니다. 모드를 가르는 가속도가 위치의 2차 미분이라 잡음이 신호보다 컸습니다. 최종 구조는 HSMM 위치 추정, 입자 필터 템포 추정, 재생 위치 분리입니다."
       }
     ],
-    "troubles": ["three-clocks", "silence-crater", "closed-loop", "validation-boundaries"],
+    "troubles": ["realtime-model-design", "three-clocks", "silence-crater", "closed-loop", "validation-boundaries"],
     "metrics": ["frontend", "compute", "controlTicks"],
     "results": ["frontend", "compute", "controlTicks"]
   },
