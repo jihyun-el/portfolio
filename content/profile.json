@@ -2,7 +2,7 @@
   "name": "우지현",
   "subtitle": "AI/ML Portfolio",
   "role": "AI/ML Engineer",
-  "heroLines": ["DSP", "Mobile"],
+  "heroLines": ["Audio DSP", "Flutter"],
   "card": [
     { "label": "주력 언어", "value": "Python · Dart" },
     { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" },

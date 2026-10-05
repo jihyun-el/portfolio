@@ -10,7 +10,7 @@
       {"name":"PEFT (LoRA·QLoRA)","icon":"huggingface","language":"Python","description":"16GB GPU에서 4비트 VLM 학습으로 팀 공통 출발점 구성. A100에서 대형 VLM을 BF16으로 학습하고 보기 순서 섞기 적용.","projectId":"ssafy-ai-challenge"},
       {"name":"Core ML","icon":"apple","language":"Python","description":"iOS 신경망 가속기에서 신경망 추론 실행. 실기기 계산 시간·호출 횟수 검증.","projectId":"classicmate","part":"engine"}
     ]},
-    {"title":"DSP","tier":"sub","items":[
+    {"title":"Audio DSP","tier":"sub","items":[
       {"name":"SciPy","icon":"scipy","language":"Python","description":"위치 추정의 확률 계산, 합성곱·창 함수·보간.","projectId":"classicmate","part":"engine"},
       {"name":"librosa","icon":"librosa","language":"Python","description":"오디오 로딩과 리샘플링, CQT 특징 추출, DTW 정렬.","projectId":"classicmate","part":"engine"}
     ]},
