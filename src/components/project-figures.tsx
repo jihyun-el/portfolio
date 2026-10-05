@@ -78,14 +78,14 @@ export function VqaSolution() {
         <strong>VLM 세 개를 원래 정밀도로 LoRA 학습</strong>
         <p className="sol-chips">{["rank 16", "2에폭", "보기 순서 섞기", "정답 글자에만 손실", "이미지 인코더 고정"].map((chip) => <span key={chip}>{chip}</span>)}</p>
       </div></li>
-      <li><div className="sol-stage"><b>TTA</b><span>Test-Time Augmentation<br />보기 순서 × 입력 크기</span></div><div className="sol-body">
+      <li><div className="sol-stage"><b>TTA</b><span>Test-Time Augmentation</span><span>보기 순서 × 입력 크기</span></div><div className="sol-body">
         <div className="sol-lanes">{ttaPlans.map((plan) => <div key={plan.name}>
           <strong>{plan.name}</strong><p className="sol-axis">{plan.axis}</p>
           <div className="tta" role="img" aria-label={`${plan.name}: 문항당 추론 ${runs(plan, "A")}회, 불확실한 문항은 ${runs(plan, "AM")}회`}>
             <span />{answerOrders.map((order) => <em key={order}>{order}</em>)}
             {plan.rows.map(([size, row]) => [<span key={size}>{size}</span>, ...[...row].map((cell, i) => <i key={size + i} data-s={cell} />)])}
           </div>
-          <p className="sol-count">문항당 추론 <b>{runs(plan, "A")}회</b> → 불확실 문항 <b>{runs(plan, "AM")}회</b></p>
+          <p className="sol-count"><span>문항당 추론 <b>{runs(plan, "A")}회</b></span> <span>→ 불확실 문항 <b>{runs(plan, "AM")}회</b></span></p>
         </div>)}</div>
         <p className="sol-legend"><span><i data-s="A" />모든 문항</span><span><i data-s="M" />불확실한 문항에만 추가</span><span><i data-s="-" />사용 안 함</span></p>
         <p>보기 순서끼리는 확률을, 입력 크기끼리는 로그 확률을 평균</p>
@@ -96,7 +96,7 @@ export function VqaSolution() {
       <li><div className="sol-stage"><b>Cascade</b><span>불확실한 문항만 다시 채점</span></div><div className="sol-body">
         <strong>{uncertain}문항({share(uncertain)}%)에만 추가 계산</strong>
         <div className="sol-meter" role="img" aria-label={`${total.toLocaleString("ko-KR")}문항 중 확정 ${share(settled)}%, 불확실 ${share(uncertain)}%`}><span style={{ width: `${share(settled)}%` }} /><span /></div>
-        <div className="sol-two">
+        <div className="sol-two is-split">
           <div><b>확정 {settled.toLocaleString("ko-KR")}문항 · {share(settled)}%</b><p>기본 답을 그대로 사용</p></div>
           <div><b>불확실 {uncertain}문항 · {share(uncertain)}%</b><p>세 모델의 답이 갈리거나 1·2등 로그 확률 차 &lt; 2.0. TTA를 넓히고 Qwen 두 모델을 전체 데이터까지 학습한 모델로 교체</p></div>
         </div>

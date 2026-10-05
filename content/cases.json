@@ -6,6 +6,7 @@
     "repo": "engine",
     "short": "반주 엔진",
     "stack": ["Python", "PyTorch", "Core ML (iOS 신경망 가속기)", "Rust (AI 에이전트 구현)"],
+    "lead": ["문제 정의", "신경망 설계", "학습 데이터", "저전력 모드 기준"],
     "hardest": [
       {
         "title": "성악에는 검출할 음 시작점이 없다",

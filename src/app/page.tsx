@@ -73,11 +73,12 @@ export default function HomePage() {
           {profile.education.map((course) => <div key={course.title}><dt>교육</dt><dd>{course.title}<small className="num">{course.period}</small></dd></div>)}
         </dl>
       </aside>
-    </section>
-    <section className="wrap stats" aria-label="대표 결과">
-      {statViews().map((stat, i) => <a className="stat reveal" key={stat.label} href={`#${stat.anchor}`} style={{ animationDelay: `${i * 0.08}s` }}>
-        <b className="num">{stat.value}{stat.unit && <small>{stat.unit}</small>}</b><span>{stat.label}</span><i>{stat.context} ↓</i>
-      </a>)}
+      {/* The results sit under both columns on a wide screen; on a narrow one they come before the card. */}
+      <section className="stats" aria-label="대표 결과">
+        {statViews().map((stat, i) => <a className="stat reveal" key={stat.label} href={`#${stat.anchor}`} style={{ animationDelay: `${i * 0.08}s` }}>
+          <b className="num">{stat.value}{stat.unit && <small>{stat.unit}</small>}</b><span>{stat.label}</span><i>{stat.context} ↓</i>
+        </a>)}
+      </section>
     </section>
     <div id="projects">{projects.map((project, i) => <ProjectSection key={project.id} project={project} index={i} total={projects.length} parts={parts.filter((part) => part.projectId === project.id)} />)}</div>
     <section className="sec" id="writing"><div className="wrap">

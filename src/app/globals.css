@@ -49,7 +49,7 @@ button { font:inherit; color:inherit; }
 .icon-button:hover { background:var(--ink); color:var(--paper); }
 
 /* Hero */
-.hero { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:clamp(32px,5vw,72px); align-items:end; padding-block:clamp(48px,8vw,104px) 48px; }
+.hero { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:48px clamp(32px,5vw,72px); align-items:end; padding-block:clamp(48px,8vw,104px) clamp(56px,8vw,96px); }
 .hero-id { display:flex; align-items:baseline; gap:10px; margin-bottom:18px; font-size:var(--fs-l); }
 .hero-id b { font-weight:900; letter-spacing:-.02em; } .hero-id span { font-weight:500; color:var(--ink-2); }
 .hero-id span::before { content:"·"; margin-right:10px; color:var(--ink-3); }
@@ -61,7 +61,7 @@ button { font:inherit; color:inherit; }
 .card dl>div:first-child { border-top:0; }
 .card dt { color:var(--ink-2); white-space:nowrap; } .card dd { font-weight:700; }
 .card dd small { display:block; font-size:var(--fs-xs); font-weight:400; color:var(--ink-2); }
-.stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(12px,2vw,24px); padding-bottom:clamp(56px,8vw,96px); }
+.stats { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(12px,2vw,24px); }
 .hero-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:32px; }
 .stat { display:block; border-top:2px solid var(--ink); padding-top:14px; text-decoration:none; }
 .stat i { display:block; margin-top:10px; font-style:normal; font-size:var(--fs-xs); font-weight:700; color:var(--ink-3); transition:color .2s; }
@@ -109,6 +109,8 @@ button { font:inherit; color:inherit; }
 .project-links { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0; }
 .store { display:inline-flex; justify-content:center; align-items:center; width:40px; height:40px; border:1px solid var(--ink); background:var(--paper); color:var(--ink); }
 .store svg { width:20px; height:20px; } .store:hover { background:var(--ink); color:var(--paper); }
+.store.named { gap:8px; width:auto; padding-inline:14px; font-size:var(--fs-s); font-weight:700; text-decoration:none; } .store.named svg { width:18px; height:18px; }
+.unit-sec .project-links { margin-top:14px; }
 .article-header .project-links { margin-top:14px; }
 /* Unit card: the three ClassicMate parts and the VQA project share one set of slots —
    stack, overview, work, troubleshooting, result — with each slot named in the left column. */
@@ -137,6 +139,9 @@ button { font:inherit; color:inherit; }
 .fold>summary::after { content:"펼치기 +"; font-size:13px; font-weight:800; white-space:nowrap; }
 .fold[open]>summary::after { content:"접기 −"; } .fold[open]>summary>span { color:var(--ink-3); font-weight:500; }
 .fold[open]>.work { border-top:1px solid var(--line); }
+/* Under a unit's leading lines the fold names the remaining work and says how many lines it holds. */
+.work+.fold { border-top:1px solid var(--line); }
+.fold.more>summary>span { font-weight:500; color:var(--ink-2); } .fold.more:not([open])>summary::after { content:attr(data-more); }
 .work-body { max-width:820px; margin-left:calc(var(--label) + 16px); padding:2px 0 22px; }
 .work-body>.prose>:first-child { margin-top:8px; }
 .result-more { margin-top:8px; } .result-more summary,.result-more .work-flat { grid-template-columns:minmax(0,1fr) 18px; } .result-more .work-body { margin-left:0; }
@@ -341,26 +346,28 @@ figure figcaption strong { font-weight:800; } figure figcaption>span { font-size
    grid is its TTA plan (answer orders across, input sizes down); the meter shows how few questions are scored again. */
 .sol-figure { max-width:820px; background:var(--stage); color:var(--stage-ink); border:1px solid var(--stage-line); }
 .sol { margin:0; padding:6px clamp(16px,3vw,28px); list-style:none; counter-reset:sol; }
-.sol>li { counter-increment:sol; display:grid; grid-template-columns:clamp(118px,22%,168px) minmax(0,1fr); gap:8px 24px; padding:22px 0; border-top:1px solid color-mix(in srgb,var(--stage-ink) 16%,transparent); }
+.sol>li { counter-increment:sol; display:grid; grid-template-columns:clamp(118px,22%,168px) minmax(0,1fr); gap:8px 24px; padding:16px 0; border-top:1px solid color-mix(in srgb,var(--stage-ink) 16%,transparent); }
 .sol>li:first-child { border-top:0; }
-.sol-stage { display:flex; flex-direction:column; gap:3px; }
+/* The stage number and name share a line; the notes go under them (beside them on a phone). */
+.sol-stage { display:flex; flex-wrap:wrap; align-items:baseline; align-content:flex-start; gap:2px 8px; }
 .sol-stage::before { content:counter(sol,decimal-leading-zero); font-size:11px; font-weight:700; letter-spacing:.14em; color:color-mix(in srgb,var(--stage-ink) 50%,transparent); }
 .sol-stage b { font-size:18px; font-weight:900; letter-spacing:.02em; line-height:1.25; }
-.sol-stage span { font-size:11px; line-height:1.6; color:color-mix(in srgb,var(--stage-ink) 62%,transparent); }
+.sol-stage span { flex-basis:100%; font-size:11px; line-height:1.6; color:color-mix(in srgb,var(--stage-ink) 62%,transparent); }
 .sol-body { min-width:0; font-size:13px; line-height:1.7; } .sol-body strong { display:block; font-size:15px; font-weight:800; } .sol-body b { font-weight:800; }
 .sol-body p { margin:4px 0 0; color:color-mix(in srgb,var(--stage-ink) 70%,transparent); }
 .sol-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px!important; } .sol-chips span { padding:2px 9px; border:1px solid color-mix(in srgb,var(--stage-ink) 32%,transparent); font-size:12px; color:var(--stage-ink); }
 .sol-lanes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; } .sol-axis { margin:0!important; font-size:11px; }
 .tta { display:grid; grid-template-columns:34px repeat(4,minmax(0,1fr)); gap:4px; align-items:center; margin-top:10px; font-size:10px; color:color-mix(in srgb,var(--stage-ink) 62%,transparent); }
 .tta em { font-style:normal; text-align:center; letter-spacing:.02em; }
-.tta i,.sol-legend i { border:1px solid color-mix(in srgb,var(--stage-ink) 24%,transparent); } .tta i { height:22px; }
+.tta i,.sol-legend i { border:1px solid color-mix(in srgb,var(--stage-ink) 24%,transparent); } .tta i { height:18px; }
 .tta i[data-s="A"],.sol-legend i[data-s="A"] { background:var(--stage-ink); border-color:var(--stage-ink); }
 .tta i[data-s="M"],.sol-legend i[data-s="M"] { border-color:var(--stage-ink); background:repeating-linear-gradient(135deg,var(--stage-ink) 0 2px,transparent 2px 6px); }
-.sol-count { margin-top:10px!important; font-size:12px; } .sol-count b { color:var(--stage-ink); }
-.sol-legend { display:flex; flex-wrap:wrap; gap:4px 18px; margin:16px 0 0!important; font-size:12px; } .sol-legend i { display:inline-block; width:16px; height:10px; margin-right:6px; vertical-align:-1px; }
-.sol-meter { display:flex; height:14px; margin:12px 0 10px; } .sol-meter span:first-child { background:color-mix(in srgb,var(--stage-ink) 20%,transparent); } .sol-meter span:last-child { flex:1; background:var(--stage-ink); }
-.sol-two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.sol-answer { padding:12px 14px; border:1px solid color-mix(in srgb,var(--stage-ink) 32%,transparent); } .sol-answer.is-final { background:var(--stage-ink); color:var(--stage); border-color:var(--stage-ink); } .sol-answer.is-final p { color:color-mix(in srgb,var(--stage) 72%,transparent); }
+.sol-count { margin-top:10px!important; font-size:12px; } .sol-count b { color:var(--stage-ink); } .sol-count span { white-space:nowrap; }
+.sol-legend { display:flex; flex-wrap:wrap; gap:4px 18px; margin:12px 0 0!important; font-size:12px; } .sol-legend i { display:inline-block; width:16px; height:10px; margin-right:6px; vertical-align:-1px; }
+.sol-meter { display:flex; height:14px; margin:10px 0 8px; } .sol-meter span:first-child { background:color-mix(in srgb,var(--stage-ink) 20%,transparent); } .sol-meter span:last-child { flex:1; background:var(--stage-ink); }
+.sol-two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } .sol-two.is-split { grid-template-columns:minmax(0,2fr) minmax(0,3fr); }
+.sol-answer b,.sol-answer p { text-wrap:balance; }
+.sol-answer { padding:10px 14px; border:1px solid color-mix(in srgb,var(--stage-ink) 32%,transparent); } .sol-answer.is-final { background:var(--stage-ink); color:var(--stage); border-color:var(--stage-ink); } .sol-answer.is-final p { color:color-mix(in srgb,var(--stage) 72%,transparent); }
 
 /* Engine I/O contract and body window */
 .contract-figure,.cube-figure { margin:28px 0; padding:20px; border:1px solid var(--ink); }
@@ -549,7 +556,8 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
 
 /* Responsive */
 @media (max-width:900px) {
-  .hero { grid-template-columns:1fr; align-items:start; }
+  /* One column: the results come right after the role, and the card follows them. */
+  .hero { grid-template-columns:1fr; align-items:start; row-gap:36px; } .hero>.stats { order:1; } .hero>.card { order:2; }
   .pr-grid { grid-template-columns:1fr; }
   .mini-grid { grid-template-columns:1fr; }
   .project-h { grid-template-columns:1fr; } .project-no { flex-direction:row; align-items:baseline; gap:8px; width:max-content; } .project-no b { margin-top:10px; }
@@ -576,7 +584,11 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
   .card dl>div { grid-template-columns:66px 1fr; }
   .diagram-figure,.performance-figure,.clock-figure,.matrix-figure,.score-figure { padding:16px; margin-block:24px; }
   .service-flow,.ownership-flow { grid-template-columns:1fr; gap:5px; }
-  .sol>li { grid-template-columns:1fr; padding:18px 0; } .sol-lanes,.sol-two { grid-template-columns:1fr; } .sol-lanes { gap:18px; } .tta i { height:16px; } .sol-two { gap:10px; }
+  .sol>li { grid-template-columns:1fr; padding:14px 0; } .sol-stage span { flex-basis:auto; } .sol-lanes,.sol-two,.sol-two.is-split { grid-template-columns:1fr; } .sol-two { gap:10px; }
+  /* Each model is one row: its name and counts on the left, its grid on the right. */
+  .sol-lanes { gap:14px; } .sol-lanes>div { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); grid-template-rows:auto auto 1fr; column-gap:14px; }
+  .sol-lanes strong,.sol-lanes .sol-axis,.sol-lanes .sol-count { grid-column:1; } .sol-lanes .sol-count { margin-top:4px!important; }
+  .sol-lanes .tta { grid-column:2; grid-row:1 / span 3; align-self:center; margin-top:0; } .tta i { height:16px; }
   .flow-arrow { height:20px; line-height:1; transform:rotate(90deg); }
   .clock-options { grid-template-columns:1fr; gap:23px; }
   .clock-option button { min-height:94px; gap:4px; padding:10px; } .clock-option button svg { width:23px; height:23px; }

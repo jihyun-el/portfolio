@@ -114,6 +114,8 @@ for (const item of cases) {
     if (!line || /^<!--|^\|/.test(line) || line.length > 160) throw new Error(`${item.id}: "${label}" must start with a card line of at most 160 characters`);
     labels.add(label);
   }
+  // `lead` names the work lines the home card shows first; the rest waits behind one line. A folded unit has no lead.
+  if (item.lead && (item.fold || !Array.isArray(item.lead) || !item.lead.length || item.lead.some(label => label === "결과" || !labels.has(label)))) throw new Error(`${item.id}: lead must list ## labels of the unit, and not be combined with fold`);
   caseIds.add(item.id);
 }
 for (const tech of stackEntries) {

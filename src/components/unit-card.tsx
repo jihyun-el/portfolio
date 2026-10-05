@@ -3,6 +3,7 @@ import type { CaseView } from "@/lib/showcase";
 import { MarkdownWithFigures } from "@/components/project-detail";
 import { SignalChainSection } from "@/components/signal-chain-section";
 import { VqaSolution } from "@/components/project-figures";
+import { ProjectLinks } from "@/components/project-links";
 
 // `**굵게**` is the only markup a card line carries: it marks the number in the sentence.
 function Line({ children }: { children: string }) {
@@ -21,12 +22,14 @@ function WorkRow({ item, open, labelled = true }: { item: UnitWork; open: boolea
 // stack, overview, work, troubleshooting, result. A unit's main diagram (the engine's panorama, the
 // VQA solution) sits right under the header. On the home page the details start closed, and a
 // unit marked `fold` shows its work as one line of labels until it is opened, so the main units
-// stay the longest. In the drawer and on the project page (`drawer`, `page`) everything is open.
+// stay the longest. A unit with `lead` shows those lines and keeps the others behind one line that
+// names them. In the drawer and on the project page (`drawer`, `page`) everything is open, in order.
 export function UnitCard({ unit, mode }: { unit: CaseView; mode: "home" | "drawer" | "page" }) {
   const open = mode !== "home";
   // The home page and an open drawer can hold the same card at once, so only the page gets ids.
   const anchor = (name?: string) => name ? mode === "page" ? { id: name } : { "data-anchor": name } : {};
-  const work = <ul className="work">{unit.work.map((item) => <li key={item.label} {...anchor(item.anchor)}><WorkRow item={item} open={open} /></li>)}</ul>;
+  const rows = (items: UnitWork[]) => <ul className="work">{items.map((item) => <li key={item.label} {...anchor(item.anchor)}><WorkRow item={item} open={open} /></li>)}</ul>;
+  const work = rows(unit.work), rest = unit.work.filter((item) => !unit.lead.includes(item.label));
   return <article className="unit" id={mode === "home" ? unit.anchor : undefined}>
     <header className="unit-h">
       {mode === "home" && <h3>{unit.title}</h3>}
@@ -40,13 +43,18 @@ export function UnitCard({ unit, mode }: { unit: CaseView; mode: "home" | "drawe
       <ol className="hard">{unit.hardest.map((item) => <li key={item.title}><b>{item.title}</b><p>{item.body}</p></li>)}</ol>
     </section>}
     <section className="unit-sec"><h4>한 일</h4>
-      {unit.fold && mode === "home" ? <details className="fold"><summary><span>{unit.work.map((item) => item.label).join(" · ")}</span></summary>{work}</details> : work}
+      {mode !== "home" ? work
+        : unit.fold ? <details className="fold"><summary><span>{unit.work.map((item) => item.label).join(" · ")}</span></summary>{work}</details>
+        : unit.lead.length && rest.length ? <div>{rows(unit.work.filter((item) => unit.lead.includes(item.label)))}
+          <details className="fold more"><summary data-more={`${rest.length}개 더 보기 +`}><span>{rest.map((item) => item.label).join(", ")}</span></summary>{rows(rest)}</details></div>
+        : work}
     </section>
     {unit.troubles.length > 0 && <section className="unit-sec"><h4>트러블슈팅</h4>
       <ul className="trouble">{unit.troubles.map((post) => <li key={post.slug}><a href={sitePath(`/writing/${post.slug}/`)}><b>{post.title}</b></a></li>)}</ul>
     </section>}
     {(unit.results.length > 0 || unit.result) && <section className="unit-sec"><h4>결과</h4><div>
       {unit.results.length > 0 && <ul className="result-nums">{unit.results.map((item) => <li key={item.label}><b className="num">{item.value}{item.unit && <small>{item.unit}</small>}</b><span>{item.label}</span></li>)}</ul>}
+      {unit.store && <ProjectLinks project={unit.store} named />}
       {unit.result && <div className="work result-more"><WorkRow item={unit.result} open={open} labelled={false} /></div>}
     </div></section>}
   </article>;

@@ -1,9 +1,9 @@
-import { cases, getUnitDoc, getWriting, history, metrics, profile, projects, stack, type Case, type UnitWork } from "@/lib/content";
+import { cases, getUnitDoc, getWriting, history, metrics, profile, projects, stack, type Case, type Project, type UnitWork } from "@/lib/content";
 
 export type MetricView = { value: string; unit?: string; label: string };
 export type Comparison = { label: string; before: number; after: number; unit: string; digits: number; delta?: "pp"; lowerIsBetter: boolean };
 export type TroubleView = { slug: string; title: string };
-export type CaseView = { id: string; projectId: string; part?: string; title: string; short: string; fold: boolean; tag: string; anchor: string; stack: string[]; overview: string; hardest: NonNullable<Case["hardest"]>; work: UnitWork[]; result?: UnitWork; troubles: TroubleView[]; results: MetricView[] };
+export type CaseView = { id: string; projectId: string; part?: string; title: string; short: string; fold: boolean; lead: string[]; store?: Pick<Project, "short" | "links">; tag: string; anchor: string; stack: string[]; overview: string; hardest: NonNullable<Case["hardest"]>; work: UnitWork[]; result?: UnitWork; troubles: TroubleView[]; results: MetricView[] };
 export type StatView = MetricView & { context: string; anchor: string };
 
 const ko = (value: number) => value.toLocaleString("ko-KR");
@@ -49,7 +49,9 @@ export function caseViews(): CaseView[] {
     // Without its own stack line a unit lists what stack.json records for it: languages first.
     const used = stack.groups.flatMap((group) => group.items).filter((tech) => tech.projectId === item.projectId && tech.part === item.part);
     return {
-      id: item.id, projectId: item.projectId, part: item.part, short: item.short, fold: item.fold ?? false, anchor: `part-${item.id}`,
+      id: item.id, projectId: item.projectId, part: item.part, short: item.short, fold: item.fold ?? false, lead: item.lead ?? [], anchor: `part-${item.id}`,
+      // The unit whose result is the release carries the project's store listings next to it.
+      store: item.results?.includes("release") && project.links?.length ? { short: project.short, links: project.links } : undefined,
       title: item.title ?? part!.title,
       tag: `${span(repo.firstDate, repo.lastDate)} · ${ko(repo.authorCommits)}커밋`,
       stack: item.stack ?? [...new Set(used.map((tech) => tech.language)), ...used.map((tech) => tech.name)],

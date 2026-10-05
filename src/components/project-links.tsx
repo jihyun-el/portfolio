@@ -7,12 +7,13 @@ const ICONS: Record<string, string> = {
 };
 
 // Public pages of a shipped project, such as its store listings. They open outside the portfolio.
-export function ProjectLinks({ project }: { project: Project }) {
+// `named` writes the store's name next to its mark, for places where the links stand in for a look at the app.
+export function ProjectLinks({ project, named = false }: { project: Pick<Project, "short" | "links">; named?: boolean }) {
   if (!project.links?.length) return null;
   return <p className="project-links">{project.links.map((link) => {
     const icon = ICONS[link.label];
-    return <a className={icon ? "store" : "read"} key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" aria-label={`${project.short} ${link.label}에서 보기 (새 탭)`} title={link.label}>
-      {icon ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon} fill="currentColor" /></svg> : `${link.label} ↗`}
+    return <a className={icon ? named ? "store named" : "store" : "read"} key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" aria-label={`${project.short} ${link.label}에서 보기 (새 탭)`} title={link.label}>
+      {icon ? <><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon} fill="currentColor" /></svg>{named && <span>{link.label} ↗</span>}</> : `${link.label} ↗`}
     </a>;
   })}</p>;
 }
