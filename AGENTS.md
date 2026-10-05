@@ -2,7 +2,8 @@
 
 This repository is the deployed GitHub Pages app. It no longer carries the
 upstream chanhdai.com source; only its MIT notice remains.
-Read `README.md` for editing and commands. Read the relevant installed Next.js
+`README.md` has the commands; the editing notes (which file holds what, deploy
+and counting rules) are in git-ignored `private/EDITING.md`. Read the relevant installed Next.js
 guide in `node_modules/next/dist/docs/` before changing framework behavior.
 
 - Keep ClassicMate (app, pipeline, engine) as one project; VQA is the other.
