@@ -87,6 +87,7 @@ const metricKeys = new Set(["frontend", "compute", "controlTicks", "publicScore"
 const cases = JSON.parse(fs.readFileSync(path.join(content, "cases.json"), "utf8"));
 if (!Array.isArray(profile.heroLines) || !profile.heroLines.length || profile.heroLines.some(line => !line)) throw new Error("profile.heroLines lists the secondary fields shown under the role on the first screen");
 if (!Array.isArray(profile.card) || profile.card.some(row => !row.label || !row.value)) throw new Error("Developer card rows need a label and value");
+if (!Array.isArray(profile.education) || profile.education.some(row => !row.title || !row.period)) throw new Error("Developer card education rows need a title and period");
 if (!Array.isArray(profile.stats) || profile.stats.length !== 3 || profile.stats.some(key => !metricKeys.has(key))) throw new Error("Home stats need three known metric keys");
 for (const project of projects) if (!project.short) throw new Error(`${project.id}: missing short label`);
 const caseIds = new Set();

@@ -7,7 +7,7 @@ import { MirrorPoseThumb } from "@/components/mirror-pose-figure";
 // Card pictures, by the `thumb` name in content/mini-projects.json.
 const thumbs: Record<string, ComponentType> = { "mirror-pose": MirrorPoseThumb };
 
-export const miniTag = (item: MiniProject) => `${item.period} · ${item.program}`;
+export const miniTag = (item: MiniProject) => [item.period, item.program, item.role].filter(Boolean).join(" · ");
 
 // Short projects outside the two main ones: a quiet row of cards. Like a troubleshooting post, a card
 // opens in the drawer and has its own page for links that arrive from outside.

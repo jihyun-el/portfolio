@@ -70,6 +70,7 @@ export default function HomePage() {
         <dl>
           {profile.card.map((row) => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
           {profile.experiences.map((experience) => <div key={experience.title}><dt>경험</dt><dd>{experience.title}<small className="num">{experience.period}</small></dd></div>)}
+          {profile.education.map((course) => <div key={course.title}><dt>교육</dt><dd>{course.title}<small className="num">{course.period}</small></dd></div>)}
         </dl>
       </aside>
     </section>

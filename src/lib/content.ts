@@ -10,6 +10,7 @@ export type Profile = {
   card: { label: string; value: string }[];
   stats: string[];
   experiences: { title: string; period: string; description: string }[];
+  education: { title: string; period: string }[];
   links: { label: string; url: string }[];
 };
 
@@ -44,7 +45,7 @@ export type UnitDoc = { overview: string; work: UnitWork[]; result?: UnitWork };
 export type ContractStage = { id: string; owner: "app" | "engine"; name: string; rate: string; handoff?: { direction: "to-engine" | "to-app" | "both"; label: string }; input: string; output: string; rule: string };
 export type BodyWindow = { channels: number; mixChannels: number; referenceChannels: number; bins: number; columns: number; hopMs: number; blockMs: number; receptiveField: number; lookahead: number; outputSlots: number[] };
 export type Contracts = { engine: { lanes: { app: string; engine: string }; stages: ContractStage[]; threadRules: { subject: string; rule: string }[]; window: BodyWindow; note: string } };
-export type MiniProject = { id: string; title: string; period: string; program: string; summary: string; tags: string[]; thumb?: string };
+export type MiniProject = { id: string; title: string; period: string; program: string; role?: string; summary: string; tags: string[]; thumb?: string };
 const directory = path.join(process.cwd(), "content");
 
 export const profile: Profile = JSON.parse(fs.readFileSync(path.join(directory, "profile.json"), "utf8"));
