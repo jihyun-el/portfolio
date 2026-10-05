@@ -47,7 +47,7 @@
     "title": "모델 크기 × 해상도 실험",
     "short": "VQA 실험",
     "stack": ["Python", "Qwen3-VL 4B (4비트 QLoRA)", "Qwen 2종과 Gemma (BF16 LoRA)", "로그 확률 앙상블"],
-    "troubles": ["experiment-gates", "validation-boundaries"],
+    "troubles": ["large-model-training", "unstable-answers", "experiment-gates", "validation-boundaries"],
     "metrics": ["publicScore", "leaderboard"]
   }
 ]
