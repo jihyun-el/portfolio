@@ -23,13 +23,15 @@
     ]},
     {"title":"Mobile","tier":"sub","items":[
       {"name":"Flutter","icon":"flutter","language":"Dart","description":"iOS·Android 앱 출시. PDF 악보 위 필기와 재생 UI 구현.","projectId":"classicmate","part":"app"},
-      {"name":"Riverpod","icon":"riverpod","language":"Dart","description":"코드 생성 프로바이더로 인증·결제·악보 화면의 상태 관리.","projectId":"classicmate","part":"app"},
+      {"name":"Riverpod","icon":"riverpod","language":"Dart","description":"코드 생성 프로바이더로 인증·결제·악보 화면의 상태 관리.","projectId":"classicmate","part":"app"}
+    ]},
+    {"title":"Backend","tier":"sub","items":[
       {"name":"Supabase","icon":"supabase","language":"Dart","description":"인증·악보 자산·소유권·기기 간 동기화와 서버 결제 처리.","projectId":"classicmate","part":"app"},
-      {"name":"PostgreSQL","icon":"postgresql","language":"Dart","description":"거래 고유성 제약, 조건부 갱신, 지갑 원장과 서버 소유권 관리.","projectId":"classicmate","part":"app"}
+      {"name":"PostgreSQL","icon":"postgresql","language":"Dart","description":"거래 고유성 제약, 조건부 갱신, 지갑 원장과 서버 소유권 관리.","projectId":"classicmate","part":"app"},
+      {"name":"FastAPI","icon":"fastapi","language":"Python","description":"3D 자세 엔진을 서버로 감싸, 업로드한 사진에서 3D 자세와 어깨 각도를 반환.","mini":"mirror-pose"}
     ]},
     {"title":"그 밖에 쓴 도구","tier":"tool","items":[
       {"name":"Rust","icon":"rust","language":"Python","description":"AI 에이전트가 구현한 이식본을 Python 참조·기준 출력·실기기 측정으로 검수.","projectId":"classicmate","part":"engine","mode":"AI 구현 협업"},
-      {"name":"FastAPI","icon":"fastapi","language":"Python","description":"3D 자세 엔진을 서버로 감싸, 업로드한 사진에서 3D 자세와 어깨 각도를 반환.","mini":"mirror-pose"},
       {"name":"verovio","icon":"verovio","language":"Python","description":"MusicXML 조판·악보 좌표 추출. 네이티브 실패를 자식 프로세스로 격리.","projectId":"classicmate","part":"pipeline"},
       {"name":"music21","icon":"music21","language":"Python","description":"12키 변환과 MIDI 생성. 악보 좌표와 연주 시간축 연결.","projectId":"classicmate","part":"pipeline"}
     ]}
