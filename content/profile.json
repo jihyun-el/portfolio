@@ -5,8 +5,7 @@
   "heroLines": ["Audio DSP", "Flutter"],
   "card": [
     { "label": "주력 언어", "value": "Python · Dart" },
-    { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" },
-    { "label": "협업 방식", "value": "AI 에이전트 구현을 참조·측정으로 검수" }
+    { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" }
   ],
   "stats": ["release", "compute", "leaderboard"],
   "experiences": [
