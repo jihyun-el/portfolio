@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { BEAT, BIN_CENTS, CHORDS, C_HI, C_LO, PF_PARTICLES, STATES, TOTAL, accompTempo, accompU, pfTempo, shapedTempo, anchorU, belief, beliefFlow, centOf, chordAt, clamp, confirmAge, coupleGain, engineEvents, recentEvents, type EngineEvents, confirmedIndex, followerTempo, frozenFor, hash, latestAnchor, modBeat, observationAt, phraseFactor, playheadU, predictedIndex, prepareFollower, salience, schedulerLead, singerTempo, singerU, tempoLayers, voiceAt, vqtParts } from "@/lib/example-score";
 import { StepGlyph } from "@/components/step-glyphs";
@@ -40,16 +41,28 @@ function tagger(stage: World, space: THREE.Object3D) {
 }
 
 /* ---------- Glowing primitives ---------- */
-// Additive white sprites and lines on a black stage: overlapping particles brighten like light.
+// Additive white sprites and lines on a black stage: overlapping particles brighten like light. The light theme
+// keeps this render and inverts the finished frame, so glow becomes ink and every level keeps its contrast.
+const INVERT = {
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+  fragmentShader: "uniform sampler2D tDiffuse; varying vec2 vUv; void main() { gl_FragColor = vec4(1.0 - texture2D(tDiffuse, vUv).rgb, 1.0); }",
+};
+const isDark = () => document.documentElement.classList.contains("dark");
+// Bloom on the light stage is kept short-reach so lit points still sparkle without a grey haze around each stage.
+const BLOOM_RADIUS = 0.45, LIGHT_BLOOM = 0.45, LIGHT_RADIUS = 0.08, LIGHT_FALLOFF = 1.4;
 const POINT_VERTEX = `
 attribute float size; attribute float alpha; varying float vAlpha; uniform float pixelRatio; uniform float zoom;
 void main() { vAlpha = pow(alpha, 0.8); vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = size * pixelRatio * zoom * (4.0 / -mv.z); gl_Position = projectionMatrix * mv; }`;
 // Point sizes were tuned for a card camera about 4.8 units away; the panorama camera stands farther back, so every
 // cloud shares this factor to keep its points as large on screen as the stage around them.
 const ZOOM = { value: 1 };
+// A point's soft edge reads as glow on the dark stage and as a smudge on the light one; the light theme raises
+// the falloff to this power so points keep their core and lose the haze.
+const FALLOFF = { value: 1 };
 const POINT_FRAGMENT = `
-uniform sampler2D map; varying float vAlpha;
-void main() { float a = texture2D(map, gl_PointCoord).a * vAlpha; if (a < 0.003) discard; gl_FragColor = vec4(vec3(1.0), a); }`;
+uniform sampler2D map; uniform float falloff; varying float vAlpha;
+void main() { float a = pow(texture2D(map, gl_PointCoord).a, falloff) * vAlpha; if (a < 0.003) discard; gl_FragColor = vec4(vec3(1.0), a); }`;
 
 function glowTexture() {
   const canvas = document.createElement("canvas"); canvas.width = canvas.height = 64;
@@ -65,7 +78,7 @@ function cloud(count: number, map: THREE.Texture, pixelRatio: number) {
   geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
   geometry.setAttribute("size", new THREE.BufferAttribute(size, 1));
   geometry.setAttribute("alpha", new THREE.BufferAttribute(alpha, 1));
-  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: map }, pixelRatio: { value: pixelRatio }, zoom: ZOOM }, vertexShader: POINT_VERTEX, fragmentShader: POINT_FRAGMENT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: map }, pixelRatio: { value: pixelRatio }, zoom: ZOOM, falloff: FALLOFF }, vertexShader: POINT_VERTEX, fragmentShader: POINT_FRAGMENT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   const points = new THREE.Points(geometry, material); points.frustumCulled = false;
   const set = (i: number, x: number, y: number, z: number, s: number, a: number) => { position[i * 3] = x; position[i * 3 + 1] = y; position[i * 3 + 2] = z; size[i] = s; alpha[i] = a; };
   const commit = () => { for (const name of ["position", "size", "alpha"]) geometry.getAttribute(name).needsUpdate = true; };
@@ -672,8 +685,15 @@ export function SignalChain3D() {
       holder.position.x = stageX(k); holder.scale.setScalar(4.7 / pose.radius); holder.add(views[k].root); scene.add(holder);
       return holder;
     });
-    const composer = new EffectComposer(renderer), bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, 0.45, 0.2), output = new OutputPass();
+    const composer = new EffectComposer(renderer), bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, BLOOM_RADIUS, 0.2), output = new OutputPass();
     composer.setPixelRatio(pixelRatio); composer.addPass(new RenderPass(scene, camera)); composer.addPass(bloom); composer.addPass(output);
+    // The theme can change while the panorama is open; the strip reads the same flag every frame.
+    const invert = new ShaderPass(INVERT); composer.addPass(invert);
+    let dark = true;
+    const applyTheme = () => { dark = isDark(); invert.enabled = !dark; bloom.radius = dark ? BLOOM_RADIUS : LIGHT_RADIUS; FALLOFF.value = dark ? 1 : LIGHT_FALLOFF; };
+    applyTheme();
+    const theme = new MutationObserver(applyTheme);
+    theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     let size = "";
     const seen = new IntersectionObserver(([entry]) => { visible.current = entry.isIntersecting; }); seen.observe(viewport);
     const sectionSeen = new IntersectionObserver(([entry]) => { sectionVisible.current = entry.isIntersecting; }); sectionSeen.observe(sectionRef.current!);
@@ -701,7 +721,7 @@ export function SignalChain3D() {
       frame = requestAnimationFrame(tick);
       if (!sectionVisible.current) return;
       const wall = (now - start) / 1000, t = reduced ? 2.1 : exampleTime(now), motion = reduced ? 0 : wall;
-      paint(stripRef.current, (ctx, w, h) => drawStrip(ctx, w, h, t, font));
+      paint(stripRef.current, (ctx, w, h) => drawStrip(ctx, w, h, t, font, dark));
       const states = clockStates(t), texts = [states.scene.name, states.scene.note, states.singer, states.follower, states.accomp];
       texts.forEach((value, k) => { const el = statusRefs.current[k]; if (el && el.textContent !== value) el.textContent = value; });
       if (!visible.current) return;
@@ -772,15 +792,16 @@ export function SignalChain3D() {
         if (from === 3) el.dataset.state = String(predictedIndex(t) % 4);
         if (from === 6) el.style.setProperty("--gain", coupleGain(t).toFixed(2));
       }
-      // The waterfall stages stack many lines, so they take less bloom.
-      bloom.strength = 0.8 - 0.5 * soft;
+      // The waterfall stages stack many lines, so they take less bloom. Inverted, a wide bloom turns into a grey
+      // smudge around the ink, so the light theme uses a weaker, short-reach one.
+      bloom.strength = (0.8 - 0.5 * soft) * (dark ? 1 : LIGHT_BLOOM);
       composer.render();
     };
     frame = requestAnimationFrame(tick);
     const warm = window.setTimeout(prepareFollower, 300);
     return () => {
-      cancelAnimationFrame(frame); window.clearTimeout(warm); seen.disconnect(); sectionSeen.disconnect();
-      views.forEach((view) => view.dispose()); bloom.dispose(); output.dispose(); composer.dispose(); map.dispose(); renderer.dispose();
+      cancelAnimationFrame(frame); window.clearTimeout(warm); seen.disconnect(); sectionSeen.disconnect(); theme.disconnect();
+      views.forEach((view) => view.dispose()); bloom.dispose(); output.dispose(); invert.dispose(); composer.dispose(); map.dispose(); renderer.dispose();
     };
   }, []);
 

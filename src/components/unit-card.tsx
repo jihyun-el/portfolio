@@ -34,7 +34,7 @@ export function UnitCard({ unit, mode }: { unit: CaseView; mode: "home" | "drawe
       <p className="unit-stack">{unit.stack.join(" · ")}</p>
       <p className="unit-line">{unit.overview}</p>
     </header>
-    {mode === "home" && unit.part === "engine" && <SignalChainSection poster={sitePath("/images/signal-chain-poster.jpg")} />}
+    {mode === "home" && unit.part === "engine" && <SignalChainSection poster={sitePath("/images/signal-chain-poster.jpg")} posterLight={sitePath("/images/signal-chain-poster-light.jpg")} />}
     {unit.id === "vqa" && <section className="unit-sec"><h4>최종 솔루션</h4><VqaSolution /></section>}
     {unit.hardest.length > 0 && <section className="unit-sec"><h4>제일 어려웠던 것</h4>
       <ol className="hard">{unit.hardest.map((item) => <li key={item.title}><b>{item.title}</b><p>{item.body}</p></li>)}</ol>

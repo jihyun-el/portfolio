@@ -3,7 +3,11 @@
 // accompaniment (never stops, never goes back, never jumps).
 import { STATES, TOTAL, accompTempo, accompU, anchorU, coupleGain, frozenFor, sceneAt, singerSeen, singerU, stateIndex, voiceAt } from "@/lib/example-score";
 
-const INK = "#f2f2f2", MID = "#9a9a9a", DIM = "#3a3a3a", FAINT = "#1d1d1d";
+// The strip sits on the panorama's stage; the light palette is the dark one inverted, like the light stage.
+const PALETTES = {
+  dark: { INK: "#f2f2f2", MID: "#9a9a9a", DIM: "#3a3a3a", FAINT: "#1d1d1d", GUIDE: "rgba(242,242,242,.18)", GLOW: 14 },
+  light: { INK: "#0d0d0d", MID: "#656565", DIM: "#c5c5c5", FAINT: "#e2e2e2", GUIDE: "rgba(13,13,13,.18)", GLOW: 3.75 },
+};
 
 export function clockStates(t: number) {
   const scene = sceneAt(t), beat = singerU(t), v = voiceAt(beat), written = STATES[stateIndex(beat)].pitch;
@@ -22,13 +26,14 @@ function text(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, co
 }
 
 /* ---------- The strip: three cursors on the score around the singer ---------- */
-export function drawStrip(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, font: string) {
+export function drawStrip(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, font: string, dark = true) {
+  const { INK, MID, DIM, FAINT, GUIDE, GLOW } = PALETTES[dark ? "dark" : "light"];
   ctx.clearRect(0, 0, w, h);
   const span = 6, centre = singerU(t), X = (beat: number) => w / 2 + (beat - centre) / span * (w / 2 - 8), rowH = h / 3;
   const rows: { at: number; draw: (x: number, y: number) => void }[] = [
     { at: centre, draw: (x, y) => { ctx.strokeStyle = singing(t) ? MID : DIM; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.stroke(); } },
     { at: anchorU(t), draw: (x, y) => { ctx.fillStyle = INK; ctx.fillRect(x - 4.5, y - 4.5, 9, 9); } },
-    { at: accompU(t), draw: (x, y) => { ctx.save(); ctx.shadowColor = INK; ctx.shadowBlur = 14; ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(x, y - 7); ctx.lineTo(x + 7, y); ctx.lineTo(x, y + 7); ctx.lineTo(x - 7, y); ctx.fill(); ctx.restore(); } },
+    { at: accompU(t), draw: (x, y) => { ctx.save(); ctx.shadowColor = INK; ctx.shadowBlur = GLOW; ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(x, y - 7); ctx.lineTo(x + 7, y); ctx.lineTo(x, y + 7); ctx.lineTo(x - 7, y); ctx.fill(); ctx.restore(); } },
   ];
   const loopStart = Math.floor(centre / TOTAL) * TOTAL;
   rows.forEach((row, r) => {
@@ -42,7 +47,7 @@ export function drawStrip(ctx: CanvasRenderingContext2D, w: number, h: number, t
     });
     row.draw(X(row.at), y);
   });
-  ctx.strokeStyle = "rgba(242,242,242,.18)"; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = GUIDE; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke(); ctx.setLineDash([]);
   text(ctx, "← 지난 음", 4, h - 6, MID, font, 10, 600);
   text(ctx, "다음 음 →", w - 4, h - 6, MID, font, 10, 600, "right");
 }
