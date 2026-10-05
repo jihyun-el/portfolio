@@ -25,7 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <a className="skip-link" href="#main-content">본문으로 이동</a>
       <header className="topbar"><div className="wrap top">
         <Link className="brand" href="/"><b>{profile.name}</b><span>{profile.subtitle}</span></Link>
-        <nav className="nav" aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/#writing">트러블슈팅</Link><Link href="/#skills">기술</Link><Link href="/#commits">커밋</Link><ThemeToggle /></nav>
+        <nav className="nav" aria-label="주 메뉴"><Link href="/#projects">프로젝트</Link><Link href="/#writing">트러블슈팅</Link><Link href="/#skills">기술</Link><Link className="nav-mini" href="/#mini">미니<span className="nav-wide"> 프로젝트</span></Link><Link href="/#commits">커밋</Link><ThemeToggle /></nav>
       </div></header>
       <main id="main-content">{children}</main>
       <footer className="contact" id="contact"><div className="wrap">
