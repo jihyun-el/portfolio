@@ -2,6 +2,7 @@ import { sitePath, type UnitWork } from "@/lib/content";
 import type { CaseView } from "@/lib/showcase";
 import { MarkdownWithFigures } from "@/components/project-detail";
 import { SignalChainSection } from "@/components/signal-chain-section";
+import { VqaSolution } from "@/components/project-figures";
 
 // `**굵게**` is the only markup a card line carries: it marks the number in the sentence.
 function Line({ children }: { children: string }) {
@@ -17,7 +18,8 @@ function WorkRow({ item, open, labelled = true }: { item: UnitWork; open: boolea
 }
 
 // Every unit — the three ClassicMate parts and the VQA project — is one card with the same slots:
-// stack, overview, work, troubleshooting, result. On the home page the details start closed, and a
+// stack, overview, work, troubleshooting, result. A unit's main diagram (the engine's panorama, the
+// VQA solution) sits right under the header. On the home page the details start closed, and a
 // unit marked `fold` shows its work as one line of labels until it is opened, so the main units
 // stay the longest. In the drawer and on the project page (`drawer`, `page`) everything is open.
 export function UnitCard({ unit, mode }: { unit: CaseView; mode: "home" | "drawer" | "page" }) {
@@ -32,13 +34,14 @@ export function UnitCard({ unit, mode }: { unit: CaseView; mode: "home" | "drawe
       <p className="unit-stack">{unit.stack.join(" · ")}</p>
       <p className="unit-line">{unit.overview}</p>
     </header>
+    {mode === "home" && unit.part === "engine" && <SignalChainSection poster={sitePath("/images/signal-chain-poster.jpg")} />}
+    {unit.id === "vqa" && <section className="unit-sec"><h4>최종 솔루션</h4><VqaSolution /></section>}
     {unit.hardest.length > 0 && <section className="unit-sec"><h4>제일 어려웠던 것</h4>
       <ol className="hard">{unit.hardest.map((item) => <li key={item.title}><b>{item.title}</b><p>{item.body}</p></li>)}</ol>
     </section>}
     <section className="unit-sec"><h4>한 일</h4>
       {unit.fold && mode === "home" ? <details className="fold"><summary><span>{unit.work.map((item) => item.label).join(" · ")}</span></summary>{work}</details> : work}
     </section>
-    {mode === "home" && unit.part === "engine" && <SignalChainSection poster={sitePath("/images/signal-chain-poster.jpg")} />}
     {unit.troubles.length > 0 && <section className="unit-sec"><h4>트러블슈팅</h4>
       <ul className="trouble">{unit.troubles.map((post) => <li key={post.slug}><a href={sitePath(`/writing/${post.slug}/`)}><b>{post.title}</b></a></li>)}</ul>
     </section>}

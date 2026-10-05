@@ -16,7 +16,7 @@ export function ClassicMateMap() {
 // How the mirror project's question led to its idea: each step is the reason for the next.
 export function MirrorIdeaFlow() {
   const steps = [
-    { kicker: "필요", title: "3D 시점이 필요하다", note: "관절 각도를 재려면 관절의 3D 좌표가 있어야 함" },
+    { kicker: "필요", title: "3D 시점이 필요하다", note: "자세를 추정하려면 관절의 3D 좌표가 있어야 함" },
     { kicker: "방법", title: "카메라가 두 대면 된다", note: "두 시점이면 3D를 계산할 수 있음" },
     { kicker: "제약", title: "두 대는 쓰기 불편하다", note: "사용자가 카메라 두 대를 세우고 맞춰야 함" },
     { kicker: "발상", title: "거울 앞에 세운다", note: "거울상이 두 번째 시점이 됨", mark: "is-answer" },
@@ -52,6 +52,62 @@ export function OwnershipFlow() {
   return <figure className="diagram-figure"><figcaption>계정 전환과 결제의 데이터 경계</figcaption>
     <div className="ownership-flow"><div><strong>기기 캐시</strong><span>필기 · 악보 화면 상태</span></div><span className="flow-arrow" aria-hidden="true">→</span><div><strong>동기화 요청</strong><span>현재 계정 확인</span></div><span className="flow-arrow" aria-hidden="true">→</span><div><strong>서버 소유권</strong><span>서버가 잔액·소유권 변경</span></div></div>
     <div className="boundary-notes"><p><strong>계정 전환</strong> 로그아웃·토큰 만료 시 캐시 정리와 동기화 경계를 함께 처리</p><p><strong>결제 중복</strong> 거래 고유성 제약과 조건부 갱신으로 같은 거래의 반복 지급 방지</p></div>
+  </figure>;
+}
+
+// The final VQA solution as submitted: every question is scored by three models, and only the
+// questions they are unsure about are scored again with larger inputs and the retrained models.
+// The grid under each model is its TTA plan: rows are input sizes, columns the four answer orders.
+// A = scored for every question, M = added for the uncertain questions only, - = not used.
+const answerOrders = ["abcd", "bcda", "cdab", "dabc"];
+const ttaPlans = [
+  { name: "Qwen3.5-27B", axis: "입력 확대", rows: [["원래", "AAAA"], ["2배", "AMMM"], ["3배", "MMMM"]] },
+  { name: "Qwen3.8-27B", axis: "입력 확대", rows: [["원래", "AAAA"], ["2배", "AMMM"], ["3배", "----"]] },
+  { name: "Gemma 4 31B", axis: "이미지 토큰 상한", rows: [["280", "AAAA"], ["560", "AMAM"], ["1120", "MMMM"]] },
+];
+export function VqaSolution() {
+  const { total, uncertain } = metrics.vqa.extraInference, settled = total - uncertain;
+  const share = (count: number) => (count / total * 100).toFixed(1);
+  const runs = (plan: typeof ttaPlans[number], marks: string) => plan.rows.reduce((sum, [, row]) => sum + [...row].filter((cell) => marks.includes(cell)).length, 0);
+  return <figure className="sol-figure" aria-label="VQA 최종 솔루션: Fine-tuning, TTA, Ensemble, Cascade, Submission">
+    <ol className="sol">
+      <li><div className="sol-stage"><b>Input</b><span>4지선다 VQA</span></div><div className="sol-body">
+        <strong>사진 + 한국어 질문 + 보기 a~d</strong><p>정답 보기의 글자 하나를 고름. test {total.toLocaleString("ko-KR")}문항</p>
+      </div></li>
+      <li><div className="sol-stage"><b>Fine-tuning</b><span>BF16 LoRA</span></div><div className="sol-body">
+        <strong>VLM 세 개를 원래 정밀도로 LoRA 학습</strong>
+        <p className="sol-chips">{["rank 16", "2에폭", "보기 순서 섞기", "정답 글자에만 손실", "이미지 인코더 고정"].map((chip) => <span key={chip}>{chip}</span>)}</p>
+      </div></li>
+      <li><div className="sol-stage"><b>TTA</b><span>Test-Time Augmentation<br />보기 순서 × 입력 크기</span></div><div className="sol-body">
+        <div className="sol-lanes">{ttaPlans.map((plan) => <div key={plan.name}>
+          <strong>{plan.name}</strong><p className="sol-axis">{plan.axis}</p>
+          <div className="tta" role="img" aria-label={`${plan.name}: 문항당 추론 ${runs(plan, "A")}회, 불확실한 문항은 ${runs(plan, "AM")}회`}>
+            <span />{answerOrders.map((order) => <em key={order}>{order}</em>)}
+            {plan.rows.map(([size, row]) => [<span key={size}>{size}</span>, ...[...row].map((cell, i) => <i key={size + i} data-s={cell} />)])}
+          </div>
+          <p className="sol-count">문항당 추론 <b>{runs(plan, "A")}회</b> → 불확실 문항 <b>{runs(plan, "AM")}회</b></p>
+        </div>)}</div>
+        <p className="sol-legend"><span><i data-s="A" />모든 문항</span><span><i data-s="M" />불확실한 문항에만 추가</span><span><i data-s="-" />사용 안 함</span></p>
+        <p>보기 순서끼리는 확률을, 입력 크기끼리는 로그 확률을 평균</p>
+      </div></li>
+      <li><div className="sol-stage"><b>Ensemble</b><span>로그 확률 앙상블</span></div><div className="sol-body">
+        <strong>세 모델의 로그 확률 평균 → 가장 높은 보기</strong><p>세 모델에 같은 가중치. 다수결, 확률 평균과 비교해 채택</p>
+      </div></li>
+      <li><div className="sol-stage"><b>Cascade</b><span>불확실한 문항만 다시 채점</span></div><div className="sol-body">
+        <strong>{uncertain}문항({share(uncertain)}%)에만 추가 계산</strong>
+        <div className="sol-meter" role="img" aria-label={`${total.toLocaleString("ko-KR")}문항 중 확정 ${share(settled)}%, 불확실 ${share(uncertain)}%`}><span style={{ width: `${share(settled)}%` }} /><span /></div>
+        <div className="sol-two">
+          <div><b>확정 {settled.toLocaleString("ko-KR")}문항 · {share(settled)}%</b><p>기본 답을 그대로 사용</p></div>
+          <div><b>불확실 {uncertain}문항 · {share(uncertain)}%</b><p>세 모델의 답이 갈리거나 1·2등 로그 확률 차 &lt; 2.0. TTA를 넓히고 Qwen 두 모델을 전체 데이터까지 학습한 모델로 교체</p></div>
+        </div>
+      </div></li>
+      <li><div className="sol-stage"><b>Submission</b><span>최종 답안 두 개</span></div><div className="sol-body">
+        <div className="sol-two">
+          <div className="sol-answer is-final"><b>답안 1 · Ensemble + 초반 모델 7개의 다수결 한 표</b><p>Public {metrics.vqa.stages.at(-1)!.score.toFixed(5)} · Private {metrics.vqa.leaderboard.private.score.toFixed(5)}</p></div>
+          <div className="sol-answer"><b>답안 2 · Ensemble</b><p>Public 0.97616 · 미리 정한 규칙만 사용</p></div>
+        </div>
+      </div></li>
+    </ol>
   </figure>;
 }
 

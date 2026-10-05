@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 
-// The panorama sits open under the engine card and plays on its own. three.js is large, so it is
+// The panorama sits open under the engine card's header and plays on its own. three.js is large, so it is
 // fetched when the reader comes near; until then, and without JavaScript, a still of the first
 // scene holds its place.
 const still = <div className="pano-poster" aria-hidden="true" />;
