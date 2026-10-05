@@ -571,7 +571,7 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
   .hero { grid-template-columns:1fr; align-items:start; row-gap:36px; } .hero>.sums { order:1; } .hero>.card { order:2; }
   .sums { grid-template-columns:1fr; gap:24px; }
   .pr-grid { grid-template-columns:1fr; }
-  .mini-grid { grid-template-columns:1fr; }
+  .mini-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .project-h { grid-template-columns:1fr; } .project-no { flex-direction:row; align-items:baseline; gap:8px; width:max-content; } .project-no b { margin-top:10px; }
 }
 @media (max-width:760px) {
