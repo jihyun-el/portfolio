@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getWriting, miniProjects, profile, projects, sitePath } from "@/lib/content";
-import { caseViews, statViews } from "@/lib/showcase";
+import { caseViews, summaryViews } from "@/lib/showcase";
 import { CommitActivity, CommitTimeline } from "@/components/history";
 import { StackSection } from "@/components/stack-section";
 import { MiniProjectBody, MiniProjects, miniTag } from "@/components/mini-projects";
@@ -73,11 +73,19 @@ export default function HomePage() {
           {profile.education.map((course) => <div key={course.title}><dt>교육</dt><dd>{course.title}<small className="num">{course.period}</small></dd></div>)}
         </dl>
       </aside>
-      {/* The results sit under both columns on a wide screen; on a narrow one they come before the card. */}
-      <section className="stats" aria-label="대표 결과">
-        {statViews().map((stat, i) => <a className="stat reveal" key={stat.label} href={`#${stat.anchor}`} style={{ animationDelay: `${i * 0.08}s` }}>
-          <b className="num">{stat.value}{stat.unit && <small>{stat.unit}</small>}</b><span>{stat.label}</span><i>{stat.context} ↓</i>
-        </a>)}
+      {/* The two projects sit under both columns on a wide screen; on a narrow one they come before the card.
+          Each summary reads role, then its headline numbers, then what the project consists of. */}
+      <section className="sums" aria-label="대표 프로젝트">
+        {summaryViews().map((item, i) => <article className="sum reveal" key={item.id} style={{ animationDelay: `${i * 0.08}s` }}>
+          <header className="sum-h">
+            <p className="sum-title"><span className="num">{String(i + 1).padStart(2, "0")}</span><a href={`#${item.id}`}>{item.name}</a>{item.tagline && <small>{item.tagline}</small>}</p>
+            <p className="sum-role">{item.role}</p>
+          </header>
+          <div className="sum-stats">{item.stats.map((stat) => <a className="stat" key={stat.label} href={`#${stat.anchor}`}>
+            <b className="num">{stat.value}{stat.unit && <small>{stat.unit}</small>}</b><span>{stat.label}</span><i>{stat.where} ↓</i>
+          </a>)}</div>
+          <dl className="sum-rows">{item.rows.map((row) => <div key={row.label}><dt>{row.label}</dt><dd>{row.line}</dd></div>)}</dl>
+        </article>)}
       </section>
     </section>
     <div id="projects">{projects.map((project, i) => <ProjectSection key={project.id} project={project} index={i} total={projects.length} parts={parts.filter((part) => part.projectId === project.id)} />)}</div>

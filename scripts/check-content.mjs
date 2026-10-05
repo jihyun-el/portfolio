@@ -139,6 +139,8 @@ for (const project of projects) {
   }
   if (!Array.isArray(project.skills) || typeof project.defaultOpen !== "boolean") throw new Error(`${project.id}: invalid skills/defaultOpen`);
   for (const link of project.links ?? []) if (!link.label || !/^https:\/\//.test(link.url)) throw new Error(`${project.id}: project links need a label and an https URL`);
+  // The first-screen summary lists a project's parts; a project without parts lists `highlights` instead.
+  if (!project.parts?.length && (!Array.isArray(project.highlights) || !project.highlights.length || project.highlights.some(row => !row.label || !row.line))) throw new Error(`${project.id}: a project without parts needs highlights (label, line)`);
   if (!fs.existsSync(path.join(content, "projects", `${project.id}.md`))) throw new Error(`${project.id}: project Markdown missing`);
   const partIds = new Set();
   for (const part of project.parts || []) {

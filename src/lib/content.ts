@@ -26,6 +26,8 @@ export type Project = {
   defaultOpen: boolean;
   links?: { label: string; url: string }[];
   parts?: { id: string; title: string; description: string }[];
+  // What a project without parts consists of, for its summary on the first screen.
+  highlights?: { label: string; line: string }[];
 };
 
 export type Writing = { slug: string; title: string; excerpt: string; body: string; onHome: boolean };

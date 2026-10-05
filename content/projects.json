@@ -28,6 +28,11 @@
     "summary": "SSAFY 16기 2회차 AI 챌린지입니다. 글자가 있는 사진과 한국어 질문을 받아 보기 a~d 중 정답을 고르는 VQA 모델을 개발하고, 리더보드 정확도로 순위를 정합니다.",
     "outcome": "Public 0.70241 → 0.97646. 최종 Private 0.97855로 217팀 중 3위 · 서울 캠퍼스 1위 (Public 14위에서 상승).",
     "skills": ["Python", "VLM", "LoRA", "QLoRA", "앙상블"],
-    "defaultOpen": false
+    "defaultOpen": false,
+    "highlights": [
+      { "label": "팀 운영", "line": "실험 축 배분 · 공통 실행 환경 · 평가 규칙" },
+      { "label": "실험", "line": "모델 크기 × 해상도 2×2 교차 · BF16 LoRA 학습" },
+      { "label": "추론", "line": "TTA · 로그 확률 앙상블 · 불확실 298문항 추가 채점" }
+    ]
   }
 ]

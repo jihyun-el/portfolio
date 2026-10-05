@@ -4,7 +4,8 @@ export type MetricView = { value: string; unit?: string; label: string };
 export type Comparison = { label: string; before: number; after: number; unit: string; digits: number; delta?: "pp"; lowerIsBetter: boolean };
 export type TroubleView = { slug: string; title: string };
 export type CaseView = { id: string; projectId: string; part?: string; title: string; short: string; fold: boolean; lead: string[]; store?: Pick<Project, "short" | "links">; tag: string; anchor: string; stack: string[]; overview: string; hardest: NonNullable<Case["hardest"]>; work: UnitWork[]; result?: UnitWork; troubles: TroubleView[]; results: MetricView[] };
-export type StatView = MetricView & { context: string; anchor: string };
+export type StatView = MetricView & { where: string; projectId: string; anchor: string };
+export type SummaryView = { id: string; name: string; tagline: string; role: string; stats: StatView[]; rows: { label: string; line: string }[] };
 
 const ko = (value: number) => value.toLocaleString("ko-KR");
 const vqaFirst = metrics.vqa.stages[0].score, vqaLast = metrics.vqa.stages.at(-1)!.score;
@@ -70,6 +71,22 @@ export function statViews(): StatView[] {
   return profile.stats.map((key) => {
     const item = cases.find((entry) => entry.metrics.includes(key))!;
     const project = projects.find((entry) => entry.id === item.projectId)!;
-    return { ...metricView(key), context: item.part ? `${project.short} · ${item.short}` : project.short, anchor: `part-${item.id}` };
+    return { ...metricView(key), where: item.short, projectId: project.id, anchor: `part-${item.id}` };
+  });
+}
+
+// The first screen's summary of each project: the role, the headline numbers that belong to it, and
+// what it consists of — its parts, or the `highlights` of a project that has none.
+export function summaryViews(): SummaryView[] {
+  const stats = statViews();
+  return projects.map((project) => {
+    const [name, tagline = ""] = project.title.split(" — ");
+    return {
+      id: project.id, name, tagline, role: project.role,
+      stats: stats.filter((stat) => stat.projectId === project.id),
+      rows: project.parts?.length
+        ? project.parts.map((part) => ({ label: cases.find((item) => item.projectId === project.id && item.part === part.id)!.short, line: part.description }))
+        : project.highlights ?? [],
+    };
   });
 }
