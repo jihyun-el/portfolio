@@ -130,6 +130,7 @@ for (const row of [...metrics.vqa.matrix, ...metrics.vqa.stages]) {
 if (metrics.vqa.stages.length < 2) throw new Error("VQA progress needs a starting and final result");
 const board = metrics.vqa.leaderboard;
 if ([board.rank, board.private?.overall, board.private?.seoul].some(rank => !Number.isInteger(rank) || rank < 1 || rank > board.teams) || !(board.private.score >= 0 && board.private.score <= 1)) throw new Error("VQA leaderboard ranks must be within the team count and the Private score within 0–1");
+if (!board.award?.name || !Number.isInteger(board.award.teams) || board.award.teams < 1) throw new Error("VQA award needs a name and the number of teams that received it");
 const ids = new Set();
 for (const project of projects) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.id) || ids.has(project.id)) throw new Error(`Invalid or duplicate project ID: ${project.id}`);

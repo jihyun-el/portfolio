@@ -25,7 +25,7 @@
       {"label":"전체 데이터 재학습","score":0.97646}
     ],
     "extraInference":{"total":6714,"uncertain":298},
-    "leaderboard":{"rank":14,"teams":217,"private":{"seoul":1,"overall":3,"score":0.97855}},
+    "leaderboard":{"rank":14,"teams":217,"private":{"seoul":1,"overall":3,"score":0.97855},"award":{"name":"최우수상","teams":6}},
     "note":"점수 그래프는 SSAFY AI 챌린지의 Public 기록입니다. 모델 크기와 해상도의 개별 효과는 2×2 실험으로 따로 쟀습니다."
   },
   "app": {"platforms":["iOS","Android"]},

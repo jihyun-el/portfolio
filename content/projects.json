@@ -26,7 +26,7 @@
     "period": "2026.09.21 ~ 2026.09.28",
     "role": "SSAFY AI 챌린지 · 5인 팀 A011 팀장",
     "summary": "SSAFY 16기 2회차 AI 챌린지입니다. 글자가 있는 사진과 한국어 질문을 받아 보기 a~d 중 정답을 고르는 VQA 모델을 개발하고, 리더보드 정확도로 순위를 정합니다.",
-    "outcome": "Public 0.70241 → 0.97646. 최종 Private 0.97855로 217팀 중 3위 · 서울 캠퍼스 1위 (Public 14위에서 상승).",
+    "outcome": "최우수상 · 최종 Private 0.97855로 217팀 중 3위 · 서울 캠퍼스 1위 (Public 14위에서 상승). Public 0.70241 → 0.97646.",
     "skills": ["Python", "VLM", "LoRA", "QLoRA", "앙상블"],
     "defaultOpen": false,
     "highlights": [

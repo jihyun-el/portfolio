@@ -115,5 +115,5 @@ export function VqaProgress({compact=false}: {compact?: boolean}) {
   const stages=compact ? [metrics.vqa.stages[0],metrics.vqa.stages.at(-1)!] : metrics.vqa.stages;
   return <figure className="score-figure"><figcaption><strong>Public 점수 변화</strong><span>점수 범위 0 — 1</span></figcaption><ol className="score-bars">
     {stages.map((stage,i) => <li key={stage.label} className={i===stages.length-1 ? "is-final" : undefined}><div><span>{stage.label}</span><strong>{stage.score.toFixed(5)}</strong></div><div className="bar-track"><span className={`bar-fill ${i===stages.length-1 ? "bar-accent" : ""}`} style={{width:`${stage.score*100}%`}} /></div></li>)}
-    </ol><p className="figure-note">{compact ? `Private 리더보드 ${metrics.vqa.leaderboard.teams}팀 중 ${metrics.vqa.leaderboard.private.overall}위 · 서울 캠퍼스 ${metrics.vqa.leaderboard.private.seoul}위. Public ${metrics.vqa.leaderboard.rank}위에서 올랐습니다.` : metrics.vqa.note}</p></figure>;
+    </ol><p className="figure-note">{compact ? `${metrics.vqa.leaderboard.award.name} · Private 리더보드 ${metrics.vqa.leaderboard.teams}팀 중 ${metrics.vqa.leaderboard.private.overall}위 · 서울 캠퍼스 ${metrics.vqa.leaderboard.private.seoul}위. Public ${metrics.vqa.leaderboard.rank}위에서 올랐습니다.` : metrics.vqa.note}</p></figure>;
 }
