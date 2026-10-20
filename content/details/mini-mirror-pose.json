@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "id": "mini-mirror-pose",
+  "projectId": "mirror-pose",
+  "title": "거울을 두 번째 시점으로 쓰는 3D 자세 복원",
+  "sentence": "카메라 한 대와 전신 거울로 관절의 3D 좌표를 얻는다. 사람과 거울상이 함께 찍힌 사진 한 장을 두 시점으로 사용한다.",
+  "period": "2025.07 · 2주 개발 · 인텔 AI For Future Workforce 인공지능 인재 양성 과정",
+  "scope": {
+    "direct": [
+      "팀장으로 3D 복원 엔진과 사진을 받는 서버를 개발했다."
+    ],
+    "team": [
+      "안드로이드 앱은 팀원들이 개발했다. 사진을 서버에 올리고 결과를 표시한다."
+    ],
+    "borrowed": [
+      "관절 검출은 YOLO11-pose, 3D 복원은 두 시점 기하(삼각측량)를 사용했다."
+    ]
+  },
+  "stack": [
+    {
+      "technology": "Ultralytics · OpenCV · SciPy",
+      "use": "관절 검출, 두 시점의 관계 추정과 삼각측량"
+    },
+    {
+      "technology": "FastAPI · Plotly",
+      "use": "사진 업로드 처리와 3D 자세·각도 결과 HTML 반환"
+    }
+  ],
+  "resultMetricIds": [],
+  "metrics": [],
+  "steps": [],
+  "cards": [
+    {
+      "id": "mirror-single-camera-stereo",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "before",
+      "structureOrder": 1,
+      "date": {
+        "from": "2025-07",
+        "to": "2025-07",
+        "precision": "month"
+      },
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "거울 속 모습 = 거울 뒤 카메라의 시점 → 사진 한 장에서 두 시점 확보",
+        "development": "2025.07 — 카메라 두 대 대신 전신 거울 한 장으로 관절 3D 좌표 복원, 엔진 · 서버 개발"
+      },
+      "problem": "자세 추정 앱에서 관절의 3D 좌표를 얻으려면 시점이 둘 필요하다. 카메라 두 대면 되지만, 두 대를 설치하고 촬영 시각까지 맞추는 구성은 사용자가 쓰기 어렵다.",
+      "cause": "거울에 비친 모습은 거울 뒤편에 놓인 카메라가 실제 사람을 본 모습과 같다. 그래서 사람과 거울상이 함께 찍힌 사진 한 장에는 시점이 둘 들어 있고, 같은 관절을 본 두 시선이 만나는 곳이 그 관절의 3D 위치다. 두 시점이 한 장에 찍히므로 촬영 시각을 맞출 필요가 없다. 운동이나 재활을 하는 공간에는 전신 거울이 이미 있어 추가 장비도 필요 없다.",
+      "decision": "YOLO11-pose로 사진 한 장에서 실제 사람과 거울상의 관절을 17개씩 검출한다. 두 관절 집합에서 두 시점의 관계를 추정하고 삼각측량으로 3D 좌표를 복원한 뒤, 복원한 자세에서 어깨 각도를 계산한다. FastAPI 서버가 사진을 받아 3D 자세와 어깨 각도를 반환한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "사진 한 장에서 3D 자세와 어깨 각도까지 이어지는 엔진과 서버를 2주 동안 만들었다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "mp-s01",
+        "mp-s02",
+        "mp-s03",
+        "mp-s04",
+        "mp-s06"
+      ],
+      "focus": null,
+      "figure": null
+    }
+  ],
+  "validation": [],
+  "reflection": [],
+  "links": [],
+  "sources": [
+    "mp-s01",
+    "mp-s02",
+    "mp-s03",
+    "mp-s04",
+    "mp-s05",
+    "mp-s06"
+  ]
+}

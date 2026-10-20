@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "id": "model",
+  "projectId": "classicmate",
+  "title": "ClassicMate 음높이 모델",
+  "sentence": "반주가 섞인 휴대폰 마이크 입력과 엔진이 재생한 반주를 함께 받아, 10ms마다 가수의 음높이 분포를 기기에서 출력한다.",
+  "period": "2026.05 ~ 2026.07",
+  "scope": {
+    "direct": [
+      "문제 정의와 구조 결정, 학습 전 실측, 데이터 구축 규칙, 손실 · 지표 · 평가 기준 설계, 에코 측정 앱 빌드와 실측, 실기기 배포 형태 결정.",
+      "가설 · 설계 · 평가는 직접 하고, 그에 따른 학습 · 측정 코드 구현은 AI 코딩 에이전트에게 맡겼다."
+    ],
+    "team": [],
+    "borrowed": [
+      "템플릿 관측(Cont 2010), 모델 구조(Bittner 2017), 교사 모델과 360빈 출력 형식(FCPE), 보컬 분리(Mel-Band RoFormer), 반주 정렬(Sync Toolbox), 가변-Q 변환(PESTO)."
+    ]
+  },
+  "stack": [
+    { "technology": "PyTorch", "use": "참조 입력 CNN의 학습 · 평가" },
+    { "technology": "Core ML", "use": "학습 전 실측과 기기 추론(신경망 가속기)" },
+    { "technology": "Python", "use": "데이터 구축 · 증강 · 교차 대조 평가" },
+    { "technology": "Flutter", "use": "에코 측정 앱(지수 사인 스윕 재생 · 녹음)" }
+  ],
+  "resultMetricIds": ["model-deploy-form", "model-heldout-phone"],
+  "metrics": [
+    {
+      "id": "model-device-probe",
+      "label": "학습 전 실측: 1천만 파라미터급 뼈대의 호출당 시간(정상 상태 최악값)",
+      "values": [
+        { "label": "창 전체를 매번 다시 계산", "value": 38.7, "unit": "ms" },
+        { "label": "프레임 단위로 호출", "value": 8.19, "unit": "ms" }
+      ],
+      "method": "학습 전 무작위 가중치 뼈대를 Core ML로 변환해 10ms마다 한 번 호출하고, 첫 3회를 뺀 정상 상태의 최댓값을 측정했다.",
+      "scope": "iPhone 15 · 저전력 모드 · 약 1천만 파라미터 · 가중치 학습 전.",
+      "measuredAt": { "from": "2026-06-13", "to": "2026-06-13", "precision": "day" },
+      "sources": ["s-mdl-probe"]
+    },
+    {
+      "id": "model-deploy-form",
+      "label": "배포 모델(14층)의 호출당 시간",
+      "values": [
+        { "label": "상태 유지 · CPU 실행", "value": 5.1, "unit": "ms" },
+        { "label": "창 재계산 fp16 · 신경망 가속기 실행", "value": 1.59, "unit": "ms" }
+      ],
+      "method": "학습을 마친 같은 모델을 두 형태로 변환해 실기기에서 호출당 시간을 비교했다. 창 재계산 형태의 출력은 원래 모델과 일치했다.",
+      "scope": "iPhone 17 · 학습한 14층 모델 · 32프레임 창.",
+      "measuredAt": { "from": "2026-06-22", "to": "2026-06-22", "precision": "day" },
+      "sources": ["s-mdl-deploy"]
+    },
+    {
+      "id": "reference-ab-pitch",
+      "label": "참조 입력 유무에 따른 ±2빈(±40센트) 음높이 정확도",
+      "values": [
+        { "label": "마이크만 사용", "value": 0.609, "unit": "비율" },
+        { "label": "마이크와 반주 참조", "value": 0.661, "unit": "비율" }
+      ],
+      "method": "노래가 있는 프레임 가운데 예측이 정답의 ±2빈 안에 든 비율. 2,500스텝 학습 중 1,000~2,500스텝에서 측정한 값의 평균이다.",
+      "scope": "9층 모델 · 같은 검증 4곡의 앞 15초 · 1,000~2,500스텝 평균.",
+      "measuredAt": { "from": "2026-06-14", "to": "2026-06-14", "precision": "day" },
+      "sources": ["s-mdl-ab"]
+    },
+    {
+      "id": "model-echo-method",
+      "label": "같은 거실 녹음에서 분석한 잔향 시간(RT60)",
+      "values": [
+        { "label": "기존 방법(음악 역합성)", "value": 915, "unit": "ms" },
+        { "label": "지수 사인 스윕", "value": 77, "unit": "ms" }
+      ],
+      "method": "측정 앱으로 녹음한 스윕 녹음 하나를 두 방법으로 분석했다.",
+      "scope": "거실 한 곳 · iPhone · 같은 녹음.",
+      "measuredAt": { "from": "2026-06-17", "to": "2026-06-17", "precision": "day" },
+      "sources": ["s-mdl-echo"]
+    },
+    {
+      "id": "model-heldout-phone",
+      "label": "학습에서 뺀 곡의 휴대폰 녹음, 정답과 반음 이내인 프레임 비율",
+      "values": [
+        { "label": "실제 휴대폰 녹음", "value": 96, "unit": "%" },
+        { "label": "같은 곡의 깨끗한 보컬 입력", "value": 98, "unit": "%" }
+      ],
+      "method": "정답은 깨끗한 보컬에 FCPE를 적용한 음높이다. 실제 녹음에는 학습과 같은 방식으로 참조 반주를 만들어 함께 넣었다.",
+      "scope": "「Halt!」 한 곡 · 배포 모델(14층 12,000스텝).",
+      "measuredAt": { "from": "2026-06-26", "to": "2026-06-26", "precision": "day" },
+      "sources": ["s-mdl-heldout"]
+    }
+  ],
+  "steps": [
+    { "step": "00", "stepName": "템플릿 → 분포", "entryCardId": "model-likelihood", "sectionAnchor": null },
+    { "step": "01", "stepName": "분리 대신 음높이만", "entryCardId": "model-pitch-only", "sectionAnchor": null },
+    { "step": "02", "stepName": "학습 전 실측", "entryCardId": "model-device-probe", "sectionAnchor": null },
+    { "step": "03", "stepName": "참조 입력", "entryCardId": "model-reference", "sectionAnchor": null },
+    { "step": "04", "stepName": "학습 데이터", "entryCardId": "model-dataset", "sectionAnchor": null },
+    { "step": "05", "stepName": "실제 에코 측정", "entryCardId": "model-echo", "sectionAnchor": null },
+    { "step": "06", "stepName": "손실과 지표", "entryCardId": "model-loss", "sectionAnchor": null },
+    { "step": "07", "stepName": "평가", "entryCardId": "model-evaluation", "sectionAnchor": null }
+  ],
+  "cards": [
+    {
+      "id": "model-likelihood", "step": "00", "stepName": "템플릿 → 분포", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-05-18", "to": "2026-05-20", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "관측: 고정 스펙트럼 템플릿 → 음높이 분포를 음표별 우도로", "development": "2026.05.18–20 — 관측: 고정 스펙트럼 템플릿 → 음높이 분포를 음표별 우도로" },
+      "problem": "참고한 악보 추종 알고리즘(Cont 2010)은 92ms 창의 FFT 스펙트럼을 음표마다 고정된 배음 템플릿과 비교해 관측을 만든다. 템플릿은 음마다 하나로 고정돼 있어, 비브라토와 모음 변화로 계속 움직이는 성악의 스펙트럼과 맞지 않았다.",
+      "cause": "관측이 스펙트럼의 모양을 직접 비교하는 한, 같은 음이라도 모음과 창법이 바뀌면 다른 음처럼 보인다. 추종에 필요한 것은 스펙트럼의 모양이 아니라, 그 순간 각 음높이일 가능성이었다.",
+      "decision": "음높이 모델(FCPE)이 한 값을 고르기 전의 360빈 출력을 관측으로 쓴다. 빈마다의 값은 서로 독립인 확신도라 합이 1이 아니지만, 소프트맥스로 정규화하지 않고 그대로 음표의 센트 값 주변에서 합산해 음표별 우도로 삼는다. 템플릿 방식에서 온 23ms 간격은 근거가 사라져, 관측 주기를 10ms로 통일했다.",
+      "alternatives": [
+        { "approach": "가장 높은 음높이 한 값만 고른 뒤 소리를 다시 합성해 입력", "reason": "분포를 한 값으로 줄이면 신경망이 가진 다른 후보의 정보가 사라진다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "관측을 스펙트럼 비교에서 음높이 분포로 바꾸고, 기기에서 실행할 모델의 출력도 360빈 분포로 정했다.", "atDecision": null, "current": null, "metricIds": [] },
+      "borrowed": {
+        "summary": "템플릿 관측은 Cont(2010), 360빈 출력 형식은 FCPE(Luo 외, 2025)의 것이다. 분포를 정규화 없이 음표별 우도로 쓰는 관측은 직접 구성했다.",
+        "links": [
+          { "label": "Cont, 2010 — IEEE TPAMI 32(6)", "href": "https://doi.org/10.1109/TPAMI.2009.106", "purpose": "실시간 악보 추종의 구조와 템플릿 관측" },
+          { "label": "Luo 외, 2025 — FCPE (arXiv:2509.15140)", "href": "https://arxiv.org/abs/2509.15140", "purpose": "교사 모델과 360빈 출력 형식" }
+        ]
+      },
+      "links": [], "sources": ["s-mdl-observation", "s-mdl-user"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-pitch-only", "step": "01", "stepName": "분리 대신 음높이만", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-10", "to": "2026-06-12", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "보컬 분리 → 음높이 추정 두 모델 → 섞인 입력에서 음높이 분포를 바로 내는 CNN 하나", "development": "2026.06.10–12 — 보컬 분리 → 음높이 추정 두 모델 → 섞인 입력에서 음높이 분포를 바로 내는 CNN 하나" },
+      "problem": "반주가 섞인 녹음에서 음높이를 얻는 경로는 채점 엔진을 만들며 정했다. 재생한 반주를 빼는 에코 제거가 목소리의 배음까지 깎아, 보컬 분리 모델(Mel-RoFormer)로 보컬만 남긴 뒤 FCPE를 적용하는 경로를 택했다. 분리 모델은 곡 전체를 앞뒤로 보는 큰 모델이라 휴대폰에서 10ms마다 실시간으로 실행하여 결과를 얻을 수 없다.",
+      "cause": "문제를 다시 정의했다. 엔진에 필요한 것은 분리된 보컬 소리가 아니라, 피아노와 성악이 섞인 입력 속 가수의 음높이다. 분리된 소리는 음높이 추정의 입력으로만 쓰인다.",
+      "decision": "분리 → FCPE 두 단계의 최종 출력인 360빈 분포만 정답으로 삼아, 섞인 입력에서 같은 출력을 바로 내는 CNN 하나로 증류한다. 분리 모델과 FCPE는 학습 정답을 만드는 데만 쓰고 배포에는 넣지 않는다. 설계 조건은 미래 참조 10~20ms, 휴대폰에서 10ms마다 실행으로 정했다. 구조는 풀링 없이 합성곱만 쌓고, 시간 문맥은 층 수로 확보한다.",
+      "alternatives": [
+        { "approach": "보컬 분리 모델을 작은 모델로 증류한 뒤 음높이 추정", "reason": "분리된 소리를 복원하는 데 모델 용량을 쓰고, 기기에서 분리와 음높이 추정 두 단계를 실행해야 한다.", "disposition": "considered-rejected" },
+        { "approach": "순환 신경망(GRU) · 팽창 합성곱으로 시간 문맥 확보", "reason": "조사한 자료에서 둘 다 신경망 가속기 대신 CPU에서 실행됐고, 학습 전 실측에서 GRU 변형은 Core ML 변환에 실패했다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "기기에서 실행되는 신경망은 섞인 입력에서 음높이 분포를 바로 내는 모델 하나다.", "atDecision": null, "current": null, "metricIds": [] },
+      "borrowed": {
+        "summary": "풀링 없이 합성곱만 쌓는 구조는 Bittner 외(2017), 교사 모델과 360빈 출력 형식은 FCPE(Luo 외, 2025), 보컬 분리는 Mel-Band RoFormer(Wang 외, 2023)에서 참조했다. 분리를 거치지 않고 음높이 분포로 바로 증류하는 문제 정의는 직접 했다.",
+        "links": [
+          { "label": "Bittner 외, 2017 — ISMIR", "href": "https://archives.ismir.net/ismir2017/paper/000085.pdf", "purpose": "풀링 없는 합성곱 구조와 배음 채널 입력" },
+          { "label": "Luo 외, 2025 — FCPE (arXiv:2509.15140)", "href": "https://arxiv.org/abs/2509.15140", "purpose": "교사 모델과 360빈 출력 형식" },
+          { "label": "Wang 외, 2023 — Mel-Band RoFormer (arXiv:2310.01809)", "href": "https://arxiv.org/abs/2310.01809", "purpose": "학습 정답을 만들 때 쓴 보컬 분리" }
+        ]
+      },
+      "links": [], "sources": ["s-mdl-aec", "s-mdl-separation", "s-mdl-redefine", "s-mdl-architecture"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-device-probe", "step": "02", "stepName": "학습 전 실측", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-12", "to": "2026-06-13", "precision": "day" }, "developmentTieOrder": 2, "core": true,
+      "lead": { "structure": "학습 전 실측: 무작위 가중치 뼈대를 실기기에서 호출당 측정 → 가속기에서 실행되는 구조만 학습", "development": "2026.06.12–13 — 학습 전 실측: 무작위 가중치 뼈대를 실기기에서 호출당 측정 → 가속기에서 실행되는 구조만 학습" },
+      "problem": "학습할 모델의 크기와 구조를 정해야 했다. 신경망 가속기가 실행하지 못하는 연산은 공식 목록이 없어, 학습부터 하면 그 모델이 기기에서 돌지 않는다는 것을 학습을 마친 뒤에야 알게 된다.",
+      "cause": "실행 시간은 가중치 값이 아니라 연산 그래프의 모양으로 정해진다. 무작위 가중치로 같은 모양의 뼈대를 만들면, 정확도는 알 수 없어도 기기 시간은 학습 전에 그대로 측정할 수 있다. 모델은 신경망 가속기에서, 추종 계산은 CPU에서 실행되므로 10ms의 대부분을 모델에 쓸 수 있다고 보고, 통과 여부가 아니라 쓸 수 있는 크기의 상한을 측정하기로 했다.",
+      "decision": "합성곱만 쌓은 뼈대를 약 5만 파라미터부터 FCPE와 같은 규모인 1천만 파라미터까지 크기별로 Core ML에 변환해, 무작위 가중치 그대로 실기기에서 측정했다. 조건은 가장 불리한 쪽으로 잡았다. 저전력 모드에서 배포처럼 10ms마다 한 번 호출하고, 첫 3회를 뺀 정상 상태의 최악값으로 판정했다. iPhone 17에서 측정한 뒤, 최소 지원 기종인 iPhone 15에서 다시 측정했다.",
+      "alternatives": [
+        { "approach": "100프레임을 한 번에 넣어 프레임당 시간으로 환산", "reason": "한 번에 넣으면 호출마다 드는 고정 비용이 가려진다. 배포는 10ms마다 한 번 호출하므로 호출당 시간으로 판정했다.", "disposition": "tested-rejected" }
+      ],
+      "result": {
+        "summary": "학습 전에 쓸 수 있는 크기의 상한을 정했다. 합성곱만 쓴 구조는 저전력 모드에서도 모든 층이 가속기에서 실행됐다. 1천만 파라미터급은 프레임 단위 호출로 10ms 안에 들었지만 빠듯해, 여유 있는 상한을 약 350만 파라미터로 두었다. 같은 1천만 파라미터급도 창 전체를 매번 다시 계산하면 10ms를 넘었다.",
+        "atDecision": "iPhone 15에서 1천만 파라미터급은 프레임 단위 호출 8.19ms, 창 전체 재계산 38.7ms였다. 8.19ms는 층마다 이전 프레임의 상태를 넘기는 비용을 뺀 하한이고, 남는 여유는 1.8ms다. 프레임 단위 호출에서 iPhone 15는 iPhone 17보다 1.09배 느렸고(계획에서는 약 2배로 잡았다), 저전력 모드는 일반 모드보다 약 1.7배 느렸다. 실제 크기는 이 상한 안에서 학습할 수 있는 깊이로 정했다(14층 · 약 117만 파라미터).",
+        "current": null,
+        "metricIds": ["model-device-probe"]
+      },
+      "borrowed": null,
+      "links": [], "sources": ["s-mdl-probe", "s-mdl-echo", "s-mdl-user"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-depth", "step": "02", "stepName": "학습 전 실측", "structurePlacement": "step", "structureOrder": 2,
+      "date": { "from": "2026-06-17", "to": "2026-06-17", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "깊이 = 시간 문맥: 잔차 없는 16층 학습 붕괴 → 14층", "development": "2026.06.17 — 깊이 = 시간 문맥: 잔차 없는 16층 학습 붕괴 → 14층" },
+      "problem": "용량을 늘리려고 14층과 1천만 파라미터급 사이에 16층(약 196만 파라미터) 모델을 만들었다. 실기기 호출당 2.19ms로 시간은 통과했지만, 학습을 시작하자 ±2빈 정확도가 0 근처에서 움직이지 않았다.",
+      "cause": "모델은 합성곱 · 배치 정규화 · ReLU 블록을 잔차 연결 없이 일렬로 쌓은 구조였다. 같은 데이터에서 9층과 14층은 학습이 진행됐고, 기존 체크포인트를 새 데이터로 평가해 ±2빈 0.838을 확인해 데이터와 평가 코드를 원인에서 제외했다. 학습률을 낮춰도 같아, 잔차 연결이 없는 구조의 깊이 한계로 판단했다.",
+      "decision": "배포 모델은 학습이 확인된 14층(약 117만 파라미터)으로 정했다. 시간 문맥은 층 수로 확보하므로, 14층의 시간 수용영역 27프레임(270ms)이 이 모델이 보는 시간 범위다.",
+      "alternatives": [
+        { "approach": "잔차 연결 없이 쌓은 16층 모델", "reason": "실기기 시간은 2.19ms로 통과했지만, 학습률 2e-3과 5e-4 모두에서 학습되지 않았다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "기기 시간이 아니라 학습 가능한 깊이로 모델 크기를 정했다. 배포 모델은 14층이다.", "atDecision": null, "current": null, "metricIds": [] },
+      "borrowed": null,
+      "links": [], "sources": ["s-mdl-echo"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-deploy-form", "step": "02", "stepName": "학습 전 실측", "structurePlacement": "step", "structureOrder": 3,
+      "date": { "from": "2026-06-21", "to": "2026-06-23", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "학습 뒤 배포 형태: 상태 유지 형태 거부 → 창 재계산 fp16, 재학습 없이 전환", "development": "2026.06.21–23 — 학습 뒤 배포 형태: 상태 유지 형태 거부 → 창 재계산 fp16, 재학습 없이 전환" },
+      "problem": "학습한 14층 모델을 기기용으로 변환해 실기기에서 측정하자, 학습 전 실측과 달리 신경망 가속기에서 실행되지 않았다. 층마다 이전 프레임의 상태를 들고 다니는 형태는 합성곱을 fp32로 두면 CPU에서 5.1ms였고, fp16으로 바꾸면 가속기용 컴파일에 실패했다.",
+      "cause": "학습 전 실측은 상태를 들고 다니지 않는 fp16 합성곱 뼈대로 했다. 배포 변환에서는 실시간 시험 프로그램에서 검증한 층별 캐시(상태 유지) 형태를 그대로 옮기고, fp16 상태가 층을 지나며 쌓이는 출력 오차를 막으려 합성곱을 fp32로 두었다. 두 변경 모두 학습 전 실측의 조건 밖이었다. 정밀도와 상태 유지를 나눠 측정해, 가속기 컴파일을 막는 원인이 정밀도가 아니라 상태 유지임을 확인했다.",
+      "decision": "상태를 버리고 매 호출마다 32프레임 창 전체를 fp16으로 다시 계산하는 형태로 바꿨다. 계산량은 늘지만 가속기에서 실행돼, 상태를 유지하는 CPU 실행보다 빠르다. 출력은 원래 모델과 일치해 재학습이 필요 없었다. 이후 측정은 정밀도 · 상태 · 전처리까지 배포 형태 그대로 한다는 원칙을 세웠다.",
+      "alternatives": [
+        { "approach": "상태를 유지하는 형태를 fp32 합성곱으로 실행", "reason": "가속기 대신 CPU에서 실행돼 호출당 5.1ms였다.", "disposition": "tested-rejected" },
+        { "approach": "상태를 유지하는 형태를 fp16으로 실행", "reason": "실기기에서 가속기용 컴파일에 실패했다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "배포 모델은 가속기에서 호출당 1.59ms로 실행되고, 재학습 없이 학습한 출력을 그대로 낸다.", "atDecision": null, "current": null, "metricIds": ["model-deploy-form"] },
+      "borrowed": null,
+      "links": [], "sources": ["s-mdl-deploy"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-reference", "step": "03", "stepName": "참조 입력", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-13", "to": "2026-06-14", "precision": "day" }, "developmentTieOrder": 2,
+      "lead": { "structure": "입력: 마이크 + 엔진이 재생한 반주(참조), 멜로디는 참조에서 제외", "development": "2026.06.13–14 — 입력: 마이크 + 엔진이 재생한 반주(참조), 멜로디는 참조에서 제외" },
+      "problem": "휴대폰 스피커로 나간 반주는 마이크로 되돌아와 노래와 섞이고, 모델은 이 섞인 신호에서 가수의 음높이만 내야 한다. 녹음에서 반주를 지우는 에코 제거는 앱과 채점 엔진에서 두 방식으로 시험했고, 둘 다 노래까지 손상시켜 기각했다.",
+      "cause": "섞인 반주는 엔진이 직접 재생한 신호다. 걸러 낼 방해음을 미리 알고 있으므로, 재생한 반주를 녹음에서 빼지 않고 참조로 함께 받는 입력으로 처음부터 설계했다.",
+      "decision": "배음 0.5 · 1 · 2 · 3 · 4 · 5배의 스펙트로그램 6장을 채널로 쌓고, 마이크 6채널과 재생한 반주 6채널을 합쳐 12채널로 입력한다. 참조에는 반주 파트만 넣고 가수가 부를 멜로디는 뺀다. 재생과 녹음 사이의 절대 지연은 실행 중에 맞추고, 학습에서는 참조를 ±30ms 안에서 무작위로 어긋나게 해 남는 오차만 견디게 했다.",
+      "alternatives": [
+        { "approach": "OS 에코 제거를 켜고 녹음", "reason": "OS가 앱을 통화 앱으로 보고 음성 처리를 걸어, 녹음의 음질과 음량이 떨어졌다. 앱 녹음은 에코 제거 · 자동 음량 · 잡음 억제를 모두 끄고, iOS는 측정 모드, Android는 무처리 입력으로 바꿨다.", "disposition": "tested-rejected" },
+        { "approach": "재생한 반주를 녹음에서 빼는 신호 처리 에코 제거(적응 필터 + 스펙트럼 차감)", "reason": "채점 엔진에서 구현했다. 반주는 약 11dB 줄었지만 목소리의 배음도 깎였다. 노래 녹음에서 음높이 흔들림이 3.5%에서 5.0%로, 추출한 음표가 477개에서 688개로 늘었고, 청취에서도 에코 제거를 하지 않은 녹음의 추출이 나았다. 그래서 보컬 분리 → FCPE 경로로 바꿨다.", "disposition": "tested-rejected" },
+        { "approach": "마이크만 쓰는 6채널 모델", "reason": "같은 조건의 비교에서 ±2빈 정확도가 0.609로, 참조 모델의 0.661보다 낮았다.", "disposition": "tested-rejected" },
+        { "approach": "가수가 부를 멜로디까지 참조로 제공", "reason": "모델이 목소리 대신 악보를 따라 출력할 수 있다.", "disposition": "considered-rejected" }
+      ],
+      "result": { "summary": "참조 입력을 붙이자 ±2빈 정확도가 0.609 → 0.661로 오르고, 같은 정확도까지의 학습 스텝이 약 절반으로 줄었다.", "atDecision": null, "current": null, "metricIds": ["reference-ab-pitch"] },
+      "borrowed": {
+        "summary": "배음을 채널로 쌓는 입력은 Bittner 외(2017)에서 참조했다. 재생한 반주를 참조 채널로 붙이는 구성은 직접 설계했다.",
+        "links": [
+          { "label": "Bittner 외, 2017 — ISMIR", "href": "https://archives.ismir.net/ismir2017/paper/000085.pdf", "purpose": "풀링 없는 합성곱 구조와 배음 채널 입력" }
+        ]
+      },
+      "links": [], "sources": ["s-mdl-aec", "s-mdl-reference", "s-mdl-ab"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-dataset", "step": "04", "stepName": "학습 데이터", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-11", "to": "2026-06-15", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "학습 데이터: 성종 · 음역 · 유성음 비율로 편중을 점검한 가곡 실연 140개, 정렬 품질은 청취로 등급화", "development": "2026.06.11–15 — 학습 데이터: 성종 · 음역 · 유성음 비율로 편중을 점검한 가곡 실연 140개, 정렬 품질은 청취로 등급화" },
+      "problem": "섞인 입력에서 음높이를 내도록 학습하려면, 성악 음높이 정답과 그 순간 재생된 반주가 짝을 이룬 데이터가 필요했다. 가곡 실연 녹음에는 보컬과 반주가 함께 있지만 음높이 정답이 없고, 반주 타이밍은 실연마다 다르다.",
+      "cause": "정답은 분리한 보컬에 FCPE를 적용해 만든다. 그래서 어떤 목소리를 모으느냐가 모델이 겪는 음높이의 폭을 정하고, 반주를 얼마나 정확히 정렬하느냐가 정답과 참조 입력의 질을 정한다. 음높이 추정에서 다양성의 축은 언어가 아니라 음역과 유성음 비율로 봤다.",
+      "decision": "수집 조건을 먼저 정했다. 악보가 있는 곡의 피아노 반주 · 독창 실연만 모으고, 입시곡 언어(독일어 · 프랑스어 · 영어 · 이탈리아어)를 중심으로 소프라노부터 베이스까지 성종을 고르게 했다. 같은 곡을 다른 음역으로 부른 실연과, 고음 소프라노 · 가성으로 부르는 카운터테너도 넣었다. 이렇게 모은 실연 165개(89곡)에서 보컬과 반주를 분리하고, 분리한 보컬에 FCPE를 적용해 음높이 정답을 만들었다.\n\n반주는 악보 파이프라인이 만든 12개 조 MIDI 중 보컬 음높이와 가장 잘 맞는 조를 골라 실연 타이밍에 정렬하고, 피아노 음원으로 다시 렌더링한다. 정렬 품질은 정렬한 멜로디와 보컬의 음높이 일치율로 등급을 나누고, 등급마다 한 곡씩 들어 사용 기준(일치율 40% 이상)을 정했다.\n\n사용 기준에 못 미친 곡을 뺀 뒤 남은 곡을 음역과 유성음 비율로 다시 집계했다. 성종과 드문 표본(고음 소프라노 · 카운터테너)은 모두 남았지만, 유성음 비율의 중앙값이 0.69로 느린 레가토에 치우쳐 있었다. 빠르고 자음이 많은 곡을 따로 36개 모아 25개를 더해, 유성음 비율이 낮은 쪽을 보강했다.\n\n실제 휴대폰 녹음은 검증에만 쓰고, 같은 곡의 실연 4개도 학습에서 빼 실연 녹음 140개로 학습했다. 렌더한 반주가 참조 입력이 되고, 분리한 보컬과 섞어 에코를 입히면 마이크 입력이 된다. 같은 녹음도 표본마다 방 응답 · 음량 비율 · 잡음을 새로 뽑아 합성한다.",
+      "alternatives": [
+        { "approach": "MusicXML에서 반주를 추출해 정렬", "reason": "반복 마디가 한 번만 펼쳐져 실연과 시간축이 어긋났다. 조마다 만들어 둔 MIDI 파일을 직접 쓰는 쪽으로 바꿨다.", "disposition": "tested-rejected" },
+        { "approach": "직접 구현한 크로마 DTW 정렬", "reason": "조 추정의 잡음으로 정렬이 흔들려, 공개된 정렬 도구(Sync Toolbox)와 12개 조 MIDI 선택으로 바꿨다.", "disposition": "tested-rejected" },
+        { "approach": "녹음의 피아노가 0초에 시작한다고 보고 정렬", "reason": "앞의 침묵과 박수까지 악보 첫머리에 맞춰져 곡 전체가 밀렸다. 반주가 있는 구간만 잘라 정렬한 뒤 시작 위치를 되돌리자, 일치율 40% 미만인 곡이 49개에서 33개로 줄었다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "성종 · 음역과 유성음 비율을 점검한 실연 녹음 140개로, 같은 녹음도 표본마다 새로운 방 · 비율 · 잡음 조건에서 학습한다.", "atDecision": null, "current": null, "metricIds": [] },
+      "borrowed": {
+        "summary": "보컬 분리는 Mel-Band RoFormer(Wang 외, 2023), 음높이 정답은 FCPE(Luo 외, 2025), 반주 정렬은 Sync Toolbox(Müller 외, 2021)를 썼다. 12개 조 MIDI는 직접 만든 악보 파이프라인의 출력이다.",
+        "links": [
+          { "label": "Wang 외, 2023 — Mel-Band RoFormer (arXiv:2310.01809)", "href": "https://arxiv.org/abs/2310.01809", "purpose": "학습 정답을 만들 때 쓴 보컬 분리" },
+          { "label": "Müller 외, 2021 — Sync Toolbox, JOSS 6(64)", "href": "https://doi.org/10.21105/joss.03434", "purpose": "실연 타이밍에 맞춘 반주 정렬" }
+        ]
+      },
+      "links": [], "sources": ["s-mdl-dataset", "s-mdl-coverage", "s-mdl-reference"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-echo", "step": "05", "stepName": "실제 에코 측정", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-14", "to": "2026-06-18", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "실제 에코: 측정 앱으로 실측 → 합성과의 차이는 잔향 길이가 아닌 직접음 비율", "development": "2026.06.14–18 — 실제 에코: 측정 앱으로 실측 → 합성과의 차이는 잔향 길이가 아닌 직접음 비율" },
+      "problem": "학습 에코는 공개 잔향 데이터의 임펄스 응답으로 합성하고, 실제 휴대폰 녹음을 음악 역합성으로 분석한 잔향 시간에 맞춰 잔향 범위를 넓혔다. 같은 방법으로 다시 분석한 값(1,151ms)은 합성 잔향을 더 길게 늘리는 쪽을 가리켰다. 이 분석법과 합성 에코가 휴대폰 스피커에서 나와 같은 휴대폰 마이크로 들어오는 실제 에코와 맞는지는 직접 측정해 검증하기로 했다.",
+      "cause": "같은 거실 녹음을 두 방법으로 분석하자, 지수 사인 스윕은 77ms, 기존 음악 역합성은 915ms였다. 기존 방법이 잔향 시간을 12배 부풀렸다. 측정 앱으로 9개 공간을 다시 측정하니 잔향 시간은 60~744ms였고, 직접음 비율은 +5~+12dB로 가장 울리는 욕실에서도 직접음이 우세했다. 학습에 쓰던 공개 잔향 데이터는 −5.3dB로 확산음이 우세했다. 휴대폰은 스피커와 마이크가 가까워 어느 방에서든 직접음이 지배하므로, 합성과 실제의 차이는 잔향 길이가 아니라 직접음 비율이었다.",
+      "decision": "측정 앱을 Flutter로 직접 빌드했다. 휴대폰 스피커로 지수 사인 스윕을 재생하면서, OS 에코 제거를 끈 녹음 경로로 같은 휴대폰 마이크에 녹음한다. 실측 응답 11개를 직접음 우세를 유지하며 77개로 늘려 학습 에코를 교체했다. 가수 쪽에도 같은 방의 잔향을 입혀, 모델이 잔향 유무로 반주와 목소리를 가르는 경로를 막았다. 같은 앱으로 반주만 재생해 녹음한 실제 휴대폰 녹음은 '노래 없음' 정답으로 학습에 섞었다.",
+      "alternatives": [
+        { "approach": "합성 잔향을 더 길게 늘리기", "reason": "근거였던 잔향 시간 1,151ms는 분석 방법이 부풀린 값이었다. 실제 휴대폰 에코는 짧고 직접음이 우세하다.", "disposition": "tested-rejected" },
+        { "approach": "휴대폰 두 대로 재생과 녹음을 나눠 측정", "reason": "한 휴대폰이 재생하고 녹음하는 실제 사용 상황의 에코를 담지 못한다.", "disposition": "considered-rejected" },
+        { "approach": "Android 기기 측정", "reason": "제조사가 강제하는 에코 제거를 녹음 설정으로 끌 수 없었다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "학습 에코를 공개 잔향 데이터에서 직접 측정한 휴대폰 응답으로 바꿨다.", "atDecision": null, "current": null, "metricIds": ["model-echo-method"] },
+      "borrowed": null,
+      "links": [], "sources": ["s-mdl-echo", "s-mdl-real-mix"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-loss", "step": "06", "stepName": "손실과 지표", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-16", "to": "2026-06-18", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "손실: 분포 · 노래 유무 · 음높이 거리 3항 / 체크포인트 선택: 검출률 − 오검출률", "development": "2026.06.16–18 — 손실: 분포 · 노래 유무 · 음높이 거리 3항 / 체크포인트 선택: 검출률 − 오검출률" },
+      "problem": "첫 모델은 FCPE처럼 분포의 확신도에서 노래 유무가 나올 것으로 보고, 360빈 분포 하나만 빈별 손실로 학습했다. 실제 마이크에서 확신한 프레임의 음높이는 정답과 중앙값 17센트 차이로 정확했지만, 확신하는 프레임은 노래 구간의 절반 정도였다.",
+      "cause": "노래가 없는 프레임은 360빈이 모두 0인 정답으로 들어가 손실의 대부분을 차지한다. 분포만 학습하면 불확실할 때 출력을 낮추는 쪽이 손실에 유리했다. 또 빈별 손실은 정답에서 한 칸 벗어난 출력과 한 옥타브 벗어난 출력에 같은 벌점을 준다.",
+      "decision": "손실을 분포 · 노래 유무 · 음높이 거리 세 항으로 나눴다. 노래 유무는 분포와 나란한 별도 출력으로 직접 학습하고, 이 출력은 학습과 체크포인트 선택에만 쓴다. 휴대폰에서는 분포만 실행한다. 음높이 거리 항은 교사(FCPE)의 학습에도 없던 항이라, 손실을 압도해 분포를 흐리지 않도록 가중을 0.02로 작게 뒀다.\n\n다시 학습하며 처음에는 체크포인트를 검출률(노래가 있는 프레임 중 확신한 비율)로 골랐다. 검출률은 분모에 노래 없는 프레임이 없어 모든 프레임에서 확신해도 1.0이 되므로, 노래 없는 프레임에서 확신한 비율(오검출률)을 뺀 값으로 바꾸고 학습 초반 1,500스텝 이전은 후보에서 뺐다.\n\n$$L=L_{\\text{분포}}+L_{\\text{노래 유무}}+0.02\\,L_{\\text{음높이 거리}},\\qquad \\text{선택 점수}=\\text{검출률}-\\text{오검출률}$$\n\n배포 체크포인트(14층 12,000스텝)는 교사와의 일치도와 청취로 확인한 뒤 정했다.",
+      "alternatives": [
+        { "approach": "검출률만으로 체크포인트 선택", "reason": "400스텝 부근에서 1.0으로 포화해, 덜 학습된 체크포인트가 최고로 저장됐다.", "disposition": "tested-rejected" }
+      ],
+      "result": { "summary": "모든 프레임에서 확신하는 체크포인트는 점수가 0이 되어, 학습 초반의 체크포인트가 최고로 저장되지 않는다.", "atDecision": null, "current": null, "metricIds": [] },
+      "borrowed": null,
+      "links": [], "sources": ["s-mdl-loss", "s-mdl-eval-teacher"], "focus": null, "figure": null
+    },
+    {
+      "id": "model-evaluation", "step": "07", "stepName": "평가", "structurePlacement": "step", "structureOrder": 1,
+      "date": { "from": "2026-06-20", "to": "2026-06-30", "precision": "day" }, "developmentTieOrder": 1,
+      "lead": { "structure": "평가: 교사로 교사를 채점하지 않음 → 청취 · 다섯 모델 교차 대조, 입력 조건별 비교", "development": "2026.06.20–30 — 평가: 교사로 교사를 채점하지 않음 → 청취 · 다섯 모델 교차 대조, 입력 조건별 비교" },
+      "problem": "학습 정답은 분리한 보컬에 FCPE를 적용해 만든 값이다. 같은 FCPE 출력으로 모델을 채점하면, FCPE가 흔들리는 구간에서는 정답과 모델 중 무엇이 틀렸는지 가릴 수 없다. 청취에서도 FCPE는 아주 높은 음역에서 흔들렸다.",
+      "cause": "평가 기준이 학습 정답과 같은 출처에서 나오면 순환 채점이 된다. 기준은 학습 정답과 독립이어야 했고, 비교는 입력 조건이 같은 것끼리 해야 했다.",
+      "decision": "기준을 셋으로 나눴다. 첫째, 깨끗한 보컬에 다섯 모델(FCPE · pYIN · Harvest · CREPE · PESTO)을 적용해 서로 대조했다. 둘째, 학습에서 뺀 곡(「Halt!」)을 실제 휴대폰으로 녹음하고, 학습과 같은 방식으로 참조 반주를 만들어 평가했다. 셋째, 반주가 섞인 같은 입력을 공개 모델에도 넣어 비교했다. 수치는 후보를 거르는 데 쓰고, 최종 판정은 청취로 했다.",
+      "alternatives": [
+        { "approach": "학습 정답(FCPE 출력)을 그대로 평가 기준으로 사용", "reason": "정답이 흔들리는 구간에서 모델과 정답 중 무엇이 틀렸는지 가릴 수 없다.", "disposition": "considered-rejected" }
+      ],
+      "result": {
+        "summary": "학습에서 뺀 곡의 실제 휴대폰 녹음에서 정답과 반음 이내 96%였고, 반주가 섞인 입력에서 공개 모델 넷이 피아노를 따라갈 때 이 모델은 소프라노를 따라갔다.",
+        "atDecision": "깨끗한 보컬 18곡에서 각 모델과 나머지 넷의 합의 사이 차이는 중앙값 8~13센트로, 깨끗한 보컬의 음높이 값은 어느 모델로도 같았다. 반주가 섞인 소프라노 입력에서는 공개 모델 넷이 기준과 1,000~2,466센트 벗어났고, 이 모델은 중앙값 46센트였다. 이 비교의 곡은 학습에 쓴 곡이며, 에코만 실측 응답으로 새로 입혔다.",
+        "current": null,
+        "metricIds": ["model-heldout-phone"]
+      },
+      "borrowed": null,
+      "links": [], "sources": ["s-mdl-panel", "s-mdl-heldout", "s-mdl-eval-teacher"], "focus": null, "figure": null
+    }
+  ],
+  "validation": [
+    {
+      "id": "model-validation-real", "lead": "실제 휴대폰 녹음(학습에서 뺀 곡)",
+      "body": "학습에서 뺀 곡 「Halt!」을 실제 휴대폰으로 녹음하고, 학습과 같은 방식으로 참조 반주를 만들어 배포 모델에 넣었다. 깨끗한 보컬에 FCPE를 적용한 정답과 비교해 반음 이내 96%였고(같은 곡의 깨끗한 보컬 입력은 98%), 노래로 판단한 프레임 비율은 0.53으로 정답의 0.56에 가까웠다. 학습에서 뺀 「Halt!」 · 「Widmung」의 실제 마이크 녹음에서는 분리 → FCPE 출력과 ±50센트 안에서 76~80%가 일치했고, 차이의 중앙값은 18~22센트였다.",
+      "metricIds": ["model-heldout-phone"],
+      "sources": ["s-mdl-heldout", "s-mdl-eval-teacher"]
+    }
+  ],
+  "reflection": [
+    { "id": "model-reflection-residual", "step": "02", "stepName": "학습 전 실측", "lead": "잔차 연결 없는 깊이 한계", "body": "잔차 연결 없이 쌓은 구조라 16층부터 학습되지 않았고, 학습이 확인된 14층으로 갔다. 뒤에 공부하며 잔차 블록을 넣었다면 더 깊은 모델도 학습할 수 있었다는 것을 알았다. 이 모델은 시간 문맥을 층 수로 확보하므로, 깊이를 늘릴 수 있었다면 보는 시간 범위도 함께 늘었다.", "sources": ["s-mdl-echo", "s-mdl-user"] },
+    { "id": "model-reflection-data", "step": "04", "stepName": "학습 데이터", "lead": "프로 성악가에 편중된 학습 목소리", "body": "학습 데이터는 가곡 실연 녹음이라 프로 성악가의 목소리뿐이다. 아마추어 목소리와 다르다는 것을 알았지만, 빠른 실험을 위해 이 절충을 택했다. 남은 한계도 같은 곳에 있다. 창법이 가곡에 편중돼 다른 창법으로의 일반화가 약하고, 학습 · 평가에 쓴 기기의 폭이 좁다.", "sources": ["s-mdl-usable", "s-mdl-user"] },
+    { "id": "model-reflection-midrange", "step": "07", "stepName": "평가", "lead": "남은 약점: 반주에 가려지는 중음역", "body": "노래 검출은 반주가 목소리를 가리는 중음역에서 가장 약하다. 13곡을 깨끗한 입력과 에코가 섞인 입력으로 나눠 측정하자, 깨끗한 입력에서는 떨어지지 않고 에코가 섞인 입력에서만 떨어졌다. 원인이 모델 용량이나 정답이 아니라 입력이므로, 다음 개선은 큰 모델이 아니라 참조 반주를 노래 유무 판단에 더 쓰는 입력 쪽이다.", "sources": ["s-mdl-panel", "s-mdl-voicing"] }
+  ],
+  "links": [
+    { "label": "10ms마다 기기에서 실행되는 음높이 모델 설계", "href": "/writing/realtime-model-design/", "purpose": "입력 표현 · 모델 구조 · 기기 추론" },
+    { "label": "반주 엔진", "href": "/projects/classicmate/#engine", "purpose": "이 모델의 출력을 관측으로 쓰는 악보 추종과 반주" }
+  ],
+  "sources": ["s-mdl-observation", "s-mdl-aec", "s-mdl-separation", "s-mdl-redefine", "s-mdl-architecture", "s-mdl-probe", "s-mdl-deploy", "s-mdl-reference", "s-mdl-ab", "s-mdl-dataset", "s-mdl-coverage", "s-mdl-echo", "s-mdl-real-mix", "s-mdl-loss", "s-mdl-eval-teacher", "s-mdl-heldout", "s-mdl-panel", "s-mdl-voicing", "s-mdl-usable", "s-mdl-user"],
+  "units": [
+    {
+      "id": "model-unit-observe", "label": null, "title": "관측과 문제 재정의: 분리 대신 음높이 분포", "metric": null,
+      "arc": {
+        "constraint": "휴대폰에서 10ms마다 실행되어야 하고, 미래 참조는 10~20ms까지만 허용된다.",
+        "problem": "고정된 음표 템플릿은 움직이는 성악과 맞지 않았다. 섞인 녹음에서 음높이를 얻는 경로(보컬 분리 → FCPE)는 기기에서 실시간으로 실행할 수 없다.",
+        "design": "관측을 음높이 분포로 바꾸고, 필요한 출력을 분리된 소리가 아닌 섞인 입력 속 가수의 음높이로 다시 정의했다.",
+        "evaluation": "분포 관측은 엔진의 추종 실험에서 채택했고, 두 모델의 최종 출력(360빈)을 그대로 정답으로 삼아 엔진에 수정 없이 연결되게 했다.",
+        "improvement": "기기에서 실행되는 신경망은 섞인 입력에서 360빈 음높이 분포를 바로 내는 CNN 하나다."
+      },
+      "steps": ["00", "01"], "cards": ["model-likelihood", "model-pitch-only"]
+    },
+    {
+      "id": "model-unit-probe", "label": "core", "title": "학습 전 실측: 기기에서 실행되는 구조만 학습",
+      "metric": { "label": "배포 모델(14층)의 호출당 시간", "before": "5.1ms · CPU", "after": "1.59ms · 가속기", "note": null },
+      "arc": {
+        "constraint": "신경망 가속기가 실행하지 못하는 연산은 공식 목록이 없어, 학습부터 하면 그 모델이 기기에서 돌지 않는다는 것을 학습을 마친 뒤에야 알게 된다.",
+        "problem": "학습 전에, 휴대폰에서 10ms마다 실행할 수 있는 모델의 크기 상한과 구조를 정해야 했다.",
+        "design": "실행 시간은 연산 그래프의 모양이 정하므로, 무작위 가중치 뼈대를 약 5만 ~ 1천만 파라미터까지 변환해 저전력 모드 · 10ms마다 한 번 호출 · 정상 상태 최악값으로 측정했다.",
+        "evaluation": "1천만 파라미터급은 프레임 단위 호출 8.19ms로 10ms 안에 들었지만 상태 전달 비용을 뺀 하한이라, 여유 있는 상한을 약 350만으로 두었다. 창 전체를 다시 계산하면 38.7ms였다. 그 안에서 16층은 학습되지 않아 14층으로 학습했다.",
+        "improvement": "학습 뒤 상태 유지 형태가 가속기에서 막히자 창 재계산 fp16으로 바꿔 재학습 없이 5.1ms → 1.59ms. 이후 측정은 배포 형태 그대로 한다."
+      },
+      "steps": ["02"], "cards": ["model-device-probe", "model-depth", "model-deploy-form"]
+    },
+    {
+      "id": "model-unit-reference", "label": null, "title": "참조 입력: 재생한 반주를 알고 시작하는 모델",
+      "metric": { "label": "±2빈(±40센트) 음높이 정확도", "before": "0.609", "after": "0.661", "note": null },
+      "arc": {
+        "constraint": "휴대폰 스피커로 나간 반주가 마이크로 되돌아와 노래와 섞인다. 녹음에서 반주를 지우는 에코 제거는 OS 방식과 신호 처리 방식 모두 노래까지 손상시켰다.",
+        "problem": "섞인 신호에서 가수의 음높이만 내야 하는데, 섞인 반주는 엔진이 직접 재생한 신호다.",
+        "design": "마이크 6채널에 재생한 반주 6채널을 붙이고 멜로디는 참조에서 뺐다. 마이크만 쓰는 모델과 같은 조건으로 학습해 비교했다.",
+        "evaluation": "9층 · 같은 검증 4곡의 앞 15초 · 2,500스텝 학습에서, 1,000~2,500스텝의 ±2빈 정확도 평균으로 비교했다.",
+        "improvement": "0.609 → 0.661, 같은 정확도까지의 학습 스텝은 약 절반."
+      },
+      "steps": ["03"], "cards": ["model-reference"]
+    },
+    {
+      "id": "model-unit-data", "label": null, "title": "데이터와 실제 에코: 편중을 점검한 실연 140개 · 측정한 휴대폰 응답으로 학습",
+      "metric": { "label": "같은 거실 녹음에서 분석한 잔향 시간", "before": "915ms", "after": "77ms", "note": "기존 음악 역합성 → 지수 사인 스윕" },
+      "arc": {
+        "constraint": "성악 음높이 정답과 그 순간 재생된 반주가 짝을 이룬 데이터가 필요했다. 정답은 분리한 보컬에 FCPE를 적용해 만들므로, 모은 목소리의 폭과 반주 정렬의 정확도가 곧 정답의 폭과 질이다.",
+        "problem": "처음 모은 실연은 느린 레가토에 치우쳐 있었고, 공개 잔향 데이터로 합성한 학습 에코가 휴대폰 스피커와 마이크 사이의 실제 에코와 맞는지는 직접 측정해 검증해야 했다.",
+        "design": "성종 · 음역과 유성음 비율로 편중을 점검해 빠르고 자음이 많은 곡을 보강하고, 정렬 품질은 일치율 등급과 청취로 걸렀다. 직접 빌드한 측정 앱으로 9개 공간의 휴대폰 에코를 지수 사인 스윕으로 측정했다.",
+        "evaluation": "같은 녹음을 두 방법으로 분석해 기존 방법을 검증하고, 9개 공간의 잔향 시간과 직접음 비율을 공개 데이터와 비교했다.",
+        "improvement": "실연 녹음 140개를 표본마다 새 조건으로 합성한다. 합성과 실제 에코의 차이는 잔향 길이가 아니라 직접음 비율(실제 +5~+12dB, 공개 데이터 −5.3dB)이었고, 실측 응답 77개로 학습 에코를 교체했다."
+      },
+      "steps": ["04", "05"], "cards": ["model-dataset", "model-echo"]
+    },
+    {
+      "id": "model-unit-loss", "label": null, "title": "손실 · 지표와 평가 기준: 교사로 교사를 채점하지 않음", "metric": null,
+      "arc": {
+        "constraint": "학습 정답은 분리한 보컬에 FCPE를 적용한 값이라, 같은 출력으로 채점하면 순환 채점이 된다.",
+        "problem": "분포만 학습한 첫 모델은 확신하는 프레임이 노래 구간의 절반이었고, 빈별 손실은 정답과의 거리를 보지 않았다. 다시 학습하며 체크포인트를 고른 검출률은 1.0으로 포화했다.",
+        "design": "손실을 분포 · 노래 유무 · 음높이 거리 세 항으로 나누고, 평가 기준을 다섯 모델 교차 대조 · 학습에서 뺀 곡 · 공개 모델과의 같은 입력 비교로 세웠다.",
+        "evaluation": "수치로 후보를 거르고, 최종 판정은 청취로 했다.",
+        "improvement": "학습에서 뺀 곡의 실제 휴대폰 녹음에서 정답과 반음 이내 96%. 반주가 섞인 입력에서 공개 모델 넷이 피아노를 따라갈 때 이 모델은 소프라노를 따라갔다."
+      },
+      "steps": ["06", "07"], "cards": ["model-loss", "model-evaluation"]
+    }
+  ]
+}

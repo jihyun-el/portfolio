@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "id": "classicmate",
+  "projectId": "classicmate",
+  "title": "ClassicMate — 클래식 연습 · 커뮤니티 앱",
+  "sentence": "클래식 입시 준비에서 연습마다 드는 반주자 비용을, 가수를 따라가는 반주로 대신하는 연습 앱. 리드 엔지니어로 반주 엔진 · 모바일 앱 · 악보 파이프라인을 설계하고 개발해 iOS · Android에 출시했다.",
+  "period": "2025.09 ~ 2026.07 · 초기팀 풀타임",
+  "scope": {
+    "direct": [
+      "리드 엔지니어로 반주 엔진 · 모바일 앱 · 악보 파이프라인을 설계하고 개발했다.",
+      "출시, QA에서 발견한 문제의 수정, 인수인계까지 맡았다.",
+      "Python과 Dart는 직접 읽고 쓴다. Rust 이식은 AI 코딩 에이전트에게 맡기고, Python 출력과의 비트 단위 대조로 검수했다."
+    ],
+    "team": [
+      "초기팀의 요구사항과 피드백을 반영하고 팀원의 변경을 통합했다."
+    ],
+    "borrowed": [
+      "Flutter · Supabase, 악보 처리 도구(verovio · music21), 공개된 악보 추종 알고리즘과 음높이 모델 구조를 활용했다."
+    ]
+  },
+  "stack": [
+    {
+      "technology": "PyTorch · Core ML · Swift · Rust",
+      "use": "반주 엔진의 모델 학습 · 기기 추론 · 앱 연결. Rust는 AI 구현 협업"
+    },
+    {
+      "technology": "Flutter · Supabase",
+      "use": "앱의 연습 · 계정 · 결제와 데이터 저장"
+    },
+    {
+      "technology": "Python · verovio · music21 · Gemini",
+      "use": "악보 · 반주 · 커서 좌표 · 곡 해설 생성"
+    }
+  ],
+  "resultMetricIds": [],
+  "metrics": [],
+  "steps": [],
+  "cards": [
+    {
+      "id": "classicmate-accompanist-cost",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "before",
+      "structureOrder": 1,
+      "date": null,
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "입시 준비 비용 중 반주자 비용 → 가수를 따라가는 반주로 대체",
+        "development": null
+      },
+      "problem": "클래식 입시 준비는 비용이 크다. 그 가운데 하나가 연습할 때마다 드는 반주자 비용이다.",
+      "cause": "노래방 반주는 고정된 템포로 재생되고, 가수가 거기에 맞춰 부른다. 성악 입시에서는 반대로, 가수가 표현하는 대로 반주자가 맞춰 준다. 고정 템포 반주로는 반주자를 대신할 수 없다.",
+      "decision": "가수가 부르는 대로 따라가는 반주를 제품의 핵심으로 정했다. 여기에 악보 열람과 필기, 곡 해설, 커뮤니티를 한 앱에 담아 혼자서 연습할 수 있게 했다.",
+      "alternatives": [],
+      "result": {
+        "summary": "앱은 iOS · Android에 출시했고, 반주 엔진은 iOS 실기기에 통합했다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [],
+      "focus": null,
+      "figure": null,
+      "relatedDetails": [
+        "engine",
+        "app",
+        "pipeline"
+      ]
+    },
+    {
+      "id": "classicmate-scoring-to-following",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "before",
+      "structureOrder": 2,
+      "date": null,
+      "developmentTieOrder": 2,
+      "lead": {
+        "structure": "고정 반주 기준 채점 대신, 가수를 따라가는 반주",
+        "development": null
+      },
+      "problem": "직접 만든 채점 엔진을 실제 녹음으로 검증하자, 프로 성악가의 연주도 박자 점수가 낮게 나왔다.",
+      "cause": "첫 채점 엔진은 고정된 반주와의 시각 차이로 박자 점수를 매겼다. 성악에서는 반주자가 가수의 호흡과 템포 변화에 맞추므로, 이 방식은 가수가 의도한 템포 변화를 박자 오류로 감점했다.",
+      "decision": "문제를 바꿨다. 박자와 음정을 평가하려면 연주의 매 순간이 악보의 어디인지부터 알아야 한다. 그 위치를 실시간으로 추정하는 악보 추종을 먼저 만들고, 추정한 위치에 반주를 맞췄다.",
+      "alternatives": [],
+      "result": {
+        "summary": "제품의 중심을 채점에서 악보 추종으로 옮겼고, 이것이 반주 엔진의 출발점이다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [],
+      "focus": null,
+      "figure": null,
+      "relatedDetails": [
+        "engine"
+      ]
+    },
+    {
+      "id": "classicmate-product-responsibilities",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "before",
+      "structureOrder": 3,
+      "date": null,
+      "developmentTieOrder": 3,
+      "lead": {
+        "structure": "제품 3분할: 곡 준비 파이프라인 · 연습 앱 · 가수를 따라가는 엔진, 같은 곡 자산 공유",
+        "development": null
+      },
+      "problem": "한 곡이 악보 화면, 반주 소리, 재생 커서, 곡 해설로 쓰이려면 세 부분이 같은 곡과 조를 같은 자산으로 가리켜야 한다.",
+      "cause": "곡을 준비하는 변환, 화면 조작, 가수를 따라가는 오디오 처리는 실행되는 때와 주기가 다르다.",
+      "decision": "파이프라인은 MusicXML에서 12개 조의 악보 · 반주 MIDI · 커서 좌표 · 곡 해설을 미리 만든다. 앱은 이를 내려받아 열람 · 필기 · 재생에 쓰고, 반주는 서버에서 오디오를 받지 않고 기기에서 MIDI를 합성해 이조 · 배속 · 구간 이동이 바로 반영된다. 엔진은 같은 악보와 반주를 받아, 가수의 위치에 맞춰 반주를 재생한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "곡 준비에서 연습까지가 하나의 데이터 흐름으로 이어진다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "cm-s01",
+        "cm-s03",
+        "cm-s04"
+      ],
+      "focus": null,
+      "figure": null,
+      "relatedDetails": [
+        "pipeline",
+        "app",
+        "engine"
+      ]
+    },
+    {
+      "id": "classicmate-operating-contracts",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "after",
+      "structureOrder": 4,
+      "date": null,
+      "developmentTieOrder": 4,
+      "lead": {
+        "structure": "QA 중 발견한 문제: 원인 끝까지 추적, 경로 차단, 변경 시 지킬 계약으로 기록",
+        "development": null
+      },
+      "problem": "QA 중에 두 문제를 발견했다. 재가입한 계정에 31초 만에 곡 소유 기록 133건이 등록됐고, 샌드박스 결제는 성공했는데 재화가 지급되지 않았다.",
+      "cause": "두 문제 모두 화면 · 로컬 저장 · 서버가 함께 움직이는 지점에서 발생했다. 고친 코드만 넘기면 다음 변경에서 같은 지점에서 결함이 재발할 수 있다.",
+      "decision": "계정 문제는 캐시 정리와 첫 동기화의 계정 확인으로, 결제 문제는 영수증 검증 구현의 교체로 해결했다. 그 뒤 실행 절차, 설계 결정 12건, 변경 계약과 확장 절차 9건을 인수인계 문서로 정리하고, DB 변경에는 회귀 테스트와 실제로 실행해 본 롤백 절차를 요구했다.",
+      "alternatives": [],
+      "result": {
+        "summary": "원작자 없이 유지보수와 확장이 가능하도록 문서와 회귀 테스트를 남겼다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "cm-s07",
+        "cm-s08",
+        "cm-s09",
+        "cm-s14"
+      ],
+      "focus": null,
+      "figure": null,
+      "relatedDetails": [
+        "app"
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "id": "classicmate-release-and-integration",
+      "lead": "앱 iOS · Android 출시, 반주 엔진 iOS 실기기 통합",
+      "body": "부분마다 다른 방법으로 확인했다. 파이프라인은 기준 악보 4곡의 출력 스냅샷으로, 결제는 클라이언트 · 서버 · DB 테스트로, 엔진은 Python 참조 구현과의 비트 단위 대조와 기기 청취로 확인했다.",
+      "metricIds": [],
+      "sources": [
+        "cm-s06",
+        "cm-s09",
+        "cm-s11",
+        "cm-s12"
+      ]
+    }
+  ],
+  "reflection": [
+    {
+      "id": "classicmate-complete-practice-flow",
+      "step": "전체",
+      "stepName": "전체",
+      "lead": "다음 제품: 사용자 악보에서 연습까지 전체 흐름을 완료 조건으로 먼저 설정",
+      "body": "지금의 흐름은 이미 전사된 MusicXML에서 시작한다. 종이 · PDF 악보를 읽어 들이는 첫 단계와, 새 곡 준비 · 계정 전환 · 반주 연습을 한 번에 지나가는 통합 시험을 처음부터 범위에 넣는다.",
+      "sources": [
+        "cm-s08",
+        "cm-s11",
+        "cm-s13"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "반주 엔진",
+      "href": "/projects/classicmate/#engine",
+      "purpose": "소리에서 연주 위치를 찾고 반주를 맞춘 과정"
+    },
+    {
+      "label": "모바일 앱",
+      "href": "/projects/classicmate/#app",
+      "purpose": "필기 · 결제 · 계정 경계와 네이티브 오디오 연결"
+    },
+    {
+      "label": "악보 파이프라인",
+      "href": "/projects/classicmate/#pipeline",
+      "purpose": "앱의 악보 · 반주 · 커서 좌표 · 곡 해설을 만든 과정"
+    }
+  ],
+  "sources": [
+    "cm-s01",
+    "cm-s02",
+    "cm-s03",
+    "cm-s04",
+    "cm-s05",
+    "cm-s06",
+    "cm-s07",
+    "cm-s08",
+    "cm-s09",
+    "cm-s10",
+    "cm-s11",
+    "cm-s12",
+    "cm-s13",
+    "cm-s14"
+  ],
+  "units": [
+    {
+      "id": "classicmate-unit-question",
+      "label": "core",
+      "title": "제품 정의: 고정 반주 채점 → 가수를 따라가는 반주",
+      "metric": null,
+      "arc": {
+        "constraint": "클래식 입시 준비는 비용이 크고, 그 가운데 하나가 연습마다 드는 반주자 비용이다.",
+        "problem": "고정 템포 반주로는 반주자를 대신할 수 없고, 직접 만든 채점 엔진은 프로 성악가의 연주에도 박자 점수를 낮게 냈다.",
+        "design": "채점 엔진을 실제 녹음으로 검증해, 고정 반주와의 시각 차이로 매긴 박자 점수가 가수가 의도한 템포 변화를 감점한다는 것을 확인하고, 문제를 연주 위치의 실시간 추정으로 바꿨다.",
+        "evaluation": "실제 녹음에서 프로 성악가 연주의 박자 점수.",
+        "improvement": "제품의 중심을 채점에서 악보 추종으로 옮겼고, 이것이 반주 엔진의 출발점이다."
+      },
+      "steps": [],
+      "cards": [
+        "classicmate-accompanist-cost",
+        "classicmate-scoring-to-following"
+      ]
+    },
+    {
+      "id": "classicmate-unit-parts",
+      "label": null,
+      "title": "제품 구조: 파이프라인 · 앱 · 엔진 3분할, 같은 곡 자산 공유",
+      "metric": null,
+      "arc": {
+        "constraint": "곡을 준비하는 변환, 화면 조작, 가수를 따라가는 오디오 처리는 실행되는 때와 주기가 다르다.",
+        "problem": "한 곡이 악보 화면 · 반주 소리 · 재생 커서 · 곡 해설로 쓰이려면 세 부분이 같은 곡과 조를 같은 자산으로 가리켜야 한다.",
+        "design": "파이프라인은 12개 조 자산을 미리 만들고, 앱은 기기에서 MIDI를 합성해 이조 · 배속 · 구간 이동을 바로 반영하고, 엔진은 같은 악보와 반주를 받는다.",
+        "evaluation": "부분마다 다른 방법으로 확인했다: 파이프라인은 출력 스냅샷, 결제는 클라이언트 · 서버 · DB 테스트, 엔진은 비트 단위 대조와 기기 청취.",
+        "improvement": "곡 준비에서 연습까지가 하나의 데이터 흐름으로 이어지고, 앱을 iOS · Android에 출시했다."
+      },
+      "steps": [],
+      "cards": [
+        "classicmate-product-responsibilities"
+      ]
+    },
+    {
+      "id": "classicmate-unit-handover",
+      "label": null,
+      "title": "QA · 인수인계: 문제 경로 차단, 변경 계약 문서화",
+      "metric": null,
+      "arc": {
+        "constraint": "화면 · 로컬 저장 · 서버가 함께 움직이는 지점이 있고, 고친 코드만 넘기면 다음 변경에서 같은 지점에서 결함이 재발할 수 있다.",
+        "problem": "QA 중 재가입한 계정에 31초 만에 곡 소유 기록 133건이 등록됐고, 샌드박스 결제는 성공했는데 재화가 지급되지 않았다.",
+        "design": "계정 문제는 캐시 정리와 첫 동기화의 계정 확인으로, 결제 문제는 영수증 검증 구현의 교체로 해결하고, 실행 절차 · 설계 결정 · 변경 계약을 인수인계 문서로 나눴다.",
+        "evaluation": "DB 변경에는 회귀 테스트와 실제로 실행해 본 롤백 절차를 요구했다.",
+        "improvement": "원작자 없이 유지보수와 확장이 가능하도록 설계 결정 12건, 변경 계약 9건, 회귀 테스트를 남겼다."
+      },
+      "steps": [],
+      "cards": [
+        "classicmate-operating-contracts"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1490 @@
+{
+  "schemaVersion": 1,
+  "id": "engine",
+  "projectId": "classicmate",
+  "title": "가수를 따라가는 반주 엔진",
+  "sentence": "마이크 입력에서 가수의 음높이를 관측해 악보 위치와 현재 템포를 추정하고, 그에 맞춰 반주를 예약 재생한다.",
+  "period": "2025.09 ~ 2026.07 · 초기팀 풀타임",
+  "scope": {
+    "direct": [
+      "관측과 반주 구조 설계, Python 참조 구현, 음높이 모델의 설계 · 학습 · 평가, 에코 측정용 앱, iOS 실기기 통합과 청취 판정.",
+      "Rust 이식은 AI 코딩 에이전트에게 맡기고, 통과 기준을 정해 Python 출력과의 대조로 검수했다."
+    ],
+    "team": [],
+    "borrowed": [
+      "악보 추종의 구조(Cont 2010)와 지속시간 모델(Cuvillier · Cont 2014), 음높이 모델의 구조(Bittner 2017)와 출력 형식(FCPE), 가변-Q 변환(PESTO), 템포 입자 필터(BeatNet), 예약 재생 방식(Raphael, ACCompanion)."
+    ]
+  },
+  "stack": [
+    {
+      "technology": "Python · NumPy",
+      "use": "반주 참조 구현과 실연 시험, 교차 언어 검증 데이터"
+    },
+    {
+      "technology": "PyTorch",
+      "use": "반주 참조 입력을 사용하는 음높이 모델 학습·평가"
+    },
+    {
+      "technology": "Rust",
+      "use": "AI 에이전트 구현으로 실시간 엔진 이식"
+    },
+    {
+      "technology": "Core ML · Swift",
+      "use": "기기 신경망 추론과 네이티브 오디오 연결"
+    }
+  ],
+  "resultMetricIds": [
+    "vqt-device-time",
+    "continuous-cross-language"
+  ],
+  "metrics": [
+    {
+      "id": "reference-ab-pitch",
+      "label": "참조 입력 유무에 따른 ±2빈(±40센트) 음높이 정확도",
+      "values": [
+        {
+          "label": "마이크만 사용",
+          "value": 0.609,
+          "unit": "비율"
+        },
+        {
+          "label": "마이크와 반주 참조",
+          "value": 0.661,
+          "unit": "비율"
+        }
+      ],
+      "method": "노래가 있는 프레임 가운데 예측이 정답의 ±2빈 안에 든 비율. 2,500스텝 학습 중 1,000~2,500스텝에서 측정한 값의 평균이다.",
+      "scope": "9층 모델 · 같은 검증 4곡의 앞 15초 · 1,000~2,500스텝 평균.",
+      "measuredAt": {
+        "from": "2026-06-14",
+        "to": "2026-06-14",
+        "precision": "day"
+      },
+      "sources": [
+        "s-eng-ref-ab"
+      ]
+    },
+    {
+      "id": "vqt-device-time",
+      "label": "전처리(VQT) 한 번의 처리 시간, 중앙값",
+      "values": [
+        {
+          "label": "입력 구간 전체를 다시 계산",
+          "value": 89,
+          "unit": "ms"
+        },
+        {
+          "label": "새 프레임만 계산 · 마이크와 참조 반주를 한 번에(약)",
+          "value": 2.6,
+          "unit": "ms"
+        }
+      ],
+      "method": "실기기에서 전처리 호출의 처리 시간 중앙값을 비교했다. 두 계산의 출력은 비트 단위로 대조했다.",
+      "scope": "A19 실기기 · 일반 전력 상태.",
+      "measuredAt": {
+        "from": "2026-06-23",
+        "to": "2026-06-23",
+        "precision": "day"
+      },
+      "sources": [
+        "s-eng-11"
+      ]
+    },
+    {
+      "id": "continuous-cross-language",
+      "label": "Python 참조 구현과 Rust 이식의 출력 비교",
+      "values": [
+        {
+          "label": "비교한 길이(곡 전체)",
+          "value": 9392,
+          "unit": "프레임"
+        },
+        {
+          "label": "두 출력의 최대 차이",
+          "value": 0,
+          "unit": "악보 초"
+        }
+      ],
+      "method": "같은 입력을 Python 구현과 Rust 구현에 넣고 출력을 프레임마다 직접 비교했다.",
+      "scope": "고정한 한 곡 전체(전주와 본곡), 재생 위치를 계산하는 제어 출력.",
+      "measuredAt": {
+        "from": "2026-07-02",
+        "to": "2026-07-02",
+        "precision": "day"
+      },
+      "sources": [
+        "s-eng-13"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "step": "01",
+      "stepName": "라이브 오디오",
+      "entryCardId": "engine-device-echo",
+      "sectionAnchor": null
+    },
+    {
+      "step": "02",
+      "stepName": "VQT 전처리",
+      "entryCardId": "engine-reference-input",
+      "sectionAnchor": null
+    },
+    {
+      "step": "03",
+      "stepName": "음높이 분포",
+      "entryCardId": "engine-model-shape",
+      "sectionAnchor": null
+    },
+    {
+      "step": "04",
+      "stepName": "음표별 우도",
+      "entryCardId": "engine-observation",
+      "sectionAnchor": null
+    },
+    {
+      "step": "05",
+      "stepName": "악보 위치 추정",
+      "entryCardId": "engine-reentry",
+      "sectionAnchor": null
+    },
+    {
+      "step": "06",
+      "stepName": "위치 평활화",
+      "entryCardId": "engine-playhead",
+      "sectionAnchor": null
+    },
+    {
+      "step": "07",
+      "stepName": "템포 추정",
+      "entryCardId": "engine-separate-tempo",
+      "sectionAnchor": null
+    },
+    {
+      "step": "08",
+      "stepName": "세 위치의 템포",
+      "entryCardId": "engine-three-clocks",
+      "sectionAnchor": null
+    },
+    {
+      "step": "09",
+      "stepName": "음표 예약 재생",
+      "entryCardId": "engine-scheduled-playback",
+      "sectionAnchor": null
+    },
+    {
+      "step": "10",
+      "stepName": "반주 오디오와 커서",
+      "entryCardId": "engine-low-power",
+      "sectionAnchor": null
+    }
+  ],
+  "cards": [
+    {
+      "id": "engine-no-future",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "before",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-05-18",
+        "to": "2026-06-15",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "참조한 알고리즘의 미래 신호 사용(실시간 미전제) → 계산하는 시점까지의 신호만 쓰는 구현",
+        "development": "2026.05.18–06.15 — 구현 경로 전체의 미래 참조 계산 탐색 · 교체 (음높이 모델 대기 시간 ~ 전처리)"
+      },
+      "problem": "참조한 알고리즘 다수는 실시간 동작을 전제하지 않는다. 녹음 전체가 주어진다고 보고, 어떤 시점의 값을 계산할 때 그 뒤의 신호까지 쓴다. 보컬 분리 모델과 음높이 모델은 앞뒤 문맥을 함께 보고, 전처리 변환은 분석 구간을 프레임 중심에 놓고, 평활 필터는 앞뒤를 대칭으로 평균하고, 악보 정렬은 곡 전체를 본다.",
+      "cause": "실시간에서는 계산해야 하는 시점에 그 뒤의 신호가 아직 없다. 미래를 1프레임 참조하려면 10ms를 기다려야 하고, 그만큼 반주가 늦는다. 녹음으로 실험하면 뒤의 신호가 항상 있어서 이 차이가 드러나지 않는다. 그렇게 얻은 결과와 그 위에서 내린 청취 판정은 실시간으로 옮기면 재현되지 않는다.",
+      "decision": "평가와 구현의 기준을 분리했다. 정답 생성과 지표 계산에는 미래 정보를 허용하고, 추정에서 재생까지의 구현 경로에는 과거와 현재의 신호만 쓴다. 시각 $t$의 출력은 $t+L$까지의 입력으로만 정해지고, $L$이 미래 참조 프레임 수다.\n\n$$y_t=f(x_1,\\dots,x_{t+L})\\quad\\Longrightarrow\\quad f(x_{1:T})_{1:t}=f(x_{1:t+L})_{1:t}$$\n\n입력의 뒤를 잘라도 앞의 출력이 같아야 한다는 뜻이다. 새 방법을 들일 때마다 이 조건을 확인했고, 미래를 참조하던 계산은 다음과 같이 바꿨다.\n\n- **음높이 모델의 대기 시간**: 공개 모델(FCPE)의 출력을 읽기 전에 45프레임을 기다리던 기본 설정을, 0~3프레임을 청취로 비교해 1프레임으로 줄였다.\n- **교사 모델**: 곡 전체를 보는 보컬 분리 모델은 기기에 올리지 않고 정답 생성에만 쓴다. 기기에는 시간 방향 패딩을 과거 쪽에 둔 합성곱 신경망으로 증류해 올렸고, 미래 참조는 2프레임(20ms)이다.\n- **템포 출력**: 음표와 음표 사이를 보간하면 다음 음표의 값을 미리 알아야 한다. 직전 값 $u$를 유지하고 1차 저역 통과로 따라가게 했다.\n\n$$v_t=v_{t-1}+\\frac{\\Delta t}{\\tau+\\Delta t}\\,(u-v_{t-1})$$",
+      "alternatives": [
+        {
+          "approach": "과거 신호만 받고 미래 자리를 과거 신호로 채우는 전처리",
+          "reason": "프레임 중심 변환으로 학습한 가중치에 붙이자 ±2빈 정확도가 0.796에서 0.527로 떨어졌다. 같은 변환을 쓰고 20ms를 기다리는 쪽을 택했다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "과거와 1프레임만으로 음 시작점 검출",
+          "reason": "곡 전체를 쓰면 ±15ms로 잡히던 음 시작이, 50ms 안에 36~43%만 잡히고 오검출이 분당 150회를 넘었다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "추정 위치를 앞뒤 대칭 필터로 평활",
+          "reason": "대칭 평활은 뒤의 값이 있어야 계산된다. 위치를 평활하지 않고, 과거만으로 추정한 템포를 적분해 위치를 만들었다.",
+          "disposition": "considered-rejected"
+        },
+        {
+          "approach": "기준 시각을 녹음의 뒤에서 읽은 예측 실험",
+          "reason": "지연이 0으로 측정됐지만 실시간에는 없는 정보를 쓴 결과여서 평가에서 제외했다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "구현 경로에서 미래를 참조하는 곳은 전처리와 음높이 신경망의 2프레임(20ms)뿐이다.",
+        "atDecision": "20ms만 기다린 실시간 출력은 곡 전체를 한 번에 처리한 출력과 2e-6 차이였다. 입력의 뒤를 잘라도 앞의 출력이 같다는 조건은 테스트로 두었다. 재생 위치 계산은 Python과 Rust 양쪽에서, 신경망은 미래 참조 0 · 1 · 2프레임 각각에서 그보다 뒤의 입력을 바꿔도 출력이 같은지 확인한다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-05-18",
+            "to": "2026-05-18",
+            "precision": "day"
+          },
+          "event": "음높이 모델의 대기 시간을 0~3프레임으로 바꿔 청취로 비교했다.",
+          "sources": []
+        },
+        {
+          "date": {
+            "from": "2026-06-02",
+            "to": "2026-06-02",
+            "precision": "day"
+          },
+          "event": "평가에는 미래 정보를 허용하고 구현은 과거와 현재만 쓴다는 기준을 정했다.",
+          "sources": []
+        },
+        {
+          "date": {
+            "from": "2026-06-10",
+            "to": "2026-06-10",
+            "precision": "day"
+          },
+          "event": "템포 출력의 보간을 직전 값 유지로 바꿨다.",
+          "sources": []
+        },
+        {
+          "date": {
+            "from": "2026-06-15",
+            "to": "2026-06-15",
+            "precision": "day"
+          },
+          "event": "전처리의 대기 시간을 20ms로 정했다.",
+          "sources": []
+        }
+      ],
+      "links": [
+        {
+          "label": "실시간 음높이 모델 설계",
+          "href": "/writing/realtime-model-design/",
+          "purpose": "교사 모델 · 전처리 · 신경망의 미래 참조를 20ms로 제한한 과정"
+        }
+      ],
+      "sources": [],
+      "focus": null,
+      "figure": null,
+      "principle": true
+    },
+    {
+      "id": "engine-observation",
+      "step": "04",
+      "stepName": "음표별 우도",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-05-20",
+        "to": "2026-06-06",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "관측: FFT 스펙트럼 · 음표 템플릿 비교 → FCPE argmax 이전 분포를 음표별 우도로 사용",
+        "development": "2026.05.20–06.06 — 관측 교체: 스펙트럼 템플릿 → 신경망 360빈 음높이 분포, 음 시작점 검출은 비교 후 제외"
+      },
+      "problem": "참고한 악보 추종 알고리즘(Antescofo, Cont 2010)은 음표마다 배음 위치에 봉우리를 둔 스펙트럼 템플릿을 만들어 프레임의 FFT 스펙트럼과 비교한다. 여기에 원본 보컬을 넣으면, 소프라노 곡에서 음표가 뭉치고 추정이 비는 구간이 생겼다.",
+      "cause": "같은 녹음에서 음높이만 추출해 다시 합성한 소리를 넣자 추종이 개선됐고, 악보 멜로디를 바이올린 음색으로 합성한 입력은 곡 끝까지 따라갔다. 입력이 단순할수록 추종이 좋아졌으므로, 원인은 추종 로직이 아니라 목소리와 고정 템플릿의 불일치다. 목소리는 모음에 따라 스펙트럼이 달라지고 호흡이 섞인다.",
+      "decision": "음높이 한 값을 고르는 마지막 단계(argmax)를 거치지 않은 360빈 출력을 그대로 관측으로 쓴다. 음표 $j$의 센트 값 주변에서 가우시안 가중치로 합산한 값이 우도이고, 쉼표의 우도는 1에서 가장 큰 빈의 값을 뺀 값이다.\n\n$$\\ell_j=\\sum_{b=1}^{360}s_b\\exp\\!\\left(-\\frac{(c_b-c_j)^2}{2\\sigma^2}\\right),\\qquad \\ell_{\\text{쉼표}}=1-\\max_b s_b$$\n\n$s_b$는 빈 $b$의 신경망 출력, $c_b$와 $c_j$는 빈과 음표의 센트 값이다. 처음에는 음표 주변의 좁은 범위만 합산했는데, 가수가 100~200센트 벗어나면 우도가 0이 되어 반주가 고정 템포로만 진행했다. 가우시안 가중치로 바꾸고, $\\sigma$는 세 곡을 청취로 비교해 75센트로 정했다.",
+      "alternatives": [
+        {
+          "approach": "가장 높은 음높이 한 값만 고른 뒤 소리를 다시 합성해 입력",
+          "reason": "분포를 한 값으로 줄이면 신경망이 가진 다른 후보의 정보가 사라진다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "성악의 음 시작점을 검출해 타이밍을 얻기",
+          "reason": "검출 방법을 바꿔도 레가토 구간의 음 시작 시각을 안정적으로 정하지 못했다. 성악에는 검출할 음 시작점이 없다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "스펙트럼 템플릿 대신, 학습된 음높이 분포가 악보 위치 추정의 관측을 맡는다.",
+        "atDecision": "테너가 악보보다 한 옥타브 낮게 부른 곡에서는 시작 4초 동안 추정이 움직이지 않았다. 곡 시작에는 위아래 한 옥타브를 함께 합산하고, 노래 프레임이 쌓이면 옥타브 이동을 한 번 정해 고정한다. 그 뒤 같은 곡에서 추정이 곡 시작부터 움직였다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": {
+        "summary": "악보 추종의 구조와 원래의 템플릿 관측은 Cont(2010), 360빈 출력 형식은 FCPE(Luo 외, 2025)의 것이다. 분포를 음표별 우도로 바꾸는 관측 모델은 직접 구성했다.",
+        "sources": [
+          "s-eng-01",
+          "s-eng-02",
+          "s-eng-04"
+        ],
+        "links": [
+          {
+            "label": "Cont, 2010 — IEEE TPAMI 32(6)",
+            "href": "https://doi.org/10.1109/TPAMI.2009.106",
+            "purpose": "실시간 악보 추종의 구조와 템포 추정"
+          },
+          {
+            "label": "Luo 외, 2025 — FCPE (arXiv:2509.15140)",
+            "href": "https://arxiv.org/abs/2509.15140",
+            "purpose": "교사 모델과 360빈 출력 형식"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [
+        "s-eng-01",
+        "s-eng-02",
+        "s-eng-04",
+        "s-eng-23"
+      ],
+      "focus": null,
+      "figure": null,
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-05-20",
+            "to": "2026-05-20",
+            "precision": "day"
+          },
+          "event": "원본 보컬에서 얻은 음높이 분포를 관측 입력으로 채택했다.",
+          "sources": [
+            "s-eng-01"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-05-29",
+            "to": "2026-05-29",
+            "precision": "day"
+          },
+          "event": "음정이 벗어나도 부분 점수를 남기도록 관측을 변경했다.",
+          "sources": [
+            "s-eng-02",
+            "s-eng-23"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-06-06",
+            "to": "2026-06-06",
+            "precision": "day"
+          },
+          "event": "음 시작점 검출 후보의 비교를 마치고 해당 접근을 제외했다.",
+          "sources": [
+            "s-eng-04"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-three-clocks",
+      "step": "08",
+      "stepName": "세 위치의 템포",
+      "structurePlacement": "step",
+      "structureOrder": 5,
+      "date": {
+        "from": "2026-05-26",
+        "to": "2026-05-26",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "추정 위치: 정확하나 지터 과다로 반주에 직접 사용 불가 → 목표는 예측 가능하고, 음악적으로 자연스러운 반주",
+        "development": "2026.05.26 — 추정 위치: 정확하나 지터 과다로 반주에 직접 사용 불가 → 목표는 예측 가능하고, 음악적으로 자연스러운 반주"
+      },
+      "problem": "옥타브를 오르내리는 구간에서 추정 위치가 인접한 음표 사이를 왕복했다. 한 곡의 50~52마디에서는 6초 동안 33번 앞뒤로 오갔고, 그 위치를 그대로 재생한 반주도 함께 흔들렸다.",
+      "cause": "첫 구조는 추정 위치 하나에 위치 오차를 줄이는 목표와 연주자가 예측할 수 있는 흐름을 만드는 목표를 함께 맡겼다. 추정 위치에는 불확실성이 있지만, 한 번 소리로 나간 반주는 되돌릴 수 없다.",
+      "decision": "가수의 실제 위치, 엔진이 추정한 위치, 반주가 재생하는 위치를 서로 다른 상태로 분리했다. 재생 위치는 독립적으로 진행하고, 추정 위치는 그 진행을 조절하는 정보로만 쓴다. 반주가 악보 위치를 순간적으로 옮기는 동작은 허용하지 않는다.",
+      "alternatives": [
+        {
+          "approach": "멈추면 따라잡고 앞서가면 제동을 거는 증상별 보정",
+          "reason": "증상은 줄었지만 보정의 출발점이 여전히 추정 위치여서, 추정이 흔들리는 구간에서 반주도 다시 흔들렸다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "추정이 흔들려도 반주는 도약하지 않는다.",
+        "atDecision": "후보는 위치 오차와 청취 양쪽으로 판단했다. 수치 지표는 후보를 거르는 데 쓰고, 채택은 청취로 정했다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [
+        {
+          "label": "가수 위치 · 추정 위치 · 재생 위치",
+          "href": "/writing/three-clocks/",
+          "purpose": "흔들림의 측정, 증상별 보정, 위치를 셋으로 나눈 과정"
+        }
+      ],
+      "sources": [
+        "s-eng-03",
+        "s-eng-tempo-current"
+      ],
+      "focus": null,
+      "figure": null,
+      "core": true
+    },
+    {
+      "id": "engine-reentry",
+      "step": "05",
+      "stepName": "악보 위치 추정",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-06-10",
+        "to": "2026-06-10",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "무음 구간: 관측 정보 없음 → 위치 진행 없이 추정 정지",
+        "development": "2026.06.10 — 긴 침묵 뒤 추정 지연 → 소리 복귀 시점의 위치 재탐색으로 해결"
+      },
+      "problem": "가수가 한동안 쉬었다가 반주에 맞춰 다시 노래하는 시험에서, 반주는 계속 진행했는데 추정 위치는 침묵 이전 부근에 남아 있었다.",
+      "cause": "위치 추정에 참조한 은닉 준마르코프 모델은 음표를 앞으로만 진행하는 상태라, 긴 침묵으로 벌어진 구간도 처음부터 차례로 통과해야 했다.",
+      "decision": "소리가 돌아오면 현재 위치의 후보를 다시 탐색한다. 후보를 옮기는 동작과 위치를 확정하는 동작을 구분해, 음높이 증거가 쌓여야만 위치를 확정한다. 재생 위치는 그동안에도 연속으로 진행한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "사람이 반주를 듣고 다시 들어오는 실시간 연주 시험에서 복귀 지연이 사라졌다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": {
+        "summary": "위치 추정은 음표를 앞으로만 진행하는 상태로 두는 은닉 준마르코프 모델(Cont 2010)이고, 지속시간은 원 논문의 지수 분포 대신 포아송 분포(Cuvillier · Cont 2014)를 쓴다. 음의 시작점이 흐린 성악에서는 지속시간 모델이 약한 관측을 보완한다. 무음 구간의 정지와 복귀 뒤의 재탐색은 직접 구성했다.",
+        "sources": [
+          "s-eng-05"
+        ],
+        "links": [
+          {
+            "label": "Cont, 2010 — IEEE TPAMI 32(6)",
+            "href": "https://doi.org/10.1109/TPAMI.2009.106",
+            "purpose": "실시간 악보 추종의 구조와 템포 추정"
+          },
+          {
+            "label": "Cuvillier · Cont, 2014 — IEEE MLSP",
+            "href": "https://doi.org/10.1109/MLSP.2014.6958908",
+            "purpose": "준마르코프 모델의 지속시간 분포"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [
+        "s-eng-05"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-playhead",
+      "step": "06",
+      "stepName": "위치 평활화",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-05-29",
+        "to": "2026-06-03",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "연주자 템포는 연속적 → 계단형 추정을 연속 위치로 변환",
+        "development": "2026.05.29–06.03 — 계단형 추정 연결: 이차 곡선 수렴 채택, 음마다 가수에 반응하는 위치 적분 방식 4종은 구현 후 청취로 기각"
+      },
+      "problem": "위치 추정은 음표가 바뀔 때마다 계단처럼 갱신된다. 그 값을 그대로 재생의 기준으로 쓰면 반주가 계단을 따라 끊기고, 여러 음표가 한 시점에 몰려 나온다.",
+      "cause": "추정이 답하는 것은 지금 어느 음표인가이고, 음표 안에서 얼마나 진행했는지는 알려 주지 않는다. 반주에 필요한 것은 연속인 위치다. 연주자의 템포는 불연속적으로 변하지 않으므로, 계단 사이는 직전의 템포로 이을 수 있다.",
+      "decision": "새 기준점이 확정되어도 그 위치로 즉시 이동하지 않는다. 직전 궤적에서 새 궤적으로, 정해진 시간 동안 이차 곡선으로 수렴한다. 기준점 사이에서는 가장 최근 기준점에서 현재 템포로 진행하고, 템포는 새 추정치를 일부만 흡수한다. 궤적은 뒤로 가지 않는다. 이렇게 만든 위치가 템포 추정과 재생 위치 보정의 입력이다.",
+      "alternatives": [
+        {
+          "approach": "미래의 음 시작을 예측해 위치를 앞당기기",
+          "reason": "반주가 빨라지면 가수도 빨라지고 예측이 다시 빨라지는 양의 되먹임으로 발산했다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "반주가 스스로 위치를 적분하는 방식 네 가지",
+          "reason": "모두 음마다 가수의 타이밍에 반응하는 방식이었다. 보컬의 음 시작은 흐려서, 거기서 얻은 템포는 어느 방식으로도 매끄럽지 않았다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "위치를 일반 평활 필터로 평활",
+          "reason": "떨리는 추정을 연속으로 따라가 가속도 변화가 커졌고, 청취에서 쓸 수 없었다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "추정이 계단처럼 갱신돼도 위치는 연속으로 이어지고, 뒤로 가지 않는다.",
+        "atDecision": "새 템포 추정치를 일부만 흡수하는 쪽이 청취에서 분명히 나아 기준으로 채택했다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": {
+        "summary": "확정 위치로 즉시 이동하지 않고 이차 곡선으로 수렴하는 방식은 Antescofo의 동기 전략에서, 템포를 일부씩 흡수하는 방식은 ACCompanion(Cancino-Chacón 외, 2023)에서 참조했다. 음마다 반응하는 방식들을 구현해 비교하고 이 조합만 남긴 것은 직접 한 일이다.",
+        "sources": [],
+        "links": [
+          {
+            "label": "Cancino-Chacón 외, 2023 — ACCompanion, IJCAI",
+            "href": "https://doi.org/10.24963/ijcai.2023/641",
+            "purpose": "템포를 일부씩 흡수하는 동기 모델"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-reference-input",
+      "step": "02",
+      "stepName": "VQT 전처리",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "developmentTieOrder": 10,
+      "date": {
+        "from": "2026-06-13",
+        "to": "2026-06-14",
+        "precision": "day"
+      },
+      "lead": {
+        "structure": "입력: 마이크 6채널 + 엔진이 재생한 반주 6채널(참조 채널)",
+        "development": "2026.06.13–14 — 마이크 단독 입력 → 재생한 반주를 참조 입력으로 추가, 같은 검증 곡에서 정확도 비교"
+      },
+      "problem": "스피커로 나간 반주는 마이크로 되돌아와 노래와 섞인다. 모델은 이 혼합 신호에서 가수의 음높이만 추정해야 했다.",
+      "cause": "섞인 반주는 엔진이 직접 재생한 신호다. 걸러 낼 방해음을 엔진이 이미 알고 있으므로, 모델도 그 신호를 함께 받도록 처음부터 설계했다.",
+      "decision": "배음 0.5 · 1 · 2 · 3 · 4 · 5배의 스펙트로그램 6장을 채널로 쌓고, 마이크 6채널과 참조 반주 6채널을 합쳐 12채널로 입력한다. $h$배 채널의 시작 주파수를 $h$배로 잡으면 한 음의 배음이 모든 채널에서 같은 빈에 놓여, 첫 층부터 배음 관계를 본다. 참조에는 반주 파트만 넣는다.",
+      "alternatives": [
+        {
+          "approach": "마이크만 쓰는 6채널 모델",
+          "reason": "같은 조건의 비교에서 ±2빈 정확도가 0.609로, 참조 모델의 0.661보다 낮았다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "가수가 부를 선율까지 참조로 제공",
+          "reason": "모델이 목소리 대신 악보를 따라 출력할 수 있다.",
+          "disposition": "considered-rejected"
+        }
+      ],
+      "result": {
+        "summary": "참조 입력을 붙이자 같은 정확도에 이르는 학습 스텝이 절반 정도로 줄었다. 짧은 비교 학습(9층 · 곡 앞 15초 · 2,500스텝)에서 ±2빈(±40센트) 정확도는 0.609 → 0.661이었다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": [
+          "reference-ab-pitch"
+        ]
+      },
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-06-13",
+            "to": "2026-06-13",
+            "precision": "day"
+          },
+          "event": "반주 참조를 함께 입력하는 구조를 구현했다.",
+          "sources": [
+            "s-eng-ref-design",
+            "s-eng-ref-code"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-06-14",
+            "to": "2026-06-14",
+            "precision": "day"
+          },
+          "event": "같은 검증 곡에서 참조 유무를 비교했다.",
+          "sources": [
+            "s-eng-ref-ab"
+          ]
+        }
+      ],
+      "borrowed": {
+        "summary": "배음을 채널로 쌓는 입력은 Bittner 외(2017)에서 참조했다. 재생한 반주를 참조 채널로 붙이는 구성은 직접 설계했다.",
+        "sources": [
+          "s-eng-ref-model",
+          "s-eng-ref-architecture"
+        ],
+        "links": [
+          {
+            "label": "Bittner 외, 2017 — ISMIR",
+            "href": "https://archives.ismir.net/ismir2017/paper/000085.pdf",
+            "purpose": "풀링 없는 합성곱 구조와 배음 채널 입력"
+          }
+        ]
+      },
+      "links": [
+        {
+          "label": "실시간 음높이 모델 설계",
+          "href": "/writing/realtime-model-design/",
+          "purpose": "입력 표현과 모델 구조, 기기 추론"
+        }
+      ],
+      "sources": [
+        "s-eng-ref-design",
+        "s-eng-ref-model",
+        "s-eng-ref-code",
+        "s-eng-ref-ab",
+        "s-eng-ref-current",
+        "s-home-engine",
+        "s-eng-ref-architecture"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-separate-tempo",
+      "step": "07",
+      "stepName": "템포 추정",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "developmentTieOrder": 10,
+      "date": {
+        "from": "2026-06-07",
+        "to": "2026-06-09",
+        "precision": "day"
+      },
+      "lead": {
+        "structure": "템포는 직접 관측 불가 → 추정 템포로 예측 가능하게 외삽, 남는 오차는 가수와 반주가 서로 맞추며 축소",
+        "development": "2026.06.07–09 — 템포는 직접 관측 불가 → 추정 템포로 예측 가능하게 외삽, 남는 오차는 가수와 반주가 서로 맞추며 축소"
+      },
+      "problem": "반주가 가수보다 일관되게 약 0.8초 늦었다. 가수와 반주가 서로 반응하는 조건에서는, 늦은 반주를 가수가 기다리면서 연주가 계속 느려졌다.",
+      "cause": "지연의 원인은 위치가 아니라 템포였다. 템포는 직접 관측되지 않는다. 음표마다 계산한 템포는 잡음이 커서 평활해야 했고, 평활하면 실제 템포 변화까지 사라졌다. 위치와 템포를 한 상태로 묶어 추정하는 후보도 구현했지만, 음높이 관측은 위치에만 대응했다. 템포 변화의 허용 폭을 넓히면 템포가 크게 흔들렸고, 좁히면 위치가 드리프트했다.",
+      "decision": "연주자에게는 고유한 템포가 있고, 그 변화율은 초 단위로 바뀌지 않는다. 그래서 템포를 값 하나가 아니라 분포로 추정했다. 위치 추정, 위치 평활화, 템포 추정을 한 방향으로 연결하고, 평활화한 위치가 악보의 기준점을 넘을 때만 입자 필터가 그 간격으로 템포 후보를 갱신한다. 분포의 중심이 음표별 잡음을 평균한다. 반주는 이 템포를 적분해 앞으로 나아가고(외삽), 위치는 느리게만 보정한다. 반주가 예측 가능하면, 남는 오차는 가수와 반주가 서로 맞추면서 수렴한다.",
+      "alternatives": [
+        {
+          "approach": "음표마다 계산한 템포를 평활해 사용",
+          "reason": "평활이 실제 템포 변화까지 지워, 반주가 약 0.8초 늦었다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "위치와 템포를 한 상태로 묶은 입자 필터",
+          "reason": "허용 폭을 바꿔 가며 비교한 어떤 설정도 템포의 부드러움과 위치 오차를 함께 만족하지 못했다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "반주의 매끄러움은 유지한 채, 실제 반주자의 타이밍과의 시간 차가 두 곡에서 0.67초 → 0.21초, 1.11초 → 0.48초로 줄었다.",
+        "atDecision": "청취에서도 분포로 추정한 템포 쪽이 나았다. 위치에서 템포로 가는 단방향 구조를 채택했다.",
+        "current": null,
+        "metricIds": []
+      },
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-06-08",
+            "to": "2026-06-08",
+            "precision": "day"
+          },
+          "event": "순환을 없앨 결합 상태공간 후보를 검토했다.",
+          "sources": [
+            "s-eng-joint-proposal"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-06-09",
+            "to": "2026-06-09",
+            "precision": "day"
+          },
+          "event": "결합 후보를 구현·기각하고 분리 후보를 만들었다.",
+          "sources": [
+            "s-eng-joint-reject",
+            "s-eng-joint-code"
+          ]
+        }
+      ],
+      "borrowed": {
+        "summary": "입자 필터의 리샘플과 전이는 BeatNet(Heydari 외, 2021)의 구현을 따랐다. 위치가 기준점을 넘는 시점을 입자 필터의 관측으로 정의한 것은 직접 구성했다. 위치 추정 내부의 템포는 Cont(2010)의 식을 그대로 쓴다.",
+        "sources": [
+          "s-eng-joint-proposal",
+          "s-eng-joint-code"
+        ],
+        "links": [
+          {
+            "label": "Heydari 외, 2021 — BeatNet, ISMIR",
+            "href": "https://arxiv.org/abs/2108.03576",
+            "purpose": "템포 입자 필터의 리샘플과 전이"
+          },
+          {
+            "label": "Cont, 2010 — IEEE TPAMI 32(6)",
+            "href": "https://doi.org/10.1109/TPAMI.2009.106",
+            "purpose": "실시간 악보 추종의 구조와 템포 추정"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [
+        "s-eng-joint-proposal",
+        "s-eng-joint-reject",
+        "s-eng-joint-code",
+        "s-eng-tempo-current",
+        "s-home-engine"
+      ],
+      "focus": null,
+      "figure": null,
+      "core": true
+    },
+    {
+      "id": "engine-model-shape",
+      "step": "03",
+      "stepName": "음높이 분포",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-06-12",
+        "to": "2026-06-17",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "보컬 분리 · 음높이 추정 두 모델 → 14층 CNN 하나로 통합",
+        "development": "2026.06.12–17 — 풀링 없는 합성곱 모델 설계, 학습 가능한 깊이와 기기 실행 조건으로 14층 선정"
+      },
+      "problem": "반주가 섞인 녹음에서 음높이를 얻으려면 보컬 분리 모델(Mel-RoFormer)로 보컬을 남긴 뒤 음높이 추정 모델(FCPE)을 적용해야 했다. 분리 모델은 곡 전체를 앞뒤로 보는 큰 모델이라 기기에서 실시간으로 실행할 수 없다.",
+      "cause": "문제를 다시 정의했다. 추종에 필요한 것은 분리된 소리가 아니라, 섞인 입력 속 가수의 음높이다. 출력의 빈 위치가 곧 답이므로 위치 정보를 줄이는 풀링은 맞지 않는다. 조사한 자료에서 순환 신경망과 팽창 합성곱은 신경망 가속기 대신 CPU에서 실행됐다.",
+      "decision": "두 단계의 최종 출력인 360빈 값만 정답으로 삼아, 섞인 입력에서 한 번에 같은 출력을 내는 작은 신경망으로 증류했다. Conv2d → BatchNorm → ReLU 블록 13개와 1×1 출력층 1개로 14층이다(80채널, 약 117만 파라미터). 시간 문맥은 층 수로 확보했다.\n\n$$R_{\\text{시간}}=1+13\\times(3-1)=27\\ \\text{프레임}=270\\,\\mathrm{ms},\\qquad R_{\\text{주파수}}=1+13\\times(5-1)=53\\ \\text{빈}$$\n\n시간 수용영역 27프레임에는 미래 2프레임이 들어 있다. 배음을 채널에서 미리 정렬했기 때문에 주파수 방향 커널은 5빈으로 충분했다.",
+      "alternatives": [
+        {
+          "approach": "잔차 연결 없이 쌓은 16층 모델",
+          "reason": "같은 데이터에서 학습률을 바꿔도 학습되지 않았다. 기존 체크포인트를 새 데이터로 평가해 ±2빈 정확도 0.838을 확인하고, 데이터와 평가 코드를 원인에서 제외했다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "9층과 14층은 학습이 진행됐고, 14층을 배포 모델로 정했다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": {
+        "summary": "풀링 없이 합성곱만 쌓는 구조는 Bittner 외(2017), 교사 모델과 360빈 출력 형식은 FCPE(Luo 외, 2025), 보컬 분리는 Mel-Band RoFormer(Wang 외, 2023)에서 참조했다. 두 모델을 하나로 증류하는 구성과 기기 실행에 맞춘 시간 문맥은 직접 설계했다.",
+        "sources": [
+          "s-eng-17",
+          "s-eng-08",
+          "s-eng-22"
+        ],
+        "links": [
+          {
+            "label": "Bittner 외, 2017 — ISMIR",
+            "href": "https://archives.ismir.net/ismir2017/paper/000085.pdf",
+            "purpose": "풀링 없는 합성곱 구조와 배음 채널 입력"
+          },
+          {
+            "label": "Luo 외, 2025 — FCPE (arXiv:2509.15140)",
+            "href": "https://arxiv.org/abs/2509.15140",
+            "purpose": "교사 모델과 360빈 출력 형식"
+          },
+          {
+            "label": "Wang 외, 2023 — Mel-Band RoFormer (arXiv:2310.01809)",
+            "href": "https://arxiv.org/abs/2310.01809",
+            "purpose": "학습 정답을 만들 때 쓴 보컬 분리"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [
+        "s-eng-17",
+        "s-eng-08",
+        "s-eng-22"
+      ],
+      "focus": null,
+      "figure": null,
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-06-12",
+            "to": "2026-06-12",
+            "precision": "day"
+          },
+          "event": "기기 추론을 위한 풀링 없는 합성곱 모델을 설계했다.",
+          "sources": [
+            "s-eng-22"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-06-17",
+            "to": "2026-06-17",
+            "precision": "day"
+          },
+          "event": "깊은 후보의 학습 실패를 대조한 뒤 14층 모델을 선택했다.",
+          "sources": [
+            "s-eng-08"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-frontend-contract",
+      "step": "02",
+      "stepName": "VQT 전처리",
+      "structurePlacement": "step",
+      "structureOrder": 20,
+      "date": {
+        "from": "2026-06-15",
+        "to": "2026-06-15",
+        "precision": "day"
+      },
+      "developmentTieOrder": 20,
+      "lead": {
+        "structure": "미래 구간 채움 실패 → 배포도 학습과 같은 변환 사용 · 20ms 대기",
+        "development": "2026.06.15 — 학습용 · 배포용 전처리의 특징 불일치를 같은 입력으로 확인 → 배포를 학습에 일치"
+      },
+      "problem": "학습에는 프레임 중심으로 정렬한 변환을, 배포에는 과거 신호만 쓰는 변환을 쓰도록 설계했다. 같은 가중치의 ±2빈 정확도가 0.796과 0.527로 갈렸다.",
+      "cause": "배포용 변환은 아직 도착하지 않은 구간을 반사해 채웠다. 그때까지는 배포 변환의 처리 시간만 측정했으므로, 같은 가중치에 두 입력을 넣어 직접 비교해 이 차이를 확인했다.",
+      "decision": "배포도 학습과 같은 변환을 쓰고, 미래 2프레임을 기다리도록 바꿨다. 기다리는 시간은 처음에 130ms로 잡았다가, 측정한 뒤 신경망의 미래 참조와 같은 20ms로 줄였다. 이후의 속도 개선은 이 특징을 보존하면서 중복 계산을 줄이는 방향으로만 진행했다.",
+      "alternatives": [
+        {
+          "approach": "중심 정렬로 학습한 가중치를 과거 신호만 쓰는 변환에 그대로 사용",
+          "reason": "같은 혼합 음원에서 ±2빈 정확도가 0.796에서 0.527로 떨어졌다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "20ms만 기다린 실시간 출력과 곡 전체를 한 번에 처리한 출력의 차이는 2e-6이었다.",
+        "atDecision": "이후 전처리는 속도와 모델 입력의 일치를 따로 검증한다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": {
+        "summary": "가변-Q 변환은 PESTO(Riou 외, 2025)의 구현을 엔진의 360빈 축에 맞춰 옮겼다.",
+        "sources": [
+          "s-eng-06",
+          "s-eng-11"
+        ],
+        "links": [
+          {
+            "label": "Riou 외, 2025 — PESTO, TISMIR 8(1)",
+            "href": "https://arxiv.org/abs/2508.01488",
+            "purpose": "가변-Q 변환과 스트리밍 계산"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [
+        "s-eng-06",
+        "s-eng-11"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-scheduled-playback",
+      "step": "09",
+      "stepName": "음표 예약 재생",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-06-15",
+        "to": "2026-06-16",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "미래 참조 2프레임 · 연산 지연 → 음표 예약 재생으로 상쇄",
+        "development": "2026.06.15–16 — 위치 확인 후 재생 → 예약 재생으로 전환, 마이크~스피커 전체 경로 실연 확인"
+      },
+      "problem": "위치를 추정한 다음 그 음표를 재생하면, 관측과 계산에 걸린 시간만큼 반주가 늦는다. 녹음 파일에서는 자연스럽던 반주가, 실제 마이크와 스피커를 연결하자 늦게 들렸다.",
+      "cause": "첫 구현은 추정 위치에 도착한 뒤에 음을 냈고, 관측과 계산에 걸린 지연이 그대로 출력에 실렸다.",
+      "decision": "재생 위치가 음표에 도달할 시각을 미리 계산해 음표를 예약하는 시퀀서를 구현했다. 마이크 · 모델 · 위치 추정 · 합성 · 스피커를 하나의 시험 프로그램으로 연결하고, 예약한 음이 실제로 출력되는 경로까지 회귀 시험에 넣었다.",
+      "alternatives": [],
+      "result": {
+        "summary": "유선 장치에서 사람이 노래하며, 반주가 템포 변화를 따라오는 것을 청취로 확인했다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": {
+        "summary": "음표를 미리 예약하는 반주 방식은 Raphael(2011)과 ACCompanion(Cancino-Chacón 외, 2023)의 것이다. 추정 결과를 프레임마다 받아 예약을 갱신하는 시퀀서는 직접 구현했다.",
+        "sources": [
+          "s-eng-06",
+          "s-eng-07"
+        ],
+        "links": [
+          {
+            "label": "Raphael, 2011 — Communications of the ACM 54(3)",
+            "href": "https://doi.org/10.1145/1897852.1897875",
+            "purpose": "예측에 따라 음표를 미리 예약하는 반주"
+          },
+          {
+            "label": "Cancino-Chacón 외, 2023 — ACCompanion, IJCAI",
+            "href": "https://doi.org/10.24963/ijcai.2023/641",
+            "purpose": "예약형 반주 시스템"
+          }
+        ]
+      },
+      "links": [],
+      "sources": [
+        "s-eng-06",
+        "s-eng-07"
+      ],
+      "focus": null,
+      "figure": null,
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-06-15",
+            "to": "2026-06-15",
+            "precision": "day"
+          },
+          "event": "예약 시퀀서와 실제 입출력 시험 경로를 구현했다.",
+          "sources": [
+            "s-eng-06"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-06-16",
+            "to": "2026-06-16",
+            "precision": "day"
+          },
+          "event": "처리량과 시퀀서 연결을 수정하고 유선 실연에서 추종을 확인했다.",
+          "sources": [
+            "s-eng-07"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-device-echo",
+      "step": "01",
+      "stepName": "라이브 오디오",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-06-17",
+        "to": "2026-06-18",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "재생한 반주의 마이크 재유입 → 반주 제거, 가수 음높이만 추출",
+        "development": "2026.06.17–18 — 측정용 앱으로 합성 검증 · 실제 휴대폰 녹음의 차이 측정 → 노래 없는 실제 녹음을 학습에 추가"
+      },
+      "problem": "학습 에코는 공개 잔향 데이터로 합성하고, 실제 휴대폰 녹음을 음악 역합성으로 분석한 잔향 시간에 맞춰 잔향 범위를 넓혔다. 같은 방법으로 다시 분석한 값(1,151ms)은 합성 잔향을 더 길게 늘리는 쪽을 가리켰다. 이 분석법과 합성 에코가 휴대폰 스피커에서 나와 같은 휴대폰 마이크로 들어오는 실제 에코와 맞는지는 직접 측정해 검증하기로 했다.",
+      "cause": "실제 에코를 측정하려고 측정용 앱을 직접 만들었다. 휴대폰 스피커로 12초 지수 사인 스윕을 재생하면서 같은 휴대폰의 마이크로 녹음하고, 9개 공간의 임펄스 응답을 구했다. 같은 녹음을 기존 음악 역합성으로 분석하면 잔향 시간이 915ms, 스윕으로는 77ms로, 기존 방법이 12배 부풀렸다. 합성과 실제의 차이는 잔향 길이가 아니라 직접음 비율에 있었다. 휴대폰은 스피커와 마이크가 가까워 어느 방에서든 직접음이 우세한데, 합성에 쓰던 공개 잔향 데이터는 마이크가 멀어 확산음이 우세했다.",
+      "decision": "측정한 응답으로 합성 조건을 바꾸고, 같은 앱으로 반주만 재생해 녹음한 실제 휴대폰 녹음을 '노래 없음' 정답으로 학습에 섞었다. 합성에서는 방 잔향을 반주와 보컬 양쪽에 같은 방의 두 위치로 적용한다. 반주에만 걸면 모델이 잔향 유무로 둘을 구분하기 때문이다. 참조와 마이크 신호의 정렬은 몇 프레임씩 무작위로 어긋나게 했다.",
+      "alternatives": [
+        {
+          "approach": "웹 페이지에서 스윕을 재생하고 녹음",
+          "reason": "iOS는 브라우저가 마이크와 스피커를 함께 쓰면 에코 제거를 켜고, 끌 수 없다. 측정하려던 에코가 녹음에서 지워졌다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "실기기에서 되돌아오는 반주를 수집해 학습에 넣는 경로를 만들었다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-eng-08",
+        "s-eng-09"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-selection-metric",
+      "step": "03",
+      "stepName": "음높이 분포",
+      "structurePlacement": "step",
+      "structureOrder": 20,
+      "date": {
+        "from": "2026-06-16",
+        "to": "2026-06-18",
+        "precision": "day"
+      },
+      "developmentTieOrder": 20,
+      "lead": {
+        "structure": "손실: 분포 · 노래 유무 · 음높이 거리 3항 / 체크포인트 선택: 검출률 − 오검출률",
+        "development": "2026.06.16–18 — 실제 마이크에서 확신 프레임이 노래 구간의 절반 → 손실 3항 · 체크포인트 선택 지표 변경"
+      },
+      "problem": "첫 모델은 FCPE처럼 분포의 확신도에서 노래 유무가 나올 것으로 보고 360빈 분포만 학습했다. 실제 마이크에서 확신한 프레임의 음높이는 정답과 중앙값 17센트 차이로 정확했지만, 확신하는 프레임은 노래 구간의 절반 정도였다.",
+      "cause": "노래가 없는 프레임이 손실의 대부분을 차지해, 분포만 학습하면 불확실할 때 출력을 낮추는 쪽이 손실에 유리했다. 빈별 손실은 정답에서 한 칸 벗어난 출력과 한 옥타브 벗어난 출력에도 같은 벌점을 준다.",
+      "decision": "손실을 분포 · 노래 유무 · 음높이 거리 세 항으로 나눴다. 노래 유무는 별도 출력으로 학습과 체크포인트 선택에만 쓰고, 엔진에는 분포만 넘긴다. 다시 학습하며 처음 쓴 검출률은 분모에 노래 없는 프레임이 없어 모든 프레임에서 확신해도 1.0이 되므로, 노래 없는 프레임에서 확신한 비율(오검출률)을 따로 측정해 두 값의 차이로 체크포인트를 고른다.\n\n$$L=L_{\\text{분포}}+L_{\\text{노래 유무}}+0.02\\,L_{\\text{음높이 거리}},\\qquad \\text{선택 점수}=\\text{검출률}-\\text{오검출률}$$",
+      "alternatives": [
+        {
+          "approach": "검출률만으로 체크포인트 선택",
+          "reason": "노래 없는 프레임의 오검출이 점수에 반영되지 않아, 400스텝 부근에서 1.0으로 포화하고 덜 학습된 체크포인트가 최고로 저장됐다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "모든 프레임에서 확신하는 체크포인트는 점수가 0이 되어, 학습 초반의 체크포인트가 최고로 저장되지 않는다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-eng-07",
+        "s-eng-19",
+        "s-eng-20",
+        "s-eng-09",
+        "s-eng-18"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-rust-verification",
+      "step": "전체",
+      "stepName": "전체",
+      "structurePlacement": "after",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-06-18",
+        "to": "2026-06-18",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "Rust 이식: AI 코딩 에이전트에 위임, 통과 기준 · 검수 절차 결정 (청취로 확정한 Python 출력과 비트 단위 일치 시 재청취 불필요)",
+        "development": "2026.06.18 — Rust 이식 모듈 단위 분할, 통과 기준 · 단계별 독립 검수 결정"
+      },
+      "problem": "Python에서 청취로 확정한 동작을 모바일용 Rust로 옮겨야 했다. 계산 정밀도나 난수 생성이 달라지면, 같은 식을 옮겨도 반주 타이밍이 달라진다.",
+      "cause": "전체를 옮긴 뒤 청취로 차이를 찾으면 원인을 모듈별로 좁힐 수 없다.",
+      "decision": "Python이 입력 · 기대 출력 · 난수열을 파일로 저장하고, AI 코딩 에이전트가 모듈별로 Rust를 구현했다. Python 참조 구현이 32비트 부동소수점으로 계산하므로 Rust도 같은 정밀도로 맞췄고, 입자 필터는 Python의 난수열을 그대로 재생해 대조했다. 통과 기준은 제어 로직 비트 동일, 전처리 허용오차 1e-5, 증분 계산과 전체 계산의 비트 동일이다. 구현한 에이전트와 다른 에이전트가 단계마다 독립으로 검수하고, 통과한 단계만 커밋했다.",
+      "alternatives": [],
+      "result": {
+        "summary": "곡 전체 9,392프레임에서 Python과 Rust의 재생 위치 출력은 최대 차이 0으로 같았다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": [
+          "continuous-cross-language"
+        ]
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-eng-10",
+        "s-eng-13"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-incremental-vqt",
+      "step": "02",
+      "stepName": "VQT 전처리",
+      "structurePlacement": "step",
+      "structureOrder": 30,
+      "date": {
+        "from": "2026-06-23",
+        "to": "2026-06-23",
+        "precision": "day"
+      },
+      "developmentTieOrder": 30,
+      "lead": {
+        "structure": "전처리: 새 프레임만 계산, 마이크 · 참조 반주 일괄 처리",
+        "development": "2026.06.23 — 실기기 전처리 89ms 측정 → 새 프레임만 계산하는 증분 계산으로 전환"
+      },
+      "problem": "10ms마다 전처리와 신경망 추론을 끝내야 하는데, 실기기에서 전처리만 89ms가 걸렸다.",
+      "cause": "첫 구현은 프레임마다 입력 구간 전체를 다시 변환하고 마지막 프레임만 썼다. 마이크와 참조 반주에도 같은 필터를 따로 적용했다.",
+      "decision": "새 프레임만 계산하도록 바꾸고, 마이크와 참조 반주를 한 번의 필터 순회로 처리했다. 두 변경 모두 출력이 이전 계산과 비트 단위로 같다.",
+      "alternatives": [],
+      "result": {
+        "summary": "전처리 89ms → 약 2.6ms(95백분위 2.9ms). 신경망 추론 1.59ms를 더해 약 4.5ms로, 예산 10ms 안에 들어왔다.",
+        "atDecision": "신경망은 층별 상태를 유지하는 스트리밍 형태가 가속기에서 컴파일되지 않았다. 프레임마다 32프레임 입력을 통째로 넣는 형태로 바꾸자 모든 연산이 가속기에서 실행되어 1.59ms가 됐고, CPU에서 상태를 유지하며 실행한 5.1ms보다 빨랐다.",
+        "current": null,
+        "metricIds": [
+          "vqt-device-time"
+        ]
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-eng-11"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "engine-continuous-confidence",
+      "step": "08",
+      "stepName": "세 위치의 템포",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-07-01",
+        "to": "2026-07-02",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "재생 위치: 템포 적분으로 외삽 / 추정 위치: 관측 확신도에 따른 연속 가중치만큼만 반영",
+        "development": "2026.07.01–02 — 틀린 음에서 반복된 템포 급락 → 연속 가중치로 해결, 곡 전체 대조 · 실기기 청취로 확인"
+      },
+      "problem": "가수가 쉬거나 음을 틀린 구간에서 반주 템포가 0.3배까지 떨어졌다. 보정을 켜고 끄는 상태 전환 조건을 조정해도, 다른 구간에서 같은 현상이 반복됐다.",
+      "cause": "관측을 믿을지 여부를 둘로 나누면, 경계 근처의 관측이 상태 전환을 반복시킨다.",
+      "decision": "재생 위치 $p$는 템포 $v$를 적분해 진행하고, 추정 위치 $q$와의 차이는 가중치 $k_t$만큼만 반영한다.\n\n$$\\hat{p}_t=p_{t-1}+v_t\\,\\Delta t,\\qquad p_t=\\hat{p}_t+k_t\\,(q_t-\\hat{p}_t)$$\n\n$k_t$를 켜고 끄는 값에서, 확신도와 관측이 예상 진행과 맞는 정도의 곱에 비례하는 연속 값으로 바꿨다. $k_t$가 0이면 반주는 자기 템포로 진행한다. Python 배열 계산, 실시간 계산, Rust 구현을 같은 입력으로 대조한 뒤 실기기에서 청취해 기준 동작으로 정했고, 상태 기계는 제거했다.",
+      "alternatives": [],
+      "result": {
+        "summary": "실제 녹음 한 곡에서 템포가 0.7배 아래로 내려간 프레임이 559개에서 0개가 됐다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-eng-12",
+        "s-eng-13"
+      ],
+      "focus": null,
+      "figure": null,
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-07-01",
+            "to": "2026-07-01",
+            "precision": "day"
+          },
+          "event": "연속 신뢰 가중을 구현하고 실녹음에서 동작을 검사했다.",
+          "sources": [
+            "s-eng-12"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-07-02",
+            "to": "2026-07-02",
+            "precision": "day"
+          },
+          "event": "곡 전체의 Python–Rust 대조와 실기기 청취 판정을 기준 동작에 반영했다.",
+          "sources": [
+            "s-eng-13"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-low-power",
+      "step": "10",
+      "stepName": "반주 오디오와 커서",
+      "structurePlacement": "step",
+      "structureOrder": 10,
+      "date": {
+        "from": "2026-07-03",
+        "to": "2026-07-04",
+        "precision": "day"
+      },
+      "developmentTieOrder": 10,
+      "lead": {
+        "structure": "최종 기준: 최악 조건인 저전력 모드에서의 안정 동작",
+        "development": "2026.07.03–04 — 배터리 · 저전력 모드의 끊김을 기기 로그로 측정 → 한 입력에서 연속 두 프레임 추출, 가속기 호출 절반 감축"
+      },
+      "problem": "극한 조건에서도 끊기지 않아야 한다고 판단해, 성능 기준을 배터리로 동작하고 저전력 모드가 켜진 상태에 두었다. 이 기준에서 반주가 끊겼다. 디버깅용 케이블을 연결하면 전원 상태가 바뀌어 증상이 사라졌다.",
+      "cause": "기기 내부 파일에 블록(20ms)당 계산 시간을 기록해 전원 상태별로 비교했다. 유선 연결에서는 12.9ms였고, 저전력 모드에서는 20~28ms로 매 블록 예산을 넘었다. 신경망 추론만 5.5ms에서 12ms로 늘고 나머지는 일정했으며, 시간은 호출 횟수가 아니라 계산한 프레임 수에 비례했다.",
+      "decision": "인접한 두 입력은 32프레임 중 31프레임이 겹친다. 합성곱 출력 한 프레임은 수용영역 27프레임만 보므로, 한 입력의 28번과 29번 출력이 연속한 두 프레임의 값과 같다. 한 입력에서 두 프레임을 함께 꺼내 블록당 가속기 호출을 2회에서 1회로 줄였고, 출력 값은 그대로다.",
+      "alternatives": [
+        {
+          "approach": "오디오 워크그룹으로 CPU 스레드 우선순위 올리기",
+          "reason": "워크그룹이 실제로 동작하는 것을 확인했지만 끊김은 사라지지 않았다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "입력 두 개를 배치로 묶어 실행",
+          "reason": "겹치는 계산이 그대로 남는다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "아이폰 17 저전력 모드에서 끊김이 사라졌다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-eng-14",
+        "s-eng-15",
+        "s-eng-16"
+      ],
+      "focus": null,
+      "figure": null,
+      "milestones": [
+        {
+          "date": {
+            "from": "2026-07-03",
+            "to": "2026-07-03",
+            "precision": "day"
+          },
+          "event": "전력 상태별 로그에서 출력 버퍼 고갈과 계산 예산 초과를 확인했다.",
+          "sources": [
+            "s-eng-14"
+          ]
+        },
+        {
+          "date": {
+            "from": "2026-07-04",
+            "to": "2026-07-04",
+            "precision": "day"
+          },
+          "event": "한 창에서 두 프레임을 얻도록 변경하고 기기별 저전력 청취 결과를 확인했다.",
+          "sources": [
+            "s-eng-16"
+          ]
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "id": "engine-validation-contracts",
+      "lead": "검증 대상별 비교 대상 · 통과 기준 별도 설정",
+      "body": "참조 입력의 효과는 같은 검증 곡에서 학습 조건을 맞춰 비교했다. Rust 이식은 고정한 입력 · 기대 출력 · 난수열로 대조했고, 제어 로직은 곡 전체 9,392프레임이 비트 단위로 같다. 전처리 시간은 실기기에서 측정했다.",
+      "metricIds": [
+        "reference-ab-pitch",
+        "continuous-cross-language",
+        "vqt-device-time"
+      ],
+      "sources": [
+        "s-eng-ref-ab",
+        "s-eng-10",
+        "s-eng-11",
+        "s-eng-13"
+      ]
+    },
+    {
+      "id": "engine-validation-device",
+      "lead": "iOS 실기기 통합 · 청취 판정",
+      "body": "실연 시험은 사람이 반주를 듣고 다시 맞추는 흐름을 포함한다. 한 입력에서 두 프레임을 꺼내는 최적화는 프레임 순서와 출력을 Rust 시험, Mac의 Core ML, PyTorch에서 대조한 뒤 기기에서 연속 재생을 들었다.",
+      "metricIds": [],
+      "sources": [
+        "s-eng-07",
+        "s-eng-13",
+        "s-eng-16"
+      ]
+    }
+  ],
+  "reflection": [
+    {
+      "id": "engine-reflection-data",
+      "step": "03",
+      "stepName": "음높이 분포",
+      "lead": "실기기 오검출을 체크포인트 선택에 직접 연결",
+      "body": "학습에 쓰지 않은 곡의 실제 휴대폰 녹음으로 확인한 수치는 「Halt!」 한 곡뿐이다. 다음에는 학습에 쓰지 않은 방과 기기의 실제 녹음을 검증 자료로 늘려 그 오검출로 체크포인트를 고르고, 모델을 키우기 전에 어떤 구간에서 확신을 잃거나 잘못 확신하는지부터 가른다.",
+      "sources": [
+        "s-eng-08",
+        "s-eng-09",
+        "s-eng-18"
+      ]
+    },
+    {
+      "id": "engine-reflection-device",
+      "step": "10",
+      "stepName": "반주 오디오와 커서",
+      "lead": "다음 과제: 구형 기기 장시간 연속 재생",
+      "body": "아이폰 15 저전력 모드에서는 곡 후반에 약한 끊김이 남았다. 처리량, 모델이 기다리는 문맥, 장치 입출력 지연을 따로 측정해 다음 병목을 정한다.",
+      "sources": [
+        "s-eng-16",
+        "s-eng-11"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "음높이 모델",
+      "href": "/projects/classicmate/#model",
+      "purpose": "이 엔진이 관측으로 쓰는 음높이 분포 모델의 학습 과정"
+    },
+    {
+      "label": "실시간 음높이 모델 설계",
+      "href": "/writing/realtime-model-design/",
+      "purpose": "입력 표현 · 모델 구조 · 학습과 배포 조건"
+    },
+    {
+      "label": "가수 위치 · 추정 위치 · 재생 위치",
+      "href": "/writing/three-clocks/",
+      "purpose": "위치 추정과 실제 재생을 분리한 이유"
+    },
+    {
+      "label": "실시간 연주 시험",
+      "href": "/writing/closed-loop/",
+      "purpose": "가수와 반주가 서로 반응하는 조건에서의 시험"
+    }
+  ],
+  "sources": [
+    "s-eng-01",
+    "s-eng-02",
+    "s-eng-03",
+    "s-eng-04",
+    "s-eng-05",
+    "s-eng-06",
+    "s-eng-07",
+    "s-eng-08",
+    "s-eng-09",
+    "s-eng-10",
+    "s-eng-11",
+    "s-eng-12",
+    "s-eng-13",
+    "s-eng-14",
+    "s-eng-15",
+    "s-eng-16",
+    "s-eng-17",
+    "s-eng-18",
+    "s-eng-19",
+    "s-eng-20",
+    "s-eng-21",
+    "s-eng-22",
+    "s-eng-23",
+    "s-eng-joint-code",
+    "s-eng-joint-proposal",
+    "s-eng-joint-reject",
+    "s-eng-ref-ab",
+    "s-eng-ref-architecture",
+    "s-eng-ref-code",
+    "s-eng-ref-current",
+    "s-eng-ref-design",
+    "s-eng-ref-model",
+    "s-eng-tempo-current",
+    "s-home-engine"
+  ],
+  "units": [
+    {
+      "id": "engine-unit-positions",
+      "label": "core",
+      "title": "세 위치 분리: 추정이 흔들려도 도약하지 않는 반주",
+      "metric": {
+        "label": "실제 녹음 한 곡에서 반주 템포가 0.7배 아래로 떨어진 프레임",
+        "before": "559",
+        "after": "0",
+        "note": null
+      },
+      "arc": {
+        "constraint": "추정 위치에는 불확실성이 있지만, 한 번 소리로 나간 반주는 되돌릴 수 없다.",
+        "problem": "추정 위치를 그대로 재생해, 6초 동안 33번 오간 추정이 반주까지 흔들었다.",
+        "design": "증상별 보정과 위치 분리를 같은 곡에서 비교하고, 보정을 켜고 끄던 조건을 연속 가중치로 바꿨다.",
+        "evaluation": "반주 템포가 무너진 프레임 수로 후보를 거르고, 채택은 청취로 정했다.",
+        "improvement": "가수 · 추정 · 재생 위치를 분리하고 확신도만큼만 보정해, 559 → 0프레임."
+      },
+      "steps": [
+        "05",
+        "06",
+        "08"
+      ],
+      "cards": [
+        "engine-three-clocks",
+        "engine-continuous-confidence",
+        "engine-playhead",
+        "engine-reentry"
+      ]
+    },
+    {
+      "id": "engine-unit-tempo",
+      "label": "core",
+      "title": "반주 템포: 추정 템포로 예측 가능하게 외삽",
+      "metric": {
+        "label": "실제 반주자의 타이밍과의 시간 차",
+        "before": "0.67초",
+        "after": "0.21초",
+        "note": "다른 한 곡은 1.11초 → 0.48초"
+      },
+      "arc": {
+        "constraint": "템포는 직접 관측되지 않고, 가수와 반주는 서로를 듣고 맞춘다.",
+        "problem": "반주가 가수보다 일관되게 약 0.8초 늦어, 가수가 기다리며 연주가 느려졌다.",
+        "design": "음표별 템포 평활, 위치와 템포를 묶은 입자 필터, 분포로 추정한 템포를 비교했다.",
+        "evaluation": "실제 반주자의 타이밍과의 시간 차(두 곡)와 청취.",
+        "improvement": "템포를 분포로 추정해 외삽하고 위치는 느리게만 보정해, 0.67 → 0.21초."
+      },
+      "steps": [
+        "07"
+      ],
+      "cards": [
+        "engine-separate-tempo"
+      ]
+    },
+    {
+      "id": "engine-unit-future",
+      "label": "principle",
+      "title": "미래 참조 제한: 계산하는 시점 이후 신호 미사용",
+      "metric": {
+        "label": "전처리가 기다리는 미래 신호",
+        "before": "130ms",
+        "after": "20ms",
+        "note": "실시간 출력과 곡 전체 처리 출력의 차이 2e-6"
+      },
+      "arc": {
+        "constraint": "기기에서 실시간으로 돌아, 계산하는 시점에 그 뒤의 신호가 아직 없다.",
+        "problem": "참조한 알고리즘 다수가 미래 신호를 써서, 녹음 실험의 결과가 실시간에서 재현되지 않는다.",
+        "design": "평가에는 미래를 허용하고 구현에는 금지하는 기준을 세우고, 입력의 뒤를 잘라도 앞 출력이 같은지 테스트로 고정했다.",
+        "evaluation": "실시간 출력과 곡 전체를 한 번에 처리한 출력의 차이.",
+        "improvement": "미래를 참조하는 곳을 전처리와 음높이 신경망의 2프레임(20ms)으로 줄였다."
+      },
+      "steps": [],
+      "cards": [
+        "engine-no-future",
+        "engine-frontend-contract"
+      ]
+    },
+    {
+      "id": "engine-unit-model",
+      "label": null,
+      "title": "음높이 모델: 반주 섞인 마이크에서 가수 음높이만 추출",
+      "metric": {
+        "label": "같은 정확도에 이르는 학습 스텝 (참조 입력 전후 · 짧은 비교 학습)",
+        "before": "1배",
+        "after": "약 0.5배",
+        "note": "±2빈 음높이 정확도 0.609 → 0.661 (9층 · 곡 앞 15초 · 2,500스텝)"
+      },
+      "arc": {
+        "constraint": "휴대폰 스피커의 반주가 마이크로 되돌아오고, 곡 전체를 보는 보컬 분리 모델은 기기에서 실행할 수 없다.",
+        "problem": "섞인 신호에서 가수의 음높이만, 기기에서 10ms마다 추정해야 했다.",
+        "design": "두 모델의 출력을 14층 CNN 하나로 증류하고, 재생한 반주를 참조 입력으로 붙여 유무를 비교했다. 9개 공간의 임펄스 응답은 직접 만든 앱으로 측정했다.",
+        "evaluation": "±2빈 정확도, 노래 없는 구간의 오검출을 뺀 선택 점수.",
+        "improvement": "참조 입력으로 같은 정확도까지의 학습 스텝이 절반으로 줄고, 짧은 비교 학습의 ±2빈 정확도는 0.609 → 0.661."
+      },
+      "steps": [
+        "01",
+        "03",
+        "04"
+      ],
+      "cards": [
+        "engine-observation",
+        "engine-model-shape",
+        "engine-reference-input",
+        "engine-device-echo",
+        "engine-selection-metric"
+      ]
+    },
+    {
+      "id": "engine-unit-device",
+      "label": null,
+      "title": "실기기 이식: 10ms 주기 실시간 동작",
+      "metric": {
+        "label": "전처리 한 번의 처리 시간 (실기기 중앙값)",
+        "before": "89ms",
+        "after": "약 2.6ms",
+        "note": "추론을 더해 약 4.5ms · 예산 10ms"
+      },
+      "arc": {
+        "constraint": "10ms마다 전처리와 추론을 끝내야 하고, 저전력 모드가 켜진 배터리 상태도 기준이다.",
+        "problem": "실기기에서 전처리만 89ms가 걸렸고, 저전력 모드에서는 블록마다 예산을 넘겨 반주가 끊겼다.",
+        "design": "블록별 계산 시간을 기기 안에 기록해 전원 상태별로 비교하고, 바꾼 계산은 이전 출력과 비트 단위로 대조했다.",
+        "evaluation": "처리 시간 중앙값과 95백분위, Python과 Rust의 출력 차이, 청취.",
+        "improvement": "전처리 89 → 약 2.6ms, Rust 대조 차이 0, 저전력 모드 끊김 해소."
+      },
+      "steps": [
+        "02",
+        "09",
+        "10"
+      ],
+      "cards": [
+        "engine-incremental-vqt",
+        "engine-rust-verification",
+        "engine-scheduled-playback",
+        "engine-low-power"
+      ]
+    }
+  ]
+}

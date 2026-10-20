@@ -1,0 +1,438 @@
+{
+  "schemaVersion": 1,
+  "id": "pipeline",
+  "projectId": "classicmate",
+  "title": "ClassicMate 악보 파이프라인",
+  "sentence": "종이 · PDF 악보는 컴퓨터가 재생할 수 없다. 악보의 음악 정보(MusicXML)에서 12개 조의 PDF 악보 · 반주 MIDI · 재생 커서 좌표와 곡 해설을 만들어 앱에 공급한다.",
+  "period": "2025.09 ~ 2026.07 · 초기팀 풀타임",
+  "scope": {
+    "direct": [
+      "MusicXML에서 앱 자산을 만드는 Python 배치를 단독으로 개발했다.",
+      "재생 시간축과 곡 해설의 입력 · 출력 규칙을 정했다."
+    ],
+    "team": [],
+    "borrowed": [
+      "조판은 verovio, MIDI 생성과 악보 분석은 music21, 검색과 구조화 출력은 Gemini API를 사용했다."
+    ]
+  },
+  "stack": [
+    {
+      "technology": "Python",
+      "use": "곡별 변환과 배치 실행, 커서 좌표 매칭, 출력 검사"
+    },
+    {
+      "technology": "verovio · music21",
+      "use": "악보 조판·음표 좌표 추출과 이조·MIDI 생성·음악 정보 분석"
+    },
+    {
+      "technology": "Gemini API",
+      "use": "검색 근거 수집, 가사 해설 구조화와 연습 코칭 생성"
+    },
+    {
+      "technology": "Supabase",
+      "use": "곡·조별 메타데이터와 생성 자산을 앱에 공급"
+    }
+  ],
+  "resultMetricIds": [
+    "pipeline-page-regression",
+    "pipeline-regression-guard"
+  ],
+  "metrics": [
+    {
+      "id": "pipeline-page-regression",
+      "label": "시간순으로 읽을 때 커서의 페이지가 뒤로 가는 횟수",
+      "values": [
+        {
+          "label": "수정 전 조별 최솟값",
+          "value": 13,
+          "unit": "건"
+        },
+        {
+          "label": "수정 전 조별 최댓값",
+          "value": 29,
+          "unit": "건"
+        },
+        {
+          "label": "수정 후 각 조",
+          "value": 0,
+          "unit": "건"
+        }
+      ],
+      "method": "좌표 맵을 음표 시작 시각 순으로 읽으며, 이어지는 항목의 페이지 번호가 줄어드는 횟수를 셌다.",
+      "scope": "슈베르트 「마왕」의 이조한 11개 조. 수정 뒤에는 원래 조를 포함한 12개 조에서 확인했다.",
+      "measuredAt": {
+        "from": "2026-03-23",
+        "to": "2026-03-23",
+        "precision": "day"
+      },
+      "sources": [
+        "s-p08",
+        "s-p09"
+      ]
+    },
+    {
+      "id": "pipeline-regression-guard",
+      "label": "구조 변경 전후의 기준 출력",
+      "values": [
+        {
+          "label": "기준 악보",
+          "value": 4,
+          "unit": "곡"
+        },
+        {
+          "label": "스냅샷 비교",
+          "value": "동일",
+          "unit": ""
+        }
+      ],
+      "method": "좌표 맵의 구조 · 음표 · 마디 · 단 좌표 해시, MIDI의 트랙별 이벤트열 해시, 조별 메타데이터를 비교했다.",
+      "scope": "원래 조만 변환한 2곡과 12개 조를 모두 변환한 2곡. 뒤의 2곡은 곡 중간에 조가 바뀌는 곡과 바뀌지 않는 곡이다.",
+      "measuredAt": {
+        "from": "2026-06-30",
+        "to": "2026-06-30",
+        "precision": "day"
+      },
+      "sources": [
+        "s-p10",
+        "s-p15"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "step": "00",
+      "stepName": "문제 · 해결",
+      "entryCardId": "pipeline-asset-contract",
+      "sectionAnchor": null
+    },
+    {
+      "step": "01",
+      "stepName": "한 시간축",
+      "entryCardId": "pipeline-shared-clock",
+      "sectionAnchor": null
+    },
+    {
+      "step": "02",
+      "stepName": "곡 해설",
+      "entryCardId": "pipeline-grounded-analysis",
+      "sectionAnchor": null
+    },
+    {
+      "step": "03",
+      "stepName": "회고 · 첫 단계",
+      "entryCardId": null,
+      "sectionAnchor": "pipeline-reflection-input"
+    },
+    {
+      "step": "04",
+      "stepName": "회고 · 한계",
+      "entryCardId": null,
+      "sectionAnchor": "pipeline-reflection-coverage"
+    }
+  ],
+  "cards": [
+    {
+      "id": "pipeline-asset-contract",
+      "step": "00",
+      "stepName": "문제 · 해결",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-02-08",
+        "to": "2026-02-16",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "core": true,
+      "lead": {
+        "structure": "종이 · PDF 악보는 재생 불가 → MusicXML에서 12개 조 악보 · 반주 MIDI · 커서 좌표 · 곡 해설 일괄 생성",
+        "development": "2026.02.08–16 — 한 곡에서 12개 조 악보 · 반주 · 커서 좌표 · 곡 해설 생성, 곡 · 조별 ID로 Supabase 적재 배치 구현"
+      },
+      "problem": "종이나 PDF 악보에는 사람이 읽는 기호와 배치만 있다. 앱이 반주를 재생하고 그 음표를 화면에서 가리키려면 음높이 · 길이 · 재생 시각과 페이지 좌표가 연결된 데이터가 필요하다.",
+      "cause": "PDF만으로는 음표의 의미와 재생 순서가 정해지지 않는다. 악보 · 반주 · 해설을 따로 만들면 같은 곡과 조의 자산을 앱에서 다시 맞춰야 한다.",
+      "decision": "입력을 음악 정보가 전사된 MusicXML로 정했다. 한 곡에서 12개 조의 PDF · MIDI · 커서 좌표를 만들고, 가사와 악보 특성을 곡 해설의 입력으로 넘긴다. 곡 · 조별 ID와 자산 경로를 맞춰 Supabase에 적재한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "앱이 쓰는 악보 · 소리 · 좌표 · 해설이 곡 단위 한 묶음으로 나온다.",
+        "atDecision": "변환은 곡마다 자식 프로세스에서 실행해, verovio가 내부에서 종료되어도 그 곡만 실패로 기록한다. 곡 ID는 진행 파일에서 재사용하고 조별 ID는 곡 ID와 조 이름에서 UUIDv5로 계산해, 끊긴 배치를 다시 실행해도 결과가 같다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-p01",
+        "s-p11",
+        "s-p16"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "pipeline-shared-clock",
+      "step": "01",
+      "stepName": "한 시간축",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-01-02",
+        "to": "2026-01-12",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "core": true,
+      "lead": {
+        "structure": "발음 시각: music21로 일원화 / 악보 좌표: verovio에서 받아 연결",
+        "development": "2026.01.02–12 — music21 발음 시각을 verovio 음표 · 박 위치에 대응, 템포 · 박자 변화를 재생 맵에 반영"
+      },
+      "problem": "악보를 보여 주는 좌표와 반주가 울리는 시각이 서로 다른 도구에서 나온다. verovio가 계산한 시각을 쓰면 music21이 만든 MIDI의 재생과 조금씩 어긋났다.",
+      "cause": "verovio는 조판과 음표별 좌표를 내지만 셈여림 · 꾸밈음을 반영한 MIDI 생성이 약하고, music21은 그런 MIDI를 만들지만 악보를 조판하지 못한다. 두 도구의 시각을 섞으면 기준이 둘이 된다.",
+      "decision": "조판과 좌표는 verovio에, MIDI와 음표 시각은 music21에 맡겼다. 두 도구가 공유하는 박 위치로 음표를 대응시키고, 박 위치 차이가 4분음표의 0.2배 안이면 같은 음표로 본다. 템포와 박자 변화도 재생 맵에 넣어 앱이 같은 기준으로 커서를 옮긴다.",
+      "alternatives": [],
+      "result": {
+        "summary": "커서와 반주가 같은 시간축을 사용한다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-p01",
+        "s-p02",
+        "s-p11"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "pipeline-cursor-page-assignment",
+      "step": "01",
+      "stepName": "한 시간축",
+      "structurePlacement": "step",
+      "structureOrder": 2,
+      "date": {
+        "from": "2026-03-23",
+        "to": "2026-03-23",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "이조 악보 커서 페이지: 마디 단위 다수결, 박 위치 순서로 역행 방지",
+        "development": "2026.03.23 — 이조한 조의 커서 역행 → 마디 기준 페이지 배정으로 해결"
+      },
+      "problem": "곡 중간에 조가 바뀌는 곡을 이조하면, 반주는 진행하는데 커서가 이전 페이지로 돌아갔다. 좌표 맵을 시간순으로 읽으며 페이지 번호가 줄어드는 횟수를 지표로 정했다. 슈베르트 「마왕」은 원래 조에서 0건, 이조한 11개 조에서 13~29건이었다.",
+      "cause": "이 경로는 verovio의 내부 표현(MEI)을 꺼내 음표를 옮긴 뒤 다시 읽어 들인다. 음표를 옮기지 않고 꺼냈다가 다시 읽기만 해도 역행이 11건 나와, 원인을 다시 읽은 뒤의 레이아웃 계산으로 좁혔다.",
+      "decision": "좌표를 첫 페이지 한 곳이 아니라 모든 페이지에서 모은 뒤, 마디 단위 다수결로 페이지를 정하고 박 위치가 시간순으로 늘어나도록 제약했다.",
+      "alternatives": [
+        {
+          "approach": "verovio에 음표가 속한 페이지를 조회",
+          "reason": "조회 값도 다른 페이지를 가리켜 12~28건이 남았다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "페이지별 시간 범위를 벗어난 좌표를 옮기거나 제거",
+          "reason": "일부 조에 1~4건이 남고, 좌표가 붙은 음표가 80~93%로 줄었다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "페이지가 줄어드는 좌표를 제거",
+          "reason": "역행은 0건이 됐지만 좌표가 붙은 음표가 70~88%로 줄어, 수십 초 동안 커서가 멈췄다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "MusicXML에서 직접 이조",
+          "reason": "역행 0건에 좌표도 모두 남았지만, 임시표와 조표 표기가 기존 악보와 달라졌다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "「마왕」 12개 조와 조가 바뀌는 5곡의 역행이 모두 0건이 됐고, 음표의 좌표는 모두 남았다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": [
+          "pipeline-page-regression"
+        ]
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-p08",
+        "s-p09",
+        "s-p02"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "pipeline-grounded-analysis",
+      "step": "02",
+      "stepName": "곡 해설",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-02-12",
+        "to": "2026-02-12",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "검색으로 사실 수집 → 구조화 출력으로 정리 → 코칭 항목별 근거 첨부",
+        "development": "2026.02.12 — 곡 해설에 코칭 단계 추가, 연습 과제 근거 필드 · 출력 검사 규칙 구현"
+      },
+      "problem": "성악 연습에는 가사의 뜻과 발음, 곡의 배경, 연습 과제가 함께 필요하다. 자유 형식 응답 하나로 받으면 앱이 표시할 항목과 조언의 근거를 일정한 형태로 다룰 수 없다.",
+      "cause": "Gemini API는 검색 그라운딩과 구조화 출력(JSON 스키마)을 한 호출에서 함께 쓸 수 없다.",
+      "decision": "호출을 셋으로 나눴다. 검색으로 곡의 사실을 모으고, 그 결과를 스키마에 맞춰 구조화하고, 구조화한 분석과 악보에서 계산한 박자 · 템포 · 마디 수 · 음역을 입력으로 연습 코칭을 만든다. 연습 과제마다 근거 필드(basis)를 요구해 악보 · 가사 · 양식 중 어디서 나온 조언인지 적게 하고, 생성 뒤 항목 수 · 연습 시간 합계 · 빈 근거를 규칙으로 검사한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "해설과 연습 과제가 근거 필드가 붙은 앱 데이터로 저장된다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-p06",
+        "s-p07",
+        "s-p12"
+      ],
+      "focus": null,
+      "figure": null
+    }
+  ],
+  "validation": [
+    {
+      "id": "pipeline-validation-regression",
+      "lead": "구조 변경 전 기준 악보 4곡의 출력 스냅샷 고정",
+      "body": "2026년 6월 30일에 엔진 파일 하나를 9개 모듈로 나누기 전에 스냅샷 비교 테스트를 먼저 커밋했다. 기준 4곡은 변환 경로가 겹치지 않게 골랐다. 좌표 맵과 MIDI 이벤트열은 해시로, PDF는 페이지 수로 비교했고, 나눈 뒤에도 네 곡의 출력이 모두 같았다.",
+      "metricIds": [
+        "pipeline-regression-guard"
+      ],
+      "sources": [
+        "s-p10",
+        "s-p15"
+      ]
+    }
+  ],
+  "reflection": [
+    {
+      "id": "pipeline-reflection-input",
+      "step": "03",
+      "stepName": "회고 · 첫 단계",
+      "lead": "악보 이미지 → MusicXML 첫 단계에 VLM을 적용했어야 함",
+      "body": "파이프라인은 이미 전사된 MusicXML에서 출발한다. 종이 · PDF 악보를 가진 사용자에게는 그 앞의 변환이 남아, 초기 문제의 절반만 해결된다. 다시 설계한다면 악보 이미지를 VLM으로 읽어 MusicXML로 바로 만든다. 기술 난도는 더 높지만, 사용자가 가진 악보에서 바로 시작할 수 있다.",
+      "sources": [
+        "s-p01",
+        "s-p13"
+      ]
+    },
+    {
+      "id": "pipeline-reflection-coverage",
+      "step": "04",
+      "stepName": "회고 · 한계",
+      "lead": "한계를 규칙으로 하나씩 차단 → 규칙을 쌓기 전에 공개된 AI 도구가 그 범위를 다루는지 확인했어야 함",
+      "body": "도돌이표가 있는 곡은 격리하고, 멜로디와 반주 두 채널을 전제하고, 조성은 사후 보정에 의존하고, 장식 기호는 기호마다 처리기를 추가했다. 새 기호가 나올 때마다 규칙이 늘어나는 구조다. 다음에는 규칙을 쌓기 전에, 공개된 도구가 그 범위를 이미 다루는지부터 확인한다.",
+      "sources": [
+        "s-p06",
+        "s-p11",
+        "s-p13"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "모바일 앱",
+      "href": "/projects/classicmate/#app",
+      "purpose": "만든 악보 · 반주 · 좌표를 쓰는 앱의 구조"
+    },
+    {
+      "label": "반주 엔진",
+      "href": "/projects/classicmate/#engine",
+      "purpose": "같은 악보와 반주로 가수를 따라가는 실시간 처리"
+    }
+  ],
+  "sources": [
+    "s-p01",
+    "s-p02",
+    "s-p03",
+    "s-p04",
+    "s-p05",
+    "s-p06",
+    "s-p07",
+    "s-p08",
+    "s-p09",
+    "s-p10",
+    "s-p11",
+    "s-p12",
+    "s-p13",
+    "s-p14",
+    "s-p15",
+    "s-p16"
+  ],
+  "units": [
+    {
+      "id": "pipeline-unit-assets",
+      "label": "core",
+      "title": "자산 계약: MusicXML 한 곡 → 12개 조 악보 · 반주 · 커서 좌표 · 해설",
+      "metric": null,
+      "arc": {
+        "constraint": "종이 · PDF 악보에는 사람이 읽는 기호와 배치만 있다.",
+        "problem": "앱이 반주를 재생하고 음표를 가리키려면 음높이 · 길이 · 재생 시각과 페이지 좌표가 연결된 데이터가 필요하고, 자산을 따로 만들면 앱에서 다시 맞춰야 한다.",
+        "design": "입력을 MusicXML로 정하고, 변환은 곡마다 자식 프로세스에서 실행하며, 조별 ID는 곡 ID와 조 이름에서 UUIDv5로 계산한다.",
+        "evaluation": "verovio가 내부에서 종료되어도 그 곡만 실패로 남는지, 끊긴 배치를 다시 실행해도 결과가 같은지.",
+        "improvement": "악보 · 소리 · 좌표 · 해설이 곡 단위 한 묶음으로 나와, 곡 · 조별 ID로 Supabase에 적재된다."
+      },
+      "steps": [
+        "00"
+      ],
+      "cards": [
+        "pipeline-asset-contract"
+      ]
+    },
+    {
+      "id": "pipeline-unit-clock",
+      "label": "core",
+      "title": "한 시간축: 커서와 반주의 시간 기준 일원화",
+      "metric": {
+        "label": "이조한 조에서 커서 페이지가 뒤로 가는 횟수 (「마왕」 11개 조)",
+        "before": "13~29건",
+        "after": "0건",
+        "note": "조가 바뀌는 5곡도 0건, 음표 좌표는 모두 유지"
+      },
+      "arc": {
+        "constraint": "악보 좌표는 verovio에서, 반주의 재생 시각은 music21에서 나와, 두 도구의 시각을 섞으면 기준이 둘이 된다.",
+        "problem": "verovio의 시각은 MIDI 재생과 조금씩 어긋났고, 이조한 곡에서는 반주가 진행하는데 커서가 이전 페이지로 돌아갔다.",
+        "design": "두 도구가 공유하는 박 위치로 음표를 대응시키고, 역행 횟수를 지표로 정해 원인을 다시 읽은 뒤의 레이아웃 계산으로 좁혔다. 페이지 조회 · 좌표 이동 · 좌표 제거 · MusicXML 직접 이조 넷은 시험 뒤 기각했다.",
+        "evaluation": "좌표 맵을 시간순으로 읽으며 페이지 번호가 줄어드는 횟수.",
+        "improvement": "모든 페이지의 좌표를 모아 마디 단위 다수결로 배정하고 박 위치 순서를 제약해, 13~29건 → 0건."
+      },
+      "steps": [
+        "01"
+      ],
+      "cards": [
+        "pipeline-shared-clock",
+        "pipeline-cursor-page-assignment"
+      ]
+    },
+    {
+      "id": "pipeline-unit-analysis",
+      "label": null,
+      "title": "근거 달린 해설: 조언마다 근거 · 출력 규칙 검사",
+      "metric": null,
+      "arc": {
+        "constraint": "Gemini API는 검색 그라운딩과 구조화 출력(JSON 스키마)을 한 호출에서 함께 쓸 수 없다.",
+        "problem": "자유 형식 응답 하나로는 앱이 표시할 항목과 조언의 근거를 일정한 형태로 다룰 수 없다.",
+        "design": "호출을 검색 · 구조화 · 코칭 셋으로 나누고, 연습 과제마다 악보 · 가사 · 양식 중 어디서 나온 조언인지 적는 근거 필드를 요구한다.",
+        "evaluation": "생성 뒤 항목 수 · 연습 시간 합계 · 빈 근거를 규칙으로 검사한다.",
+        "improvement": "해설과 연습 과제가 근거 필드가 붙은 앱 데이터로 저장된다."
+      },
+      "steps": [
+        "02"
+      ],
+      "cards": [
+        "pipeline-grounded-analysis"
+      ]
+    }
+  ]
+}

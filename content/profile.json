@@ -1,0 +1,20 @@
+{
+  "name": "우지현",
+  "subtitle": "AI/ML Portfolio",
+  "role": "AI/ML Engineer",
+  "heroLines": ["Audio DSP", "Flutter"],
+  "card": [
+    { "label": "주력 언어", "value": "Python · Dart" },
+    { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" }
+  ],
+  "stats": ["release", "leaderboard"],
+  "experiences": [
+    { "title": "ClassicMate 초기팀 리드 엔지니어", "period": "2025.09 ~ 2026.07", "description": "모바일 앱 · 악보 파이프라인 · 반주 엔진을 설계하고 개발했다. 초기팀에 풀타임으로 참여했다." },
+    { "title": "SSAFY 16기 AI 챌린지 최우수상 · A011 팀장", "period": "2026.09.21 ~ 2026.09.28", "description": "5인 팀의 가설 설계·실험 배분·공통 실행 환경·발표를 맡았다. Private 리더보드 217팀 중 3위 · 서울 캠퍼스 1위로 최우수상을 받았다." }
+  ],
+  "education": [
+    { "title": "인텔 AI For Future Workforce", "period": "2025.04 ~ 2025.09 · 우수 수료 (상위 10%)" },
+    { "title": "SSAFY 16기", "period": "2026.07 ~ 2027.06 (수료 예정)" }
+  ],
+  "links": [{"label":"Email","url":"mailto:wkc0631sy@gmail.com"},{"label":"GitHub","url":"https://github.com/jihyun-el"}]
+}

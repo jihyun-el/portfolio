@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 1,
+  "id": "app",
+  "projectId": "classicmate",
+  "title": "ClassicMate 모바일 앱",
+  "sentence": "악보 열람 · 필기 · 반주 · 결제를 한 앱에 담고, 화면 · 로컬 데이터 · 서버 권한 · 네이티브 오디오의 경계를 나눠 구현한 Flutter 앱. iOS · Android에 출시했다.",
+  "period": "2025.09 ~ 2026.07 · 초기팀 풀타임",
+  "scope": {
+    "direct": [
+      "리드 엔지니어로 악보 열람 · 필기 · 기기 간 동기화 · 결제 · 계정 경계를 설계하고 개발했다.",
+      "반주 엔진을 iOS 네이티브 오디오에 연결했다.",
+      "QA에서 발견한 문제의 원인 추적과 수정, 인수인계를 맡았다."
+    ],
+    "team": [
+      "리드 엔지니어로서 초기팀의 요구사항과 운영 피드백을 반영하고 팀원의 변경을 통합했다."
+    ],
+    "borrowed": [
+      "Flutter · Riverpod · Supabase 위에 구성하고, PDF 뷰어(pdfrx) · 필기 · 결제 라이브러리를 연결했다."
+    ]
+  },
+  "stack": [
+    {
+      "technology": "Flutter · Dart",
+      "use": "악보 열람 · 필기 · 반주 화면과 계정별 상태 · 동기화"
+    },
+    {
+      "technology": "Riverpod",
+      "use": "기능별 화면 상태와 공통 서비스의 수명 관리"
+    },
+    {
+      "technology": "Supabase · PostgreSQL",
+      "use": "인증, 영수증 검증, 지급 · 환불 서버 함수와 원장"
+    },
+    {
+      "technology": "Swift",
+      "use": "iOS 네이티브 오디오 입출력과 Flutter 제어 채널 연결"
+    }
+  ],
+  "resultMetricIds": [],
+  "metrics": [],
+  "steps": [
+    {
+      "step": "00",
+      "stepName": "구조",
+      "entryCardId": "app-layer-boundaries",
+      "sectionAnchor": null
+    },
+    {
+      "step": "01",
+      "stepName": "필기",
+      "entryCardId": "app-pdf-coordinate-contract",
+      "sectionAnchor": null
+    },
+    {
+      "step": "02",
+      "stepName": "결제",
+      "entryCardId": "app-payment-grant",
+      "sectionAnchor": null
+    },
+    {
+      "step": "03",
+      "stepName": "계정 경계",
+      "entryCardId": "app-account-transition",
+      "sectionAnchor": null
+    },
+    {
+      "step": "04",
+      "stepName": "인수인계",
+      "entryCardId": "app-handover-contracts",
+      "sectionAnchor": null
+    }
+  ],
+  "cards": [
+    {
+      "id": "app-layer-boundaries",
+      "step": "00",
+      "stepName": "구조",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-02-11",
+        "to": "2026-02-22",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "core": true,
+      "lead": {
+        "structure": "기능별 4계층(View · ViewModel · Repository · Service), 잔액 · 소유권 변경은 서버 전담",
+        "development": "2026.02.11–22 — 화면 단위 코드 → 기능 단위 구조로 이전, 화면 상태를 Riverpod Notifier로 분리"
+      },
+      "problem": "악보 열람 · 필기 · 반주 · 상점 · 커뮤니티가 한 앱에 있다. 화면이 서버 호출과 로컬 저장을 직접 처리하면, 계정 전환이나 결제 복구 같은 공통 동작을 화면마다 고쳐야 한다.",
+      "cause": "화면의 상태와 저장된 데이터는 수명이 다르다. 악보 화면을 닫아도 필기와 내려받은 자산은 남아야 하고, 화면에 표시하는 잔액은 서버가 승인한 거래 결과여야 한다.",
+      "decision": "기능 모듈마다 View, Riverpod Notifier, Repository, DataSource · Service를 둔다. View는 입력과 표시, Notifier는 화면 상태와 작업 순서, Repository는 데이터 접근을 맡는다. 지갑과 소유권 쓰기는 서버 함수(RPC, Edge Function)만 수행하고, 클라이언트는 응답에 실린 잔액을 표시한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "필기 · 결제 · 동기화의 규칙이 화면이 아니라 각자의 계층에 놓인다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a01",
+        "s-a13"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-pdf-coordinate-contract",
+      "step": "01",
+      "stepName": "필기",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2025-12-22",
+        "to": "2026-01-14",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "필기: PDF 원본 좌표로 저장 / 화면 배율: 렌더러 담당",
+        "development": "2025.12.22–2026.01.14 — 필기 모드 확대 시 필기 · 악보 어긋남 → 네 번의 시도 끝에 페이지 오버레이로 해결"
+      },
+      "problem": "악보를 확대하면 필기만 커지고 악보는 그대로였다.",
+      "cause": "PDF 뷰어(pdfrx)와 필기 라이브러리가 확대와 이동을 각자 처리했고, pdfrx는 확대 상태를 밖에서 제어할 수 없다.",
+      "decision": "PDF 뷰어가 페이지마다 제공하는 오버레이에 필기판을 올렸다. 입력 위치는 화면 크기에 대한 비율로 바꾼 뒤 PDF 원본 페이지 크기에 곱해 저장하고, 화면 크기에 맞추는 일은 렌더링 단계가 맡는다.",
+      "alternatives": [
+        {
+          "approach": "필기판의 배경에 PDF 뷰어를 배치",
+          "reason": "확대 처리가 두 겹이 되어 제스처가 충돌했다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "바깥 확대 영역으로 악보와 필기를 함께 감싸기",
+          "reason": "PDF 뷰어가 터치를 먼저 가져가 중첩 제스처가 충돌했다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "PDF 페이지를 이미지로 렌더링",
+          "reason": "페이지당 약 18MB를 쓰고, 확대하면 화질이 떨어졌다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "두 쪽의 확대 값을 직접 맞추기",
+          "reason": "좌표 변환이 복잡해지고 프레임 드롭이 생겼다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "네 번의 시도 뒤, 기기와 확대 배율이 달라도 필기가 악보의 같은 자리에 놓인다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a02",
+        "s-a03",
+        "s-a01"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-annotation-merge",
+      "step": "01",
+      "stepName": "필기",
+      "structurePlacement": "step",
+      "structureOrder": 2,
+      "date": {
+        "from": "2026-04-13",
+        "to": "2026-04-14",
+        "precision": "day"
+      },
+      "developmentTieOrder": 2,
+      "lead": {
+        "structure": "곡 목록: 마지막 쓰기 우선 / 필기: 페이지 단위 3-way merge",
+        "development": "2026.04.13–14 — 기기 간 동기화 구현, 곡 목록 · 필기의 충돌 처리 분리 설계"
+      },
+      "problem": "한 계정이 여러 기기에서 필기하면 기기마다 다른 편집이 남는다. 필기 문서 전체를 마지막 쓰기로 덮으면 다른 기기에서 쓴 페이지가 사라진다.",
+      "cause": "즐겨찾기 같은 곡 목록 상태와 필기의 획 목록은 병합 단위가 다르다. 필기는 같은 페이지에서도 추가와 삭제가 함께 일어나, 저장 시각만으로는 무엇이 바뀌었는지 가릴 수 없다.",
+      "decision": "필기는 페이지마다 마지막 동기화 상태 · 현재 기기 · 서버의 획 목록을 비교한다. 한쪽이 지운 획은 지우고, 각 기기가 추가한 획은 합친다. 오프라인에서 쓴 변경은 대기열에 쌓았다가 올린다. JSON을 주고받으며 키 순서와 숫자 표현이 달라져도 같은 획으로 인식하도록 비교 전에 정규화한다.",
+      "alternatives": [
+        {
+          "approach": "필기 문서 전체에 마지막 쓰기 우선 적용",
+          "reason": "서로 다른 페이지를 동시에 편집해도 한쪽 문서가 통째로 덮인다.",
+          "disposition": "considered-rejected"
+        }
+      ],
+      "result": {
+        "summary": "다른 기기에서 쓴 필기를 덮어쓰지 않고 합친다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a01",
+        "s-a04",
+        "s-a05",
+        "s-a15",
+        "s-a13"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-account-transition",
+      "step": "03",
+      "stepName": "계정 경계",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-04-16",
+        "to": "2026-04-17",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "계정 전환 시 기기의 곡 목록 · 필기 캐시 삭제",
+        "development": "2026.04.16–17 — QA 중 발견: 탈퇴 후 재가입 계정에 이전 계정의 곡 복제 → 경로 추적 · 차단"
+      },
+      "problem": "QA 중, 같은 기기에서 탈퇴하고 재가입한 계정에 계정 생성 31초 만에 곡 소유 기록 133건이 등록됐다. 수동 다운로드로는 불가능한 속도여서 자동 동기화가 생성한 것으로 판단하고 경로를 추적했다.",
+      "cause": "원인은 세 단계로 이어졌다. 탈퇴 처리가 로컬 파일만 지우고, 곡 목록을 가진 메모리 캐시는 로그아웃 뒤에도 남겼다. 첫 동기화는 서버가 비어 있고 로컬에 곡이 있으면, 계정이 바뀌었는지 확인하지 않고 로컬을 서버로 올렸다. 기기에 파일이 남아 있으면 다운로드가 서버 호출을 건너뛰어, 계정이 바뀐 뒤에도 차감 없이 곡이 열렸다.",
+      "decision": "로그아웃과 탈퇴가 메모리 캐시와 파일을 함께 비우도록 정리 절차를 하나로 묶었다. 토큰 만료처럼 로그아웃 화면을 거치지 않는 계정 종료도 같은 절차를 거친다. 첫 동기화는 저장된 계정과 현재 계정이 다르면 로컬 곡 목록과 필기를 비운다. 로컬 목록을 서버 소유 기록으로 올리던 경로는 제거하고, 소유 기록 쓰기는 서버 함수 호출로 옮겼다. 다운로드는 기기에 파일이 있어도 항상 서버 함수를 거친다.",
+      "alternatives": [],
+      "result": {
+        "summary": "계정이 바뀌면 이전 계정의 데이터가 새 계정으로 넘어가지 않는다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a06",
+        "s-a05",
+        "s-a13",
+        "s-a15"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-payment-grant",
+      "step": "02",
+      "stepName": "결제",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-04-25",
+        "to": "2026-05-04",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "core": true,
+      "lead": {
+        "structure": "동일 결제 중복 수신에도 1회만 지급",
+        "development": "2026.04.25–05.04 — 영수증 검증 · 지급을 서버로 이전 → 거래 고유 제약 · 조건부 갱신 · 지급 후 완료 처리 연결"
+      },
+      "problem": "스토어 결제와 앱 재화 지급은 서로 다른 시스템에서 일어난다. 응답이 끊기거나 같은 영수증이 다시 전달되어도 지급은 한 번이어야 하고, 지급되지 않은 거래는 다시 시도할 수 있어야 한다.",
+      "cause": "거래가 있는지 조회한 뒤 지급하면, 동시에 들어온 두 요청이 모두 통과할 수 있다. 지급 권한은 DB 안에서 한 요청에만 주어져야 한다.",
+      "decision": "서버가 영수증을 검증하고(Apple은 서명된 거래 정보의 인증서 체인, Google은 Play Developer API), 영수증에 묶인 계정이 요청한 계정인지 확인한다. 거래 테이블에 (결제 제공자, 외부 거래 ID) 고유 제약을 두고, 조건부 UPDATE가 행을 바꾼 요청만 지급한다. 스토어에는 서버 검증이 성공했을 때만 구매 완료를 알려, 실패한 거래는 스토어가 다시 보낸다. 지갑은 유료 · 보상 · 환불 부채 세 칸으로 나누고, 원장은 추가만 한다.",
+      "alternatives": [
+        {
+          "approach": "검증 결과와 무관하게 구매 완료를 알리기",
+          "reason": "서버 검증이 실패해도 스토어가 영수증을 다시 보내지 않아, 결제됐는데 지급되지 않은 거래를 복구할 수 없다.",
+          "disposition": "tested-rejected"
+        }
+      ],
+      "result": {
+        "summary": "같은 영수증이 동시에 두 번 들어와도 한 요청만 지급되고, 나머지는 '이미 처리됨'을 받는다.",
+        "atDecision": "결제 백엔드를 운영 서버에 배포하고, 중복 지급과 환불 회계 규칙을 DB 테스트(pgTAP)로 고정했다. 구현과 검수는 두 AI 코딩 에이전트(Codex · Claude)가 번갈아 맡았다.",
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a07",
+        "s-a10",
+        "s-a11",
+        "s-a01",
+        "s-a16"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-apple-runtime",
+      "step": "02",
+      "stepName": "결제",
+      "structurePlacement": "step",
+      "structureOrder": 2,
+      "date": {
+        "from": "2026-05-03",
+        "to": "2026-05-04",
+        "precision": "day"
+      },
+      "developmentTieOrder": 2,
+      "lead": {
+        "structure": "Apple 영수증 인증서 체인 · 서명 검증: Edge 런타임에서 실행되는 구현(jose · PKI.js)",
+        "development": "2026.05.03–04 — 결제 성공 · 충전 실패 → 런타임 인증서 API까지 추적, 검증 구현 교체"
+      },
+      "problem": "Apple Sandbox에서 결제는 성공했는데 재화가 지급되지 않았다. 서버에 거래 기록도 생기지 않아, 지급보다 앞선 영수증 검증 단계가 실패하고 있었다.",
+      "cause": "Edge 런타임의 Node 호환층에 X509Certificate.toString이 구현되어 있지 않아, Apple 공식 라이브러리가 인증서 체인 검증을 끝내지 못했다.",
+      "decision": "검증기를 jose와 PKI.js 조합으로 교체해 인증서 체인, JWS 서명, 앱 식별자와 실행 환경을 직접 검사한다. 구매 영수증과 서버 알림이 같은 검증 경로를 쓰도록 맞췄다.",
+      "alternatives": [
+        {
+          "approach": "빠진 인증서 API를 폴리필로 보완",
+          "reason": "같은 계열의 호환 문제를 계속 보정해야 했다.",
+          "disposition": "tested-rejected"
+        },
+        {
+          "approach": "검증 전용 Node 서버를 분리",
+          "reason": "서버와 내부 인증, 장애 전파 경로가 하나씩 더 생긴다.",
+          "disposition": "considered-rejected"
+        }
+      ],
+      "result": {
+        "summary": "런타임 호환 문제로 인한 실패와 실제 영수증 거부를 오류 분류로 구분하고, 원인과 확인 절차를 운영 런북으로 남겼다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a08",
+        "s-a07",
+        "s-a09",
+        "s-a11"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-native-audio-boundary",
+      "step": "00",
+      "stepName": "구조",
+      "structurePlacement": "step",
+      "structureOrder": 2,
+      "date": {
+        "from": "2026-06-23",
+        "to": "2026-07-06",
+        "precision": "day"
+      },
+      "developmentTieOrder": 2,
+      "lead": {
+        "structure": "실시간 오디오: 네이티브 계층 전담 / Flutter: 재생 명령 · 위치 · 템포 값만 교환",
+        "development": "2026.06.23–07.06 — 반주 엔진을 iOS 네이티브 오디오 루프에 연결, 앱 · 엔진 간 호출을 제어 명령으로 제한"
+      },
+      "problem": "가수의 소리에 맞춰 반주를 바꾸려면 마이크 입력 · 추론 · 반주 출력이 끊기지 않고 이어져야 한다. 화면 상태를 갱신하는 경로로 오디오 블록을 주고받으면 실시간 처리가 화면 작업에 묶인다.",
+      "cause": "화면과 엔진은 처리 주기와 수명이 다르다. 화면에 필요한 것은 재생 명령과 커서 위치이고, 오디오 샘플 자체는 필요하지 않다.",
+      "decision": "Swift 오디오 루프와 미리 빌드한 엔진 라이브러리가 입력 · 추론 · 출력을 맡는다. Flutter 플랫폼 채널은 시작 · 정지 · 일시정지 · 재개 · 구간 이동 명령과 위치 · 템포 값만 교환한다. 모델과 자산은 백그라운드에서 불러오고 결과만 메인 스레드로 돌려준다.",
+      "alternatives": [
+        {
+          "approach": "오디오 블록을 Dart와 네이티브 사이로 왕복",
+          "reason": "플랫폼 채널과 메모리 관리가 오디오 처리 경로에 들어온다.",
+          "disposition": "considered-rejected"
+        }
+      ],
+      "result": {
+        "summary": "반주 엔진을 iOS 실기기에 통합했다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [
+        {
+          "label": "반주 엔진",
+          "href": "/projects/classicmate/#engine",
+          "purpose": "네이티브 계층에서 실행되는 엔진의 추정과 제어"
+        }
+      ],
+      "sources": [
+        "s-a01",
+        "s-a12",
+        "s-a13",
+        "s-a15"
+      ],
+      "focus": null,
+      "figure": null
+    },
+    {
+      "id": "app-handover-contracts",
+      "step": "04",
+      "stepName": "인수인계",
+      "structurePlacement": "step",
+      "structureOrder": 1,
+      "date": {
+        "from": "2026-07-06",
+        "to": "2026-07-06",
+        "precision": "day"
+      },
+      "developmentTieOrder": 1,
+      "lead": {
+        "structure": "원작자 없이 유지보수 · 확장 가능한 문서화",
+        "development": "2026.07.06 — 인수인계 문서: 실행 가이드 · 설계 결정 · 변경 시 지켜야 할 계약"
+      },
+      "problem": "소스와 운영 기록이 여러 문서에 흩어져 있어, 새 개발자가 현재 구현과 폐기한 계획을 구별하기 어려웠다. 결제 검증기처럼 짧은 기간에 구현이 여러 번 바뀐 부분은 오래된 설명을 따라 고칠 위험이 있었다.",
+      "cause": "실행 방법, 설계 이유, 운영 주의사항이 한 문서에 섞이면 필요한 정보를 찾기 어렵다.",
+      "decision": "문서를 넷으로 나눴다. README는 클론 후 실행까지, ARCHITECTURE는 설계 결정 12건과 기각한 대안, HANDOFF는 변경할 때 지켜야 할 계약과 확장 절차 9건, 결제 전수조사는 결제 영역 커밋 이력과 검증 방식의 변화를 담는다. DB 변경에는 회귀 테스트와 실제로 실행해 본 롤백 절차를 요구한다.",
+      "alternatives": [],
+      "result": {
+        "summary": "코드를 바꿀 때 확인할 계약과 그 근거가 문서로 연결된다.",
+        "atDecision": null,
+        "current": null,
+        "metricIds": []
+      },
+      "borrowed": null,
+      "links": [],
+      "sources": [
+        "s-a14",
+        "s-a13",
+        "s-a07",
+        "s-a15"
+      ],
+      "focus": null,
+      "figure": null
+    }
+  ],
+  "validation": [
+    {
+      "id": "app-validation-payment",
+      "lead": "결제 검증: 클라이언트 · 서버 · DB 세 층 각각",
+      "body": "구매 완료를 알리는 조건은 Flutter 테스트로, 인증서 · 서명과 오류 분류는 서버 함수 테스트로, 중복 지급과 환불 원장은 DB 테스트로 확인했다. 영수증 재전달, 검증 실패 뒤 재시도, 이미 지급된 거래의 표시를 각각 조건으로 두었다.",
+      "metricIds": [],
+      "sources": [
+        "s-a07",
+        "s-a11",
+        "s-a10"
+      ]
+    },
+    {
+      "id": "app-validation-boundaries",
+      "lead": "필기 병합 · 계정 전환: 확인 항목을 인수인계 문서에 연결",
+      "body": "필기는 기준 상태와 양쪽 변경본의 병합 규칙을, 계정 전환은 메모리 · 파일 정리와 첫 동기화 경로를 확인 항목으로 두었다. 네이티브 오디오는 실기기에서 듣고 확인했다.",
+      "metricIds": [],
+      "sources": [
+        "s-a13",
+        "s-a04",
+        "s-a05",
+        "s-a12"
+      ]
+    }
+  ],
+  "reflection": [
+    {
+      "id": "app-reflection-contract-tests",
+      "step": "전체",
+      "stepName": "전체",
+      "lead": "계정 전환 · 결제 복구는 기능 횡단 통합 시험으로 먼저 고정",
+      "body": "QA에서 발견한 두 문제 모두 화면 · 로컬 저장 · 서버가 함께 움직일 때 나타났다. 다음에는 탈퇴 후 같은 기기에서 재가입하기, 영수증 재전달과 구매 완료 실패, 오프라인 필기 뒤 여러 기기 병합을 통합 시험으로 먼저 만든다.",
+      "sources": [
+        "s-a06",
+        "s-a13",
+        "s-a07",
+        "s-a09"
+      ]
+    },
+    {
+      "id": "app-reflection-native-validation",
+      "step": "00",
+      "stepName": "구조",
+      "lead": "네이티브 연결의 완료 조건에 재생 상태 전환 포함",
+      "body": "오디오를 네이티브로 분리하면 화면의 재생 상태와 엔진 출력 사이에 통합 지점이 생긴다. 다음에는 일시정지 · 재개 · 구간 이동을 한 시험에 넣고, 오디오 기록과 제어 상태를 함께 남겨 전환에서 생기는 문제의 위치를 찾는다.",
+      "sources": [
+        "s-a13",
+        "s-a12"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "검증 범위를 나누는 기준",
+      "href": "/writing/validation-boundaries/",
+      "purpose": "구현 비교와 시스템 전체 검증을 구분한 기준"
+    },
+    {
+      "label": "반주 엔진",
+      "href": "/projects/classicmate/#engine",
+      "purpose": "네이티브에 연결한 반주 엔진의 추정과 제어"
+    },
+    {
+      "label": "악보 파이프라인",
+      "href": "/projects/classicmate/#pipeline",
+      "purpose": "앱이 읽는 PDF · MIDI · 커서 좌표를 만드는 과정"
+    }
+  ],
+  "sources": [
+    "s-a01",
+    "s-a02",
+    "s-a03",
+    "s-a04",
+    "s-a05",
+    "s-a06",
+    "s-a07",
+    "s-a08",
+    "s-a09",
+    "s-a10",
+    "s-a11",
+    "s-a12",
+    "s-a13",
+    "s-a14",
+    "s-a15",
+    "s-a16",
+    "s-a17"
+  ],
+  "units": [
+    {
+      "id": "app-unit-layers",
+      "label": "core",
+      "title": "계층 분리: 화면 · 데이터 · 서버 권한 · 네이티브 오디오의 경계",
+      "metric": null,
+      "arc": {
+        "constraint": "악보 열람 · 필기 · 반주 · 상점 · 커뮤니티가 한 앱에 있고, 화면 상태 · 저장 데이터 · 실시간 오디오는 수명과 주기가 다르다.",
+        "problem": "화면이 서버 호출과 로컬 저장을 직접 처리하면 계정 전환 · 결제 복구를 화면마다 고쳐야 하고, 오디오 처리가 화면 작업에 묶인다.",
+        "design": "기능마다 View · Notifier · Repository · Service를 두고, 지갑 · 소유권 쓰기는 서버 함수만 한다. 오디오 블록을 Dart와 네이티브 사이로 왕복하는 안은 제외하고, Swift 오디오 루프가 입력 · 추론 · 출력을 맡는다.",
+        "evaluation": "네이티브 오디오는 실기기에서 듣고 확인했다.",
+        "improvement": "필기 · 결제 · 동기화의 규칙이 각자의 계층에 놓이고, 반주 엔진을 iOS 실기기에 통합했다."
+      },
+      "steps": [
+        "00"
+      ],
+      "cards": [
+        "app-layer-boundaries",
+        "app-native-audio-boundary"
+      ]
+    },
+    {
+      "id": "app-unit-annotation",
+      "label": null,
+      "title": "필기: 배율 · 기기가 달라도 같은 자리, 페이지 단위 병합",
+      "metric": null,
+      "arc": {
+        "constraint": "PDF 뷰어(pdfrx)는 확대 상태를 밖에서 제어할 수 없고, 한 계정이 여러 기기에서 필기한다.",
+        "problem": "확대하면 필기만 커졌고, 필기 문서 전체를 마지막 쓰기로 덮으면 다른 기기에서 쓴 페이지가 사라진다.",
+        "design": "필기판 배경 배치 · 바깥 확대 영역 · 이미지 렌더링 · 확대 값 맞추기를 차례로 시도해 제스처 충돌 · 메모리(페이지당 약 18MB) · 프레임 드롭으로 기각하고, 병합 단위를 곡 목록과 필기로 나눴다.",
+        "evaluation": "필기는 기준 상태와 양쪽 변경본의 병합 규칙을 확인 항목으로 두었다.",
+        "improvement": "기기와 확대 배율이 달라도 필기가 악보의 같은 자리에 놓이고, 다른 기기의 필기는 덮어쓰지 않고 합친다."
+      },
+      "steps": [
+        "01"
+      ],
+      "cards": [
+        "app-pdf-coordinate-contract",
+        "app-annotation-merge"
+      ]
+    },
+    {
+      "id": "app-unit-payment",
+      "label": "core",
+      "title": "결제: 중복 수신에도 1회 지급, 런타임 호환 검증",
+      "metric": null,
+      "arc": {
+        "constraint": "스토어 결제와 앱 재화 지급은 서로 다른 시스템에서 일어나고, 응답이 끊기거나 같은 영수증이 다시 올 수 있다.",
+        "problem": "조회한 뒤 지급하면 동시에 들어온 두 요청이 모두 통과할 수 있고, Apple Sandbox에서는 결제가 성공했는데 영수증 검증이 실패했다.",
+        "design": "거래 고유 제약과 조건부 UPDATE로 지급 권한을 한 요청에만 준다. 검증기는 폴리필 · 별도 Node 서버 안과 비교한 뒤 jose · PKI.js로 교체했다.",
+        "evaluation": "구매 완료 조건은 Flutter 테스트, 인증서 · 서명은 서버 함수 테스트, 중복 지급과 환불 원장은 DB 테스트(pgTAP)로 확인했다.",
+        "improvement": "같은 영수증이 동시에 두 번 들어와도 한 요청만 지급되고, 런타임 호환 실패와 실제 영수증 거부를 구분한다."
+      },
+      "steps": [
+        "02"
+      ],
+      "cards": [
+        "app-payment-grant",
+        "app-apple-runtime"
+      ]
+    },
+    {
+      "id": "app-unit-account",
+      "label": null,
+      "title": "계정 경계 · 인수인계: 이전 계정 데이터 차단, 변경 계약 문서화",
+      "metric": null,
+      "arc": {
+        "constraint": "탈퇴 · 재가입 · 토큰 만료처럼 계정이 바뀌는 경로가 여럿이고, 코드는 원작자 없이 이어받을 수 있어야 한다.",
+        "problem": "QA 중, 같은 기기에서 재가입한 계정에 31초 만에 이전 계정의 곡 소유 기록 133건이 등록됐다.",
+        "design": "메모리 캐시 · 첫 동기화 · 다운로드로 이어진 원인을 추적해 정리 절차를 하나로 묶고, 소유 기록 쓰기를 서버 함수로 옮겼다. 실행 · 설계 결정 · 변경 계약을 문서 넷으로 나눴다.",
+        "evaluation": "계정 전환은 메모리 · 파일 정리와 첫 동기화 경로를 확인 항목으로 두고, DB 변경에는 회귀 테스트와 실제로 실행해 본 롤백 절차를 요구했다.",
+        "improvement": "계정이 바뀌면 이전 계정의 데이터가 넘어가지 않고, 설계 결정 12건과 변경 계약 9건이 문서로 연결된다."
+      },
+      "steps": [
+        "03",
+        "04"
+      ],
+      "cards": [
+        "app-account-transition",
+        "app-handover-contracts"
+      ]
+    }
+  ]
+}

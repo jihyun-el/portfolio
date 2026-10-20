@@ -1,0 +1,210 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const root = path.resolve(import.meta.dirname, "..");
+const content = path.join(root, "content");
+const profile = JSON.parse(fs.readFileSync(path.join(content, "profile.json"), "utf8"));
+const projects = JSON.parse(fs.readFileSync(path.join(content, "projects.json"), "utf8"));
+const stack = JSON.parse(fs.readFileSync(path.join(content, "stack.json"), "utf8"));
+const history = JSON.parse(fs.readFileSync(path.join(content, "history.json"), "utf8"));
+const metrics = JSON.parse(fs.readFileSync(path.join(content, "metrics.json"), "utf8"));
+if (!profile.name || !profile.role || !Array.isArray(profile.links)) throw new Error("Profile fields are missing");
+for (const link of profile.links) {
+  if (!/^(https:\/\/|mailto:)/.test(link.url)) throw new Error(`Unsupported contact URL: ${link.url}`);
+}
+// A mini project is one card: a title, when and where, one sentence and its tools, plus its text in content/mini/<id>.md.
+// `thumb` names a card picture in src/components/mini-projects.tsx.
+const miniProjects = JSON.parse(fs.readFileSync(path.join(content, "mini-projects.json"), "utf8"));
+const miniThumbs = new Set(["mirror-pose"]), miniIds = new Set();
+if (!Array.isArray(miniProjects)) throw new Error("mini-projects.json must be a list");
+for (const item of miniProjects) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.id) || miniIds.has(item.id)) throw new Error(`Invalid or duplicate mini project ID: ${item.id}`);
+  for (const key of ["title", "period", "program", "summary"]) {
+    if (typeof item[key] !== "string" || !item[key].trim()) throw new Error(`${item.id}: missing ${key}`);
+  }
+  if (!Array.isArray(item.tags) || !item.tags.length || (item.thumb && !miniThumbs.has(item.thumb))) throw new Error(`${item.id}: needs tags and a known thumb name`);
+  if (!fs.existsSync(path.join(content, "mini", `${item.id}.md`))) throw new Error(`${item.id}: mini project Markdown missing`);
+  miniIds.add(item.id);
+}
+// Every technology names the language it was used through; a unit's stack line lists languages first.
+if (!Array.isArray(stack.languages) || !stack.languages.length || !Array.isArray(stack.groups) || !stack.groups.length) throw new Error("stack.json needs languages and groups");
+const technologies = new Set(), languages = new Set(stack.languages.map(item => item.name));
+const stackEntries = [...stack.languages, ...stack.groups.flatMap(group => group.items ?? [])];
+for (const group of stack.groups) {
+  if (!group.title || !["main", "sub", "tool"].includes(group.tier) || !Array.isArray(group.items) || !group.items.length) throw new Error(`Stack group is incomplete: ${group.title}`);
+  for (const item of group.items) if (!languages.has(item.language)) throw new Error(`${item.name}: language must be one of ${[...languages].join(", ")}`);
+}
+for (const language of stack.languages) if (!stack.groups.some(group => group.title === language.group)) throw new Error(`${language.name}: group must be a stack group title`);
+const brandIcons = JSON.parse(fs.readFileSync(path.join(root, "src/lib/brand-icons.json"), "utf8"));
+for (const item of stackEntries) {
+  if (item.icon && !brandIcons[item.icon]) throw new Error(`${item.name}: no logo named ${item.icon} in src/lib/brand-icons.json`);
+  // A technology belongs to a main project's unit, or to a mini project (`mini`), never both.
+  const project = projects.find(project => project.id === item.projectId);
+  if (!item.name || !item.description || technologies.has(item.name) || Boolean(project) === miniIds.has(item.mini)) throw new Error(`Invalid stack entry: ${item.name}`);
+  if (item.part && !project?.parts?.some(part => part.id === item.part)) throw new Error(`Invalid stack project part: ${item.name}`);
+  technologies.add(item.name);
+}
+const repositories = new Set();
+for (const repo of history.repositories) {
+  if (!projects.some(project => project.id === repo.projectId) || repositories.has(repo.id) || !/^[a-f0-9]{40}$/.test(repo.snapshot)) throw new Error(`Invalid history repository: ${repo.id}`);
+  repositories.add(repo.id);
+  if (!Number.isInteger(repo.authorCommits) || repo.authorCommits < 0 || repo.authorCommits > repo.commits) throw new Error(`Invalid commit count: ${repo.id}`);
+  if (repo.months.length !== history.months.length || repo.months.some((item,i) => item.month !== history.months[i] || !Number.isInteger(item.count) || item.count < 0)) throw new Error(`Invalid history months: ${repo.id}`);
+  if (repo.months.reduce((sum,item) => sum+item.count,0) !== repo.authorCommits) throw new Error(`Monthly commits do not match author total: ${repo.id}`);
+  // A repository counted over several branches lists each one: its tip, and the commits it adds beyond the first.
+  if (repo.branches) {
+    if (repo.branches[0]?.snapshot !== repo.snapshot || repo.branches.some(branch => !branch.name || !/^[a-f0-9]{40}$/.test(branch.snapshot) || !Number.isInteger(branch.authorCommits) || branch.authorCommits > branch.commits)) throw new Error(`Invalid branch record: ${repo.id}`);
+    if (repo.branches.reduce((sum,branch) => sum+branch.commits,0) !== repo.commits || repo.branches.reduce((sum,branch) => sum+branch.authorCommits,0) !== repo.authorCommits) throw new Error(`Branch commits do not add up: ${repo.id}`);
+  }
+  for (const milestone of repo.milestones) {
+    if (!/^[a-f0-9]{40}$/.test(milestone.sha) || !/^\d{4}-\d{2}-\d{2}$/.test(milestone.date) || !milestone.title || !milestone.description) throw new Error(`Invalid milestone: ${repo.id}`);
+    if (milestone.date < repo.firstDate || milestone.date > repo.lastDate) throw new Error(`Milestone outside snapshot dates: ${repo.id}`);
+  }
+}
+for (const key of ["frontendBeforeMs", "frontendAfterMs", "computeMs", "budgetMs", "controlTicks"]) {
+  if (!Number.isFinite(metrics.engine[key]) || metrics.engine[key] <= 0) throw new Error(`Invalid engine metric: ${key}`);
+}
+if (metrics.engine.computeMs > metrics.engine.budgetMs || metrics.engine.frontendAfterMs > metrics.engine.frontendBeforeMs) throw new Error("Engine chart ranges need review");
+const contract = JSON.parse(fs.readFileSync(path.join(content, "contracts.json"), "utf8")).engine;
+const stageIds = new Set();
+for (const stage of contract.stages) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stage.id) || stageIds.has(stage.id) || !["app", "engine"].includes(stage.owner)) throw new Error(`Invalid contract stage: ${stage.id}`);
+  for (const key of ["name", "rate", "input", "output", "rule"]) {
+    if (typeof stage[key] !== "string" || !stage[key].trim()) throw new Error(`${stage.id}: missing contract ${key}`);
+  }
+  if ((stage.owner === "app") !== Boolean(stage.handoff)) throw new Error(`${stage.id}: app stages and only app stages cross the engine boundary`);
+  if (stage.handoff && (!["to-engine", "to-app", "both"].includes(stage.handoff.direction) || !stage.handoff.label)) throw new Error(`${stage.id}: invalid handoff`);
+  stageIds.add(stage.id);
+}
+if (contract.stages[0].handoff?.direction !== "to-engine" || contract.stages.at(-1).handoff?.direction !== "to-app") throw new Error("Block contract must enter and leave through the app");
+const win = contract.window;
+if (win.mixChannels + win.referenceChannels !== win.channels || win.receptiveField > win.columns || win.lookahead >= win.receptiveField) throw new Error("Body window dimensions are inconsistent");
+if (win.outputSlots.some(slot => !Number.isInteger(slot) || slot - (win.receptiveField - 1 - win.lookahead) < 0 || slot + win.lookahead > win.columns - 1)) throw new Error("Output slot needs its full receptive field and lookahead inside the window");
+if (win.blockMs % win.hopMs !== 0 || win.blockMs / win.hopMs !== win.outputSlots.length) throw new Error("Frames per block must equal output slots per inference");
+if (!contract.stages.find(stage => stage.id === "body")?.handoff?.label.includes(`${win.channels}×${win.bins}×${win.columns}`)) throw new Error("Body handoff label must match the window shape");
+// Keys the home page knows how to render from metrics.json; keep in sync with src/lib/showcase.ts.
+const metricKeys = new Set(["frontend", "compute", "controlTicks", "publicScore", "leaderboard", "release"]);
+const cases = JSON.parse(fs.readFileSync(path.join(content, "cases.json"), "utf8"));
+if (!Array.isArray(profile.heroLines) || !profile.heroLines.length || profile.heroLines.some(line => !line)) throw new Error("profile.heroLines lists the secondary fields shown under the role on the first screen");
+if (!Array.isArray(profile.card) || profile.card.some(row => !row.label || !row.value)) throw new Error("Developer card rows need a label and value");
+if (!Array.isArray(profile.education) || profile.education.some(row => !row.title || !row.period)) throw new Error("Developer card education rows need a title and period");
+if (!Array.isArray(profile.stats) || !profile.stats.length || profile.stats.some(key => !metricKeys.has(key))) throw new Error("Home stats need known metric keys");
+for (const project of projects) if (!project.short) throw new Error(`${project.id}: missing short label`);
+const caseIds = new Set();
+for (const item of cases) {
+  const project = projects.find(entry => entry.id === item.projectId);
+  if (!/^[a-z0-9-]+$/.test(item.id) || caseIds.has(item.id) || !project) throw new Error(`Invalid case: ${item.id}`);
+  if (item.part ? !project.parts?.some(part => part.id === item.part) : !item.title) throw new Error(`${item.id}: case needs a project part or its own title`);
+  if (!history.repositories.some(repo => repo.id === item.repo && repo.projectId === item.projectId)) throw new Error(`${item.id}: unknown history repository`);
+  if (!item.short || ![undefined, true, false].includes(item.fold)) throw new Error(`${item.id}: missing short label or invalid fold`);
+  if (item.stack && (!Array.isArray(item.stack) || !item.stack.length)) throw new Error(`${item.id}: stack must list at least one technology`);
+  for (const hard of item.hardest ?? []) if (!hard.title || !hard.body) throw new Error(`${item.id}: a hardest item needs a title and a body`);
+  for (const slug of item.troubles ?? []) if (!fs.existsSync(path.join(content, "writing", `${slug}.md`))) throw new Error(`${item.id}: unknown writing ${slug}`);
+  // A unit may show no number of its own (the pipeline's only one was withdrawn); any it names must be known.
+  if (!Array.isArray(item.metrics) || item.metrics.some(key => !metricKeys.has(key))) throw new Error(`${item.id}: unknown metric key`);
+  if ((item.results ?? []).some(key => !item.metrics.includes(key))) throw new Error(`${item.id}: result numbers must be among its metrics`);
+  // A unit's Markdown fills the card: an overview paragraph, then `## 라벨` sections whose first paragraph is the card line.
+  const unitFile = path.join(content, "projects", `${item.projectId}${item.part ? `-${item.part}` : ""}.md`);
+  const [overview, ...sections] = fs.readFileSync(unitFile, "utf8").replace(/\r\n/g, "\n").split(/^## /m);
+  if (!overview.trim() || overview.trim().includes("\n\n") || !sections.length) throw new Error(`${item.id}: unit Markdown needs a one-paragraph overview, then ## sections`);
+  const labels = new Set();
+  for (const section of sections) {
+    const label = section.slice(0, section.indexOf("\n")).trim();
+    const line = section.slice(section.indexOf("\n") + 1).replace(/<!--\s*anchor:[^>]*-->/, "").trim().split(/\n\n+/)[0];
+    if (!label || labels.has(label)) throw new Error(`${item.id}: unit sections need distinct labels`);
+    if (!line || /^<!--|^\|/.test(line) || line.length > 160) throw new Error(`${item.id}: "${label}" must start with a card line of at most 160 characters`);
+    labels.add(label);
+  }
+  // `lead` names the work lines the home card shows first; the rest waits behind one line. A folded unit has no lead.
+  if (item.lead && (item.fold || !Array.isArray(item.lead) || !item.lead.length || item.lead.some(label => label === "결과" || !labels.has(label)))) throw new Error(`${item.id}: lead must list ## labels of the unit, and not be combined with fold`);
+  caseIds.add(item.id);
+}
+for (const tech of stackEntries) {
+  if (!tech.mini && !cases.some(item => item.projectId === tech.projectId && item.part === tech.part)) throw new Error(`No case covers technology ${tech.name}`);
+}
+for (const key of profile.stats) if (!cases.some(item => item.metrics.includes(key))) throw new Error(`Home stat ${key} belongs to no case`);
+const matrixKeys = new Set(metrics.vqa.matrix.map(row => `${row.size}-${row.pixels}`));
+if (metrics.vqa.matrix.length !== 4 || !["4B-512", "4B-768", "8B-512", "8B-768"].every(key => matrixKeys.has(key))) throw new Error("VQA matrix needs all four experiment conditions");
+for (const row of [...metrics.vqa.matrix, ...metrics.vqa.stages]) {
+  if (!Number.isFinite(row.score) || row.score < 0 || row.score > 1) throw new Error("VQA score is outside 0–1");
+}
+if (metrics.vqa.stages.length < 2) throw new Error("VQA progress needs a starting and final result");
+const board = metrics.vqa.leaderboard;
+if ([board.rank, board.private?.overall, board.private?.seoul].some(rank => !Number.isInteger(rank) || rank < 1 || rank > board.teams) || !(board.private.score >= 0 && board.private.score <= 1)) throw new Error("VQA leaderboard ranks must be within the team count and the Private score within 0–1");
+if (!board.award?.name || !Number.isInteger(board.award.teams) || board.award.teams < 1) throw new Error("VQA award needs a name and the number of teams that received it");
+const ids = new Set();
+for (const project of projects) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project.id) || ids.has(project.id)) throw new Error(`Invalid or duplicate project ID: ${project.id}`);
+  ids.add(project.id);
+  for (const key of ["title", "period", "role", "summary", "outcome"]) {
+    if (typeof project[key] !== "string" || !project[key].trim()) throw new Error(`${project.id}: missing ${key}`);
+  }
+  if (!Array.isArray(project.skills) || typeof project.defaultOpen !== "boolean") throw new Error(`${project.id}: invalid skills/defaultOpen`);
+  for (const link of project.links ?? []) if (!link.label || !/^https:\/\//.test(link.url)) throw new Error(`${project.id}: project links need a label and an https URL`);
+  // The first-screen summary lists a project's parts; a project without parts lists `highlights` instead.
+  if (!project.parts?.length && (!Array.isArray(project.highlights) || !project.highlights.length || project.highlights.some(row => !row.label || !row.line))) throw new Error(`${project.id}: a project without parts needs highlights (label, line)`);
+  if (!fs.existsSync(path.join(content, "projects", `${project.id}.md`))) throw new Error(`${project.id}: project Markdown missing`);
+  const partIds = new Set();
+  for (const part of project.parts || []) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part.id) || partIds.has(part.id)) throw new Error(`${project.id}: invalid or duplicate part`);
+    partIds.add(part.id);
+    if (!fs.existsSync(path.join(content, "projects", `${project.id}-${part.id}.md`))) throw new Error(`${project.id}: missing part Markdown ${part.id}`);
+  }
+}
+for (const folder of ["projects", "writing", "mini"]) {
+  for (const name of fs.readdirSync(path.join(content, folder))) {
+    if (!name.endsWith(".md")) continue;
+    const text = fs.readFileSync(path.join(content, folder, name), "utf8");
+    if (folder === "writing" && !/^# .+\r?\n/.test(text)) throw new Error(`${name}: first line must be a # title`);
+    if (/C:\\Users\\|\.\.\/reports\/|ssafy-16-2-ai\/|\[.*\]\([^)]*(?:INDEX\.md|REPORT_)/.test(text)) throw new Error(`${name}: internal archive reference in public content`);
+  }
+}
+// A project detail (content/details/<id>.json) is public: it carries review IDs only, never the paths behind them.
+// One for each unit, for a product with parts, and for each mini project.
+const detailIds = [...cases.map(item => item.id), ...projects.filter(project => project.parts?.length).map(project => project.id), ...miniProjects.map(item => `mini-${item.id}`)];
+const detailKeys = new Set(["schemaVersion", "id", "projectId", "title", "sentence", "period", "scope", "stack", "resultMetricIds", "metrics", "steps", "cards", "validation", "reflection", "links", "sources", "units"]);
+const day = /^\d{4}-\d{2}(-\d{2})?$/, cardIds = new Set();
+for (const id of detailIds) {
+  const file = path.join(content, "details", `${id}.json`);
+  if (!fs.existsSync(file)) throw new Error(`${id}: detail missing in content/details`);
+  const text = fs.readFileSync(file, "utf8"), detail = JSON.parse(text);
+  if (detail.id !== id || Object.keys(detail).some(key => !detailKeys.has(key))) throw new Error(`${id}: detail has a wrong ID or an unknown field`);
+  // A drive path is one letter before the colon; the "s" of "https://" has a letter before it and is not one.
+  if (/"(repository|revision|locator|claims|finding)"\s*:|(?<![A-Za-z])[A-Za-z]:[\\/]{1,2}[A-Za-z]|file:\/\/|private\/|portfolio-private/.test(text)) throw new Error(`${id}: private path or review field in a public detail`);
+  for (const key of ["title", "sentence", "period"]) if (typeof detail[key] !== "string" || !detail[key].trim()) throw new Error(`${id}: detail needs ${key}`);
+  const metricIds = new Set(detail.metrics.map(metric => metric.id)), steps = new Map(detail.steps.map(step => [step.step, step.stepName]));
+  for (const card of detail.cards) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(card.id) || cardIds.has(card.id)) throw new Error(`${id}: invalid or duplicate card ID ${card.id}`);
+    cardIds.add(card.id);
+    if (card.step === "전체" ? !["before", "after"].includes(card.structurePlacement) : card.structurePlacement !== "step" || steps.get(card.step) !== card.stepName) throw new Error(`${card.id}: step and placement must match the home steps`);
+    if (card.date ? !day.test(card.date.from) || !day.test(card.date.to) || card.date.from > card.date.to || !card.lead.development?.includes(" — ") : card.lead.development !== null) throw new Error(`${card.id}: a dated card has a development line starting with its date, an undated card none`);
+    if (!card.lead.structure || !card.problem || !card.cause || !card.decision || !card.result?.summary) throw new Error(`${card.id}: card text is incomplete`);
+    if (card.alternatives.some(item => !item.approach || !item.reason || !["tested-rejected", "considered-rejected"].includes(item.disposition))) throw new Error(`${card.id}: invalid alternative`);
+    if (card.result.metricIds.some(key => !metricIds.has(key))) throw new Error(`${card.id}: unknown metric`);
+  }
+  // The cards are read in one order, by date where dates are on record: a card without a date would not be in it.
+  if (detail.cards.some(card => card.date) && detail.cards.some(card => !card.date)) throw new Error(`${id}: cards must all have a date or none`);
+  for (const step of detail.steps) {
+    if (step.entryCardId && detail.cards.find(card => card.id === step.entryCardId)?.step !== step.step) throw new Error(`${id}: step ${step.step} must open on one of its own cards`);
+    if (step.sectionAnchor && !detail.reflection.some(item => item.id === step.sectionAnchor)) throw new Error(`${id}: step ${step.step} leads to an unknown part`);
+  }
+  if (detail.validation.some(item => item.metricIds.some(key => !metricIds.has(key)))) throw new Error(`${id}: unknown metric in validation`);
+  // Units of what was done: every card in exactly one, every step with cards in exactly one that holds a card of it.
+  if (detail.units) {
+    const held = detail.units.flatMap(unit => unit.cards), stepped = detail.units.flatMap(unit => unit.steps);
+    for (const unit of detail.units) {
+      if (!unit.id || !unit.title || ![null, "core", "principle"].includes(unit.label) || ![undefined, null, "채택", "기각", "반증"].includes(unit.verdict)) throw new Error(`${id}: unit ${unit.id} is incomplete`);
+      // A number is shown only where one is on record before and after; none at all is null, never a half.
+      if (unit.metric !== null && (!unit.metric?.label || !unit.metric.before || !unit.metric.after)) throw new Error(`${id}: unit ${unit.id} needs a whole number before and after, or none`);
+      if (["constraint", "problem", "design", "evaluation", "improvement"].some(key => !unit.arc?.[key])) throw new Error(`${id}: unit ${unit.id} needs all five parts of its arc`);
+      for (const step of unit.steps) if (!unit.cards.some(card => detail.cards.find(item => item.id === card)?.step === step)) throw new Error(`${id}: unit ${unit.id} lists step ${step} without a card of it`);
+    }
+    if (held.length !== detail.cards.length || detail.cards.some(card => held.filter(item => item === card.id).length !== 1)) throw new Error(`${id}: every card must be in exactly one unit`);
+    for (const step of new Set(detail.cards.map(card => card.step).filter(step => step !== "전체"))) if (stepped.filter(item => item === step).length !== 1) throw new Error(`${id}: step ${step} must be in exactly one unit`);
+  }
+  for (const link of [...detail.links, ...detail.cards.flatMap(card => [...card.links, ...(card.borrowed?.links ?? [])])]) {
+    const post = link.href.match(/^\/writing\/([a-z0-9-]+)\/$/);
+    if (!link.label || !/^(\/|https:\/\/)/.test(link.href) || (post && !fs.existsSync(path.join(content, "writing", `${post[1]}.md`)))) throw new Error(`${id}: invalid link ${link.href}`);
+  }
+}
+console.log(`Content valid: ${projects.length} projects, ${technologies.size} technologies, ${repositories.size} history snapshots, ${detailIds.length} details.`);

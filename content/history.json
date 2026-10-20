@@ -1,0 +1,366 @@
+{
+  "author": "manu",
+  "method": "저장소의 모든 브랜치에서 센 작성자 manu의 커밋. main과 내용이 같은 커밋은 한 번만 셈. 병합·문서·AI 공동작성 포함.",
+  "months": [
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07",
+    "2026-08",
+    "2026-09"
+  ],
+  "repositories": [
+    {
+      "id": "app",
+      "projectId": "classicmate",
+      "title": "모바일 앱",
+      "branch": "main 외 2개",
+      "branches": [
+        {
+          "name": "main",
+          "snapshot": "0d50b5a9227755878285e05aa3370ee8a56cfdfb",
+          "commits": 667,
+          "authorCommits": 636
+        },
+        {
+          "name": "feat/follower-mode",
+          "snapshot": "61cd85526c74f868db925fc068ea30a7bdfee0da",
+          "commits": 8,
+          "authorCommits": 8
+        },
+        {
+          "name": "demo/review",
+          "snapshot": "ec6873016bb70bb850597ebe3156d641807cb711",
+          "commits": 9,
+          "authorCommits": 9
+        }
+      ],
+      "scopeNote": "출시 앱 main 이력과 main에 없는 브랜치 2개",
+      "snapshot": "0d50b5a9227755878285e05aa3370ee8a56cfdfb",
+      "commits": 684,
+      "authorCommits": 653,
+      "firstDate": "2025-12-10",
+      "lastDate": "2026-07-06",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 34
+        },
+        {
+          "month": "2026-01",
+          "count": 66
+        },
+        {
+          "month": "2026-02",
+          "count": 85
+        },
+        {
+          "month": "2026-03",
+          "count": 252
+        },
+        {
+          "month": "2026-04",
+          "count": 147
+        },
+        {
+          "month": "2026-05",
+          "count": 61
+        },
+        {
+          "month": "2026-06",
+          "count": 0
+        },
+        {
+          "month": "2026-07",
+          "count": 8
+        },
+        {
+          "month": "2026-08",
+          "count": 0
+        },
+        {
+          "month": "2026-09",
+          "count": 0
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "42b7595da76d905f11f03c260a66c0e279b77c25",
+          "date": "2026-04-14",
+          "title": "계정 단위 곡 목록·필기 동기화",
+          "description": "곡 목록과 필기 데이터를 계정에 묶어, 기기를 바꿔도 이어 쓸 수 있게 했다."
+        },
+        {
+          "sha": "1a359fbcdf3dc0cde1e6f25b2343d2c90062bbbe",
+          "date": "2026-04-17",
+          "title": "캐시를 통한 소유권 승계 차단",
+          "description": "한 기기에서 다른 계정으로 로그인하면 크레딧 차감 없이 이전 계정의 악보 소유권을 넘겨받던 경로를 차단했다."
+        },
+        {
+          "sha": "5906d74c314359eafa255448e82cd336ce86013a",
+          "date": "2026-05-04",
+          "title": "Apple 결제 서명 검증 자체 구현",
+          "description": "샌드박스 결제는 성공했는데 음표가 충전되지 않던 문제에서, 서버 런타임에 없는 인증서 기능을 피해 jose·pkijs로 서명 검증을 다시 구현했다."
+        },
+        {
+          "sha": "f9c57ae5e8cb213b8bf2bd911f6691ecf7f3225d",
+          "date": "2026-07-06",
+          "title": "반주 엔진 앱 연동",
+          "description": "앱에 연결한 반주 엔진을 반주 화면에서 제어하도록 상태 모델과 화면 제어를 연결했다. 같은 날 네이티브 브리지와 네이티브 오디오 연결을 함께 추가했다."
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "projectId": "classicmate",
+      "title": "악보 파이프라인",
+      "branch": "main",
+      "scopeNote": "MusicXML 변환·해설 파이프라인",
+      "snapshot": "87adab88d3f9143a3ee69430d7fef5f77e268dc5",
+      "commits": 64,
+      "authorCommits": 64,
+      "firstDate": "2025-12-31",
+      "lastDate": "2026-07-06",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 1
+        },
+        {
+          "month": "2026-01",
+          "count": 6
+        },
+        {
+          "month": "2026-02",
+          "count": 21
+        },
+        {
+          "month": "2026-03",
+          "count": 13
+        },
+        {
+          "month": "2026-04",
+          "count": 2
+        },
+        {
+          "month": "2026-05",
+          "count": 1
+        },
+        {
+          "month": "2026-06",
+          "count": 18
+        },
+        {
+          "month": "2026-07",
+          "count": 2
+        },
+        {
+          "month": "2026-08",
+          "count": 0
+        },
+        {
+          "month": "2026-09",
+          "count": 0
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "2ab03f554e30edaed8234d9b2d64a4066760b929",
+          "date": "2026-02-23",
+          "title": "좌표 지도 v7 — 마디별 시작 시각",
+          "description": "앱 커서와 반주 재생을 잇는 좌표 지도에 마디별 시작 시각을 더했고, 이 v7 형식이 앱과의 계약이 됐다."
+        },
+        {
+          "sha": "86d6f60eb19f24387ccd1e20e582483b80871bb1",
+          "date": "2026-03-20",
+          "title": "이조 악보의 덧줄 자동 최적화",
+          "description": "조를 옮기면 덧줄이 늘어 읽기 어려워지는 문제를, 음자리표와 옥타브 기호를 자동으로 선택해 줄였다."
+        },
+        {
+          "sha": "0fa909fc5aec02d4e4095ac8036ce12efcfb7fb5",
+          "date": "2026-03-23",
+          "title": "이조 악보의 페이지 역행 0건",
+          "description": "조가 바뀌는 곡을 이조하면 커서가 이전 페이지로 역행하던 13~29건을, 마디 단위로 페이지를 정해 5곡 모두 0건으로 만들었다."
+        }
+      ]
+    },
+    {
+      "id": "engine",
+      "projectId": "classicmate",
+      "title": "반주 엔진",
+      "branch": "main 외 1개",
+      "branches": [
+        {
+          "name": "main",
+          "snapshot": "4ed6f3a3fdb04ed0ec95e5e7459bc3a14630fa07",
+          "commits": 296,
+          "authorCommits": 296
+        },
+        {
+          "name": "feat/voicing-relabel",
+          "snapshot": "57bb0a5ff91d3f8ce05bf787718af535af62dcf4",
+          "commits": 4,
+          "authorCommits": 4
+        }
+      ],
+      "scopeNote": "5~7월 개발, 8월 코드 대조 문서 포함",
+      "snapshot": "4ed6f3a3fdb04ed0ec95e5e7459bc3a14630fa07",
+      "commits": 300,
+      "authorCommits": 300,
+      "firstDate": "2026-05-16",
+      "lastDate": "2026-08-24",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 0
+        },
+        {
+          "month": "2026-01",
+          "count": 0
+        },
+        {
+          "month": "2026-02",
+          "count": 0
+        },
+        {
+          "month": "2026-03",
+          "count": 0
+        },
+        {
+          "month": "2026-04",
+          "count": 0
+        },
+        {
+          "month": "2026-05",
+          "count": 68
+        },
+        {
+          "month": "2026-06",
+          "count": 199
+        },
+        {
+          "month": "2026-07",
+          "count": 27
+        },
+        {
+          "month": "2026-08",
+          "count": 6
+        },
+        {
+          "month": "2026-09",
+          "count": 0
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "20bdc235f62e931fe6d42a0f2b1549c9f673ef8a",
+          "date": "2026-06-10",
+          "title": "쉼 뒤 재진입 지연 25초 → 0초",
+          "description": "가수가 반주 박자에 맞춰 다시 들어와도 추정이 악보를 한 음씩 차례로 통과해 늦던 문제를, 쉼이 끝날 때 탐색 범위를 다시 잡아 해결했다."
+        },
+        {
+          "sha": "c34b265c8b9089b69d56c0ca485ce0024f1553ee",
+          "date": "2026-06-16",
+          "title": "사람이 직접 부르는 실시간 연주 시험",
+          "description": "블록 처리를 72ms에서 16.3ms로 줄여, 사람이 직접 부른 테이크에서 반주가 템포 변화를 따라가는 것을 확인했다."
+        },
+        {
+          "sha": "a4e1784ac2eef29b885b5710c53d1fffe97b21b0",
+          "date": "2026-06-23",
+          "title": "전처리 89ms → 약 2.6ms",
+          "description": "프레임마다 입력 구간 전체를 다시 계산하던 전처리를 새 프레임만 계산하고 두 신호를 한 번에 처리하도록 바꿨고, 값은 비트 단위로 같았다."
+        },
+        {
+          "sha": "ddf76f9b0dc7fb9cad99e812eb3c28ed97aa64b8",
+          "date": "2026-07-02",
+          "title": "틀린 음에 반주 템포가 급락하던 문제 해결",
+          "description": "켜고 끄던 조건을 연속 가중치로 바꿔, 실제 녹음에서 템포가 0.7배 아래로 떨어진 프레임을 559개에서 0개로 줄였다."
+        }
+      ]
+    },
+    {
+      "id": "vqa",
+      "projectId": "ssafy-ai-challenge",
+      "title": "멀티모달 VQA",
+      "branch": "exp/manu",
+      "scopeNote": "팀 공통 실험·제출을 관리한 사용자 브랜치",
+      "snapshot": "d87877ff5464d49d814c0e54e32b94778e984f2b",
+      "commits": 187,
+      "authorCommits": 187,
+      "firstDate": "2026-09-21",
+      "lastDate": "2026-09-27",
+      "months": [
+        {
+          "month": "2025-12",
+          "count": 0
+        },
+        {
+          "month": "2026-01",
+          "count": 0
+        },
+        {
+          "month": "2026-02",
+          "count": 0
+        },
+        {
+          "month": "2026-03",
+          "count": 0
+        },
+        {
+          "month": "2026-04",
+          "count": 0
+        },
+        {
+          "month": "2026-05",
+          "count": 0
+        },
+        {
+          "month": "2026-06",
+          "count": 0
+        },
+        {
+          "month": "2026-07",
+          "count": 0
+        },
+        {
+          "month": "2026-08",
+          "count": 0
+        },
+        {
+          "month": "2026-09",
+          "count": 187
+        }
+      ],
+      "milestones": [
+        {
+          "sha": "885aaea477638608069bc9211873a0a709701899",
+          "date": "2026-09-22",
+          "title": "모델 크기 × 해상도 2×2",
+          "description": "4B·8B와 512²·768²를 교차해 두 효과를 분리했고, 8B·768²로 Public 0.95233에 올랐다."
+        },
+        {
+          "sha": "5190691c026cd7c6105fbbe6326d7ff21590ea69",
+          "date": "2026-09-23",
+          "title": "7표 앙상블로 0.97 돌파",
+          "description": "모델끼리 답이 갈린 434문항을 큰 모델들로 다시 판정해 Public 0.97021을 기록했다."
+        },
+        {
+          "sha": "f443c86abe0a00742421b1c13bbdfa8d348850a9",
+          "date": "2026-09-25",
+          "title": "직접 학습한 세 모델의 결합",
+          "description": "Qwen 두 종과 Gemma를 BF16 LoRA·보기 순서 섞기로 학습해 로그 확률을 평균한 결합으로 Public 0.97170을 기록했다."
+        },
+        {
+          "sha": "2828e363894cb6144c1e646ac526fd4468138c42",
+          "date": "2026-09-27",
+          "title": "최종 답안 Public 0.97646",
+          "description": "불확실한 298문항을 train 전체로 다시 학습한 모델로 채점한 답안을 최종 답안 1로 정했다."
+        }
+      ]
+    }
+  ]
+}

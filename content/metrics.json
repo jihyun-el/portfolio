@@ -1,0 +1,40 @@
+{
+  "engine": {
+    "frontendBeforeMs": 89,
+    "frontendAfterMs": 2.6,
+    "computeMs": 4.5,
+    "budgetMs": 10,
+    "controlTicks": 9392,
+    "note": "실기기에서 측정한 계산 시간(전처리·신경망)입니다."
+  },
+  "vqa": {
+    "matrix": [
+      {"size":"4B","pixels":512,"score":0.89037},
+      {"size":"4B","pixels":768,"score":0.93029},
+      {"size":"8B","pixels":512,"score":0.91271},
+      {"size":"8B","pixels":768,"score":0.95233}
+    ],
+    "stages": [
+      {"label":"제공 베이스라인","score":0.70241},
+      {"label":"4B 공통 출발점","score":0.89037},
+      {"label":"추론 해상도 768²","score":0.93029},
+      {"label":"8B · 768²","score":0.95233},
+      {"label":"초반 7표 앙상블","score":0.97021},
+      {"label":"BF16 학습 · 로그 평균","score":0.97170},
+      {"label":"조건 평균 · 추가 채점","score":0.97557},
+      {"label":"전체 데이터 재학습","score":0.97646}
+    ],
+    "extraInference":{"total":6714,"uncertain":298},
+    "checks": {
+      "chance": {"label":"학습에도 큰 사진 쓰기","gain":7,"range":16},
+      "confirmed": [
+        {"label":"사진을 더 크게","public":134,"private":133},
+        {"label":"모델을 더 크게","public":75,"private":79},
+        {"label":"마지막에 조금 더 학습","public":3,"private":-3}
+      ]
+    },
+    "leaderboard":{"rank":14,"teams":217,"private":{"seoul":1,"overall":3,"score":0.97855},"award":{"name":"최우수상","teams":6}},
+    "note":"점수 그래프는 SSAFY AI 챌린지의 Public 기록입니다. 모델 크기와 해상도의 개별 효과는 2×2 실험으로 따로 쟀습니다."
+  },
+  "app": {"platforms":["iOS","Android"]}
+}

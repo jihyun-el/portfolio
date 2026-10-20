@@ -1,0 +1,83 @@
+[
+  {
+    "id": "engine",
+    "projectId": "classicmate",
+    "part": "engine",
+    "repo": "engine",
+    "short": "반주 엔진",
+    "home": {
+      "problem": "클래식 입시 준비는 비용 부담이 크다. 반주자 비용이 그중 하나다",
+      "title": "가수를 따라가는 반주 엔진",
+      "sub": "마이크 입력에서 가수의 음높이를 추출해 악보 위치와 템포를 실시간으로 추정하고, 그 흐름에 맞춰 반주를 재생한다."
+    },
+    "stack": ["Python", "PyTorch", "Core ML (iOS 신경망 가속기)", "Rust (AI 에이전트 구현)"],
+    "lead": ["문제 정의", "신경망 설계", "학습 데이터", "저전력 모드 기준"],
+    "hardest": [
+      {
+        "title": "성악에는 검출할 음 시작점이 없다",
+        "body": "참고한 악보 추종 알고리즘은 악기 연주에서 검증된 것입니다. 관측은 학습 없이 스펙트럼(푸리에 변환)을 음표별 템플릿과 비교해 계산합니다. 성악은 모음에 따라 스펙트럼이 달라지고 레가토와 비브라토로 음의 시작과 끝이 뚜렷하지 않아, 이 관측으로는 위치 추정이 무너졌습니다. 과거 신호만 쓰는 음 시작 검출도 50ms 오차 안에 실제 시작의 36~43%만 잡고 오검출이 분당 150회를 넘었습니다. 그래서 음높이 추정 신경망의 360빈 출력을 음높이 한 값으로 줄이지 않고 그대로 음표별 우도로 쓰는 관측 모델을 세웠습니다."
+      },
+      {
+        "title": "구조가 맞는지는 구현해서 들어 보기 전에 알 수 없다",
+        "body": "위치 추정, 템포 추정, 둘의 결합 구조를 2026년 5월 16일부터 6월 10일까지 실험으로 정했습니다. 칼만 필터, 결합 HMM, 위치·템포 결합 상태공간, 모드 전환 필터(IMM)를 구현해 측정과 청취로 비교하고 폐기했습니다. IMM은 세 모드의 확률이 33/33/33으로 나왔습니다. 모드를 가르는 가속도가 위치의 2차 미분이라 잡음이 신호보다 컸습니다. 최종 구조는 HSMM 위치 추정, 입자 필터 템포 추정, 재생 위치 분리입니다."
+      }
+    ],
+    "troubles": ["realtime-model-design", "three-clocks", "silence-crater", "closed-loop", "validation-boundaries"],
+    "metrics": ["frontend", "compute", "controlTicks"],
+    "results": ["frontend", "compute", "controlTicks"]
+  },
+  {
+    "id": "model",
+    "projectId": "classicmate",
+    "part": "model",
+    "repo": "engine",
+    "short": "음높이 모델",
+    "home": {
+      "title": "반주가 섞인 마이크에서 가수의 음높이만 추출하는 모델",
+      "sub": "엔진이 재생한 반주를 참조 입력으로 받아, 휴대폰 신경망 가속기에서 10ms마다 음높이 분포를 출력한다."
+    },
+    "fold": true,
+    "stack": ["Python", "PyTorch", "Core ML (iOS 신경망 가속기)", "Flutter (에코 측정 앱)"],
+    "troubles": ["realtime-model-design"],
+    "metrics": [],
+    "results": []
+  },
+  {
+    "id": "app",
+    "projectId": "classicmate",
+    "part": "app",
+    "repo": "app",
+    "short": "모바일 앱",
+    "home": {
+      "context": "클래식 연주자를 위한 연습·커뮤니티 앱",
+      "title": "iOS · Android 출시",
+      "sub": "악보 열람과 필기 · 기기 간 동기화 · 인앱 결제"
+    },
+    "fold": true,
+    "metrics": ["release"],
+    "results": ["release"]
+  },
+  {
+    "id": "pipeline",
+    "projectId": "classicmate",
+    "part": "pipeline",
+    "repo": "pipeline",
+    "short": "악보 파이프라인",
+    "home": {
+      "title": "악보 한 곡 → 12개 조 · 반주 · 커서"
+    },
+    "fold": true,
+    "metrics": []
+  },
+  {
+    "id": "vqa",
+    "projectId": "ssafy-ai-challenge",
+    "repo": "vqa",
+    "title": "멀티모달 VQA — 실험과 팀 운영",
+    "short": "멀티모달 VQA",
+    "stack": ["Python", "Qwen3-VL 4B (4비트 QLoRA)", "Qwen 2종과 Gemma (BF16 LoRA)", "로그 확률 앙상블"],
+    "troubles": ["large-model-training", "unstable-answers", "experiment-gates", "validation-boundaries"],
+    "metrics": ["publicScore", "leaderboard"],
+    "results": ["leaderboard", "publicScore"]
+  }
+]
