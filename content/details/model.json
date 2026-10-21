@@ -297,6 +297,7 @@
     { "label": "반주 엔진", "href": "/projects/classicmate/#engine", "purpose": "이 모델의 출력을 관측으로 쓰는 악보 추종과 반주" }
   ],
   "sources": ["s-mdl-observation", "s-mdl-aec", "s-mdl-separation", "s-mdl-redefine", "s-mdl-architecture", "s-mdl-probe", "s-mdl-deploy", "s-mdl-reference", "s-mdl-ab", "s-mdl-dataset", "s-mdl-coverage", "s-mdl-echo", "s-mdl-real-mix", "s-mdl-loss", "s-mdl-eval-teacher", "s-mdl-heldout", "s-mdl-panel", "s-mdl-voicing", "s-mdl-usable", "s-mdl-user"],
+  "highlights": ["model-unit-probe", "model-unit-reference"],
   "units": [
     {
       "id": "model-unit-observe", "label": null, "title": "관측과 문제 재정의: 분리 대신 음높이 분포", "metric": null,

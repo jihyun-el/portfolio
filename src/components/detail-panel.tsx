@@ -2,23 +2,25 @@ import type { ReactNode } from "react";
 import { getWriting, history, sitePath, type Writing } from "@/lib/content";
 import { developmentOrder, structureOrder, type Detail, type DetailCard, type DetailLink, type DetailMetric, type DetailUnit } from "@/lib/details";
 import { Markdown } from "@/components/markdown";
-import { DetailView, type DetailLogEntry, type DetailStep, type DetailUnitView } from "@/components/detail-view";
+import { DetailView, type DetailLogEntry, type DetailPart, type DetailStep, type DetailUnitView } from "@/components/detail-view";
 import type { SymbolAssets, SymbolKind } from "@/components/detail-symbols";
 
 // The text of a project detail, laid out once on the server, in the same parts on every detail: the scope (what it
-// is, with whom, on what); what was done (the units, each opening to the way it went, its cards and what it taught);
-// how the whole was verified; the process by date, one line a step of the work or a commit; what the whole taught;
-// further reading. Every card is written out once, in its unit, and has the same four rows (problem and cause, what
-// was tried and decided, the result, what was taken and what was changed). A card's own posts are a row of their own;
-// the papers it cites are a note under the last row. DetailView arranges the parts.
+// is, what the lead did and with whom, and the results it leads with); what was done (the units, each read by its title,
+// its number with what was measured, and the way it went in five lines, opening to its cards and what it taught); how
+// the whole was verified; the process by date, one line a step of the work or a commit; what the whole taught; the
+// stack and the prior work it stands on; further reading. Every card is written out once, in its unit, and has the
+// same four rows (problem and cause, what was tried and decided, the result, what was taken and what was changed),
+// each headed above its text. A card's own posts are a row of their own; the papers it cites are a note under the last
+// row. DetailView arranges the parts.
 const WHOLE = "전체";
-const SCOPE: [keyof Detail["scope"], string][] = [["direct", "담당 범위"], ["team", "협업 범위"], ["borrowed", "활용한 기존 기술"]];
+const SCOPE: [keyof Detail["scope"], string][] = [["direct", "담당 범위"], ["team", "협업 범위"]];
 const PRINCIPLE = "설계 원칙";
 const DROPPED = { "tested-rejected": "실험 후 기각", "considered-rejected": "검토 후 제외" };
 // The way a unit of work went, in the order a reader asks about it.
 const ARC: [keyof DetailUnit["arc"], string][] = [["constraint", "제약"], ["problem", "문제 정의"], ["design", "실험 설계"], ["evaluation", "평가"], ["improvement", "개선"]];
 
-// A unit's arc as a strip of five, the last one marked: what it came to.
+// A unit's arc as five lines down, the last one marked: what it came to.
 function Arc({ unit }: { unit: DetailUnit }) {
   return <figure className="dv-flow dv-arc"><ol aria-label={`${unit.title}: 제약에서 개선까지`}>{ARC.map(([key, label]) =>
     <li key={key} data-key={key === "improvement" ? "" : undefined}><p>{label}</p><span>{unit.arc[key]}</span></li>)}</ol></figure>;
@@ -154,7 +156,7 @@ export function DetailPanel({ detail, name, kind, assets, top, intros = {}, figu
     return {
       id: unit.id, title: unit.title, metric: unit.metric, verdict: unit.verdict ?? null, steps: unit.steps, cards: unit.cards, principle: unit.label === "principle",
       label: unit.label === "principle" ? PRINCIPLE : unit.label === "core" ? coreLabel : null,
-      body: <>{unitFigures[unit.id]}<Arc unit={unit} /></>,
+      arc: <Arc unit={unit} />, body: unitFigures[unit.id],
       held: notes.map((item) => item.id),
       notes: notes.length > 0 ? <div className="dv-unit-notes"><p className="dv-sub-h">회고</p>{notes.map((item) => <Note key={item.id} item={item} />)}</div> : null,
     };
@@ -172,20 +174,27 @@ export function DetailPanel({ detail, name, kind, assets, top, intros = {}, figu
       kind: "commit" as const, id: entry.sha, at: entry.date, when: day(entry.date), repository: repo.title, sha: entry.sha, title: entry.title, description: entry.description,
     }))),
   ].sort((a, b) => a.at.localeCompare(b.at) || (a.kind === b.kind ? 0 : a.kind === "card" ? -1 : 1));
+  // The parts after the units, as the contents beside the text name them.
+  const parts: DetailPart[] = [
+    ...(detail.validation.length > 0 ? [{ id: `${detail.id}-validation`, name: "검증" }] : []),
+    ...(grouped && log.length > 0 ? [{ id: `${detail.id}-cards`, name: "개발 과정" }] : []),
+    ...(loose.length > 0 ? [{ id: `${detail.id}-reflection`, name: "회고" }] : []),
+    { id: `${detail.id}-stack`, name: "기술 스택" },
+    ...(detail.links.length > 0 ? [{ id: `${detail.id}-links`, name: "관련 글" }] : []),
+  ];
   const card = (item: DetailCard) => <Card key={item.id} card={item} metrics={detail.metrics} posts={posts} intro={intros[item.id]} figure={figures[item.id]}
     folded={!grouped && ranked && !item.core && !item.principle} coreLabel={coreLabel} byDate={!grouped && byDate} />;
-  return <DetailView id={detail.id} name={name} kind={kind} assets={assets} steps={steps} list={byDate ? development : structure} byDate={byDate} top={top} units={units} log={log}
+  return <DetailView id={detail.id} name={name} kind={kind} assets={assets} steps={steps} list={byDate ? development : structure} byDate={byDate} top={top} units={units} log={log} highlights={detail.highlights ?? []} parts={parts}
     meta={detail.cards.map((item) => ({ id: item.id, related: item.relatedDetails ?? [] }))}
     // In a unit a card is headed by its line in the structure; in a list of whole cards by date by its dated line.
     cards={Object.fromEntries(detail.cards.map((item) => [item.id, card(item)]))}
-    // The scope in one place: what it is and when, then (where the units do not stand for it) what was built, with
-    // whom and on what.
+    // The scope in one place: what it is and when, what the lead did and with whom. The results follow it (DetailView);
+    // the stack and the prior work it stands on are read near the end.
     scope={<>
       <h3 className="dv-h">개발 범위</h3>
       <p className="dv-sentence">{detail.sentence}</p>
       <p className="dv-period num">{detail.period}</p>
-      <dl className="dv-rows">{SCOPE.filter(([key]) => detail.scope[key].length > 0 && !(grouped && key === "direct")).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{detail.scope[key].map((line) => <p key={line}>{line}</p>)}</dd></div>)}</dl>
-      <div className="dv-stack-part"><p className="dv-sub-h">기술 스택</p><ul className="dv-stack">{detail.stack.map((item) => <li key={item.technology}><b>{item.technology}</b><span>{item.use}</span></li>)}</ul></div>
+      <dl className="dv-rows">{SCOPE.filter(([key]) => detail.scope[key].length > 0).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{detail.scope[key].map((line) => <p key={line}>{line}</p>)}</dd></div>)}</dl>
     </>}
     verify={detail.validation.length > 0 && <section className="dv-sec" id={`${detail.id}-validation`} aria-label="검증">
       <h3 className="dv-h">검증</h3>
@@ -200,6 +209,11 @@ export function DetailPanel({ detail, name, kind, assets, top, intros = {}, figu
         <h3 className="dv-h">회고</h3>
         {loose.map((item) => <Note key={item.id} item={item} />)}
       </section>}
+      <section className="dv-sec dv-tech" id={`${detail.id}-stack`} data-spy="" aria-label="기술 스택과 활용한 기존 기술">
+        <h3 className="dv-h">기술 스택과 활용한 기존 기술</h3>
+        <ul className="dv-stack">{detail.stack.map((item) => <li key={item.technology}><b>{item.technology}</b><span>{item.use}</span></li>)}</ul>
+        {detail.scope.borrowed.length > 0 && <div className="dv-borrowed"><p className="dv-sub-h">활용한 기존 기술</p>{detail.scope.borrowed.map((line) => <p key={line}>{line}</p>)}</div>}
+      </section>
       {detail.links.length > 0 && <section className="dv-sec" id={`${detail.id}-links`} data-spy="" aria-label="관련 글">
         <h3 className="dv-h">관련 글</h3>
         <Links links={detail.links} posts={posts} />

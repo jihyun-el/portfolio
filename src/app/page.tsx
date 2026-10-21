@@ -118,15 +118,16 @@ export default function HomePage() {
       </>,
     };
   });
-  // A product's own scene stands before its parts: its lead engineer and what they built in the head, and the three
-  // parts put together in light, each named with what it does. It is the first thing a reader of the site sees. The
-  // problem the product answers stands with the engine's scene, beside the part that answers it.
+  // A product's own scene stands before its parts: what was built and under which constraint in the head, the lead
+  // engineer and the team in the line above it, and the parts put together in light, each named with what it does. It
+  // is the first thing a reader of the site sees. The problem the product answers stands with the engine's scene.
   const products = projects.filter((project) => project.parts?.length && project.home).map((project) => {
     const own = parts.filter((unit) => unit.projectId === project.id);
     const part = (id: string) => { const unit = own.find((item) => item.part === id)!; return { id: unit.id, no: String(parts.indexOf(unit) + 1).padStart(2, "0"), name: unit.short, line: project.parts!.find((item) => item.id === id)!.description }; };
     return {
       id: project.id, head: true, group: project.id, also: [`${project.id}/overview`], name: project.short, label: project.short, period: project.period,
-      title: project.home!.title, sub: project.home!.sub, stats: [],
+      title: project.home!.title, accent: project.home!.accent, sub: project.home!.sub, line: project.home!.line,
+      role: project.displayRole, team: project.home!.team, stats: (project.home!.stats ?? []).map(metricView),
       figure: <ProductLanding engine={part("engine")} model={part("model")} app={part("app")} pipeline={part("pipeline")} score={sitePath("/images/pipeline-debussy-p1.svg")} />,
       // The product's store listings stand under its button, as they do on the app's scene.
       actions: <>

@@ -370,6 +370,7 @@
     "s-p15",
     "s-p16"
   ],
+  "highlights": ["pipeline-unit-clock"],
   "units": [
     {
       "id": "pipeline-unit-assets",

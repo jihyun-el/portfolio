@@ -741,6 +741,7 @@
     "vq-s11",
     "vq-s12"
   ],
+  "highlights": ["vqa-unit-final", "vqa-unit-baseline", "vqa-unit-training"],
   "units": [
     {
       "id": "vqa-unit-baseline",

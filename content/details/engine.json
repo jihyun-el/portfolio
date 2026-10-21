@@ -1350,6 +1350,7 @@
     "s-eng-tempo-current",
     "s-home-engine"
   ],
+  "highlights": ["engine-unit-positions", "engine-unit-tempo", "engine-unit-device"],
   "units": [
     {
       "id": "engine-unit-positions",

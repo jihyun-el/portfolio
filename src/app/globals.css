@@ -270,7 +270,7 @@ button { font:inherit; color:inherit; }
 /* Articles */
 .article { max-width:880px; margin-inline:auto; padding:40px clamp(16px,4vw,44px) 96px; }
 /* A project's old address, read without scripts: the detail text on a page of its own, its place rail not pinned. */
-.article-detail { max-width:1080px; } .article-detail .dv-rail { position:static; }
+.article-detail { max-width:1080px; } .article-detail .dv-rail { position:static; max-height:none; overflow:visible; }
 .back-link { font-size:var(--fs-s); font-weight:700; text-decoration:none; color:var(--ink-2); } .back-link::before { content:"← "; } .back-link:hover { color:var(--ink); }
 .article-header { margin:40px 0 32px; padding-bottom:28px; border-bottom:2px solid var(--ink); }
 .article-header h1 { font-size:clamp(28px,3.8vw,46px); font-weight:900; line-height:1.2; letter-spacing:-.03em; }
@@ -703,6 +703,24 @@ body:has(.project-browser) #main-content { height:100dvh; }
 .stage-stats b { display:block; font-size:clamp(15px,1.35vw,22px); font-weight:900; letter-spacing:-.02em; line-height:1.15; white-space:nowrap; }
 .stage-stats b small { margin-left:2px; font-size:.55em; font-weight:600; letter-spacing:0; }
 .stage-stats span { display:block; max-width:17em; margin-top:4px; font-size:11px; line-height:1.4; color:var(--soft); }
+/* A product’s own scene leads the site: what was built under which constraint, the constraint’s words in the
+   signal’s colour (the engine ramp between coral and magenta on light, magenta and orange on dark), then the number
+   that bears the constraint out, what the lead did and how far it got. The lead and the team stand above. */
+.stage-product { --signal-ink:#c04466; }
+.dark .stage-product { --signal-ink:#d94446; }
+.stage-product .stage-kicker { font-size:13px; font-weight:600; letter-spacing:.02em; }
+.stage-product .stage-kicker strong { font-weight:800; color:var(--stage-ink); }
+.stage-product .stage-title { font-size:clamp(27px,min(3.06vw,6.6vh),44px); font-weight:800; letter-spacing:-.03em; line-height:1.18; }
+.stage-accent { font-style:normal; color:var(--signal-ink); }
+.stage-product .stage-sub { font-size:clamp(15px,1.2vw,17px); font-weight:400; letter-spacing:-.01em; line-height:1.6; }
+.stage-product .stage-line { margin-top:5px; font-size:clamp(13.5px,1.08vw,15.5px); font-weight:500; }
+.stage-product .stage-head { grid-template-areas:"kicker kicker actions" "context context actions" "title title actions" "stats stats actions" "copy copy actions"; }
+/* The number stands right under the title it bears out, as one line: the time, then what is done in it and how often. */
+.stage-product .stage-stats { align-self:start; justify-content:flex-start; margin-top:clamp(10px,1.8vh,16px); }
+.stage-product .stage-stats li { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
+.stage-product .stage-stats b { font-size:clamp(19px,1.75vw,26px); font-weight:800; }
+.stage-product .stage-stats span { max-width:none; margin-top:0; font-size:clamp(13.5px,1.08vw,15.5px); font-weight:500; }
+.stage-product .stage-copy { align-self:start; margin-top:clamp(10px,1.8vh,16px); }
 .stage-actions { grid-area:actions; align-self:start; display:grid; justify-items:end; gap:10px; }
 .stage-go { display:flex; justify-content:space-between; align-items:center; gap:28px; min-width:220px; min-height:48px; padding:8px 16px; border:2px solid var(--stage-ink); background:var(--stage-ink); color:var(--stage); font-size:14px; font-weight:800; text-decoration:none; }
 .stage-go span { font-size:20px; }
@@ -1052,6 +1070,10 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
      under it, where they read with the release the line names. */
   .stage-head { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"kicker kicker" "context context" "title title" "copy go" "more go" "stats stats"; }
   .stage-title { font-size:clamp(24px,min(5.4vw,6.4vh),52px); }
+  .stage-product .stage-title { font-size:clamp(24px,min(4.6vw,5.4vh),44px); }
+  /* The product’s number stays under its title (where a short stacked window drops the other scenes’ numbers). */
+  .stage-product .stage-head { grid-template-areas:"kicker kicker" "context context" "title title" "stats stats" "copy go" "more go"; }
+  .stage-product .stage-stats { display:flex; justify-content:flex-start; margin-top:clamp(10px,1.8vh,16px); }
   .stage-copy { align-self:start; }
   .stage-actions { display:contents; }
   .stage-go { grid-area:go; align-self:center; margin-top:clamp(8px,1.5vh,16px); }
@@ -1117,6 +1139,13 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .stage-stats { justify-content:flex-start; gap:12px; margin-top:7px; }
   .stage-stats b { font-size:14px; }
   .stage-stats span { margin-top:2px; font-size:8px; }
+  .stage-product .stage-head { grid-template-areas:"kicker" "context" "title" "stats" "copy" "actions"; }
+  .stage-product .stage-kicker { font-size:11px; }
+  .stage-product .stage-title { font-size:clamp(24px,7.4vw,32px); }
+  .stage-product .stage-sub { font-size:14px; line-height:1.5; }
+  .stage-product .stage-line { margin-top:4px; font-size:12.5px; }
+  .stage-product .stage-stats b { font-size:20px; }
+  .stage-product .stage-stats span { font-size:12.5px; }
   .stage-actions { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-top:7px; }
   .stage-go { gap:10px; min-width:0; min-height:32px; padding:4px 9px; font-size:11px; }
   .stage-go span { font-size:14px; }
@@ -1625,6 +1654,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .browser-scenes>article { gap:10px; padding-top:14px; padding-bottom:10px; }
   .stage-context { margin-top:4px; font-size:clamp(13px,1.05vw,16px); }
   .stage-title { font-size:clamp(24px,min(2.8vw,4.9vh),40px); }
+  .stage-product .stage-title { font-size:clamp(24px,min(2.8vw,4.9vh),40px); }
   .stage-copy { margin-top:6px; }
   .vp { gap:6px; }
   .vp-nav button { padding-top:6px; }
@@ -1804,7 +1834,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv { --bar:10px; container:detail / inline-size; color:var(--ink); }
 .dv :where(p,ol,ul,dl,dd,h3,h4,figure) { margin:0; padding:0; list-style:none; }
 .dv-in { display:grid; grid-template-columns:minmax(0,236px) minmax(0,1fr); gap:0 clamp(28px,5cqw,72px); align-items:start; }
-.dv-main { min-width:0; max-width:47em; padding-top:20px; font-size:15px; line-height:1.85; }
+.dv-main { min-width:0; max-width:736px; padding-top:20px; font-size:16px; line-height:1.75; }
 .drawer-inline .drawer-body:has(>.dv) { padding-top:0; }
 /* Two levels of heading, the same on every detail. A part of the detail (scope, process, verification, retrospective,
    related posts, the commit record) is a panel of its own: a heavy rule on top, a heading larger than anything in it,
@@ -1822,21 +1852,28 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* The scope: what it does in one sentence, when, what was built, with whom and on what. */
 .dv-sentence { font-size:19px; font-weight:800; letter-spacing:-.02em; line-height:1.55; word-break:keep-all; text-wrap:pretty; }
 .dv-period { margin-top:6px; font-size:12px; font-weight:700; color:var(--ink-3); }
-.dv-stack-part { margin-top:28px; padding-top:14px; border-top:1px solid var(--line); }
+.dv-results { margin-top:24px; padding-top:16px; border-top:1px solid var(--line); }
+.dv-results ul { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+.dv-results button { display:grid; align-content:start; justify-items:start; gap:4px; width:100%; height:100%; padding:12px 14px 14px; border:1px solid var(--line); background:var(--wash); color:inherit; font:inherit; text-align:left; cursor:pointer; transition:border-color .15s; }
+.dv-results button:hover { border-color:var(--ink); }
+.dv-results-name { font-size:13px; font-weight:800; color:var(--ink-2); }
+.dv-results button:hover .dv-results-name { color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+.dv-results .dv-result-of { margin-top:0; }
+.dv-results .dv-unit-num b { font-size:26px; }
+/* The stack and the prior work it stands on, near the end. */
+.dv-tech .dv-stack li { grid-template-columns:150px minmax(0,1fr); }
+.dv-borrowed { margin-top:22px; padding-top:14px; border-top:1px solid var(--line); font-size:15px; line-height:1.7; }
 /* In the scope, who did what and on what is small print under the sentence, so what was done starts on the first
    screen. */
 .dv-main>.dv-scope { padding-bottom:28px; }
-.dv-scope .dv-rows { gap:6px; margin-top:16px; font-size:13.5px; line-height:1.7; }
-.dv-scope .dv-rows dt { padding-top:.2em; }
-.dv-scope .dv-stack-part { margin-top:14px; padding-top:10px; }
-.dv-scope .dv-stack { gap:2px; }
-.dv-stack { display:grid; gap:5px; font-size:13px; line-height:1.6; }
+.dv-scope .dv-rows { gap:12px; margin-top:18px; font-size:15px; line-height:1.7; }
+.dv-stack { display:grid; gap:6px; font-size:14px; line-height:1.6; }
 .dv-stack li { display:grid; grid-template-columns:132px minmax(0,1fr); gap:0 16px; }
 .dv-stack b { font-weight:800; } .dv-stack span { color:var(--ink-2); }
 /* A named row: the name in a narrow column, so the names of a card read down like a list. */
-.dv-rows { display:grid; gap:16px; margin-top:18px; }
-.dv-rows>div { display:grid; grid-template-columns:132px minmax(0,1fr); gap:0 16px; }
-.dv-rows dt { padding-top:.5em; font-size:12px; font-weight:800; line-height:1.5; color:var(--ink-2); word-break:keep-all; }
+.dv-rows { display:grid; gap:26px; margin-top:18px; }
+.dv-rows>div { display:grid; gap:6px; }
+.dv-rows dt { font-size:13.5px; font-weight:800; letter-spacing:.01em; line-height:1.5; color:var(--ink-2); word-break:keep-all; }
 .dv-rows dd { min-width:0; }
 .dv .prose { line-height:inherit; } .dv .prose p { margin:0; }
 .dv-rows dd>*+*,.dv .prose>*+*,.dv-item>*+* { margin-top:.6em; }
@@ -1845,10 +1882,10 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
    starts under its own bar and ends in open space, so where one piece stops and the next begins is seen at a glance. */
 .dv-card { padding-bottom:58px; }
 .dv-card:last-child { padding-bottom:8px; }
-.dv-bar { display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:36px; padding:6px 12px; border-top:2px solid var(--ink); background:var(--wash); }
-.dv-mark { display:flex; align-items:center; gap:.6em; font-size:12px; font-weight:900; line-height:1.5; }
-.dv-mark b { padding:.1em .5em; background:var(--ink); color:var(--paper); }
-.dv-when { font-size:12px; font-weight:700; color:var(--ink-2); white-space:nowrap; }
+.dv-bar { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:10px 0 0; border-top:1px solid var(--ink-3); }
+.dv-mark { display:flex; align-items:center; gap:.6em; font-size:13px; font-weight:800; line-height:1.5; color:var(--ink-2); }
+.dv-mark b { padding:0 .45em; box-shadow:inset 0 0 0 1px var(--ink-3); color:var(--ink); }
+.dv-when { font-size:13px; font-weight:700; color:var(--ink-2); white-space:nowrap; }
 .dv-lead { margin-top:16px; font-size:18px; font-weight:800; letter-spacing:-.02em; line-height:1.5; word-break:keep-all; text-wrap:pretty; }
 .dv-result { font-weight:800; }
 /* By date the cards hang on a line, each bar from its date; the date leads the bar and the step is the smaller mark.
@@ -1864,10 +1901,8 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* A core card, the decision the rest hangs on: a filled bar and a larger line, read in full. Where a detail names
    core cards, every other card is its line and its result, and its rows open on demand. */
 .dv-bar-l { display:flex; align-items:center; gap:14px; min-width:0; }
-.dv-core { font-size:11px; font-weight:900; letter-spacing:.04em; white-space:nowrap; }
-.dv-card[data-core] .dv-bar { background:var(--ink); }
-.dv-card[data-core] .dv-bar :is(.dv-mark,.dv-mark span,.dv-when,.dv-core) { color:var(--paper); }
-.dv-card[data-core] .dv-mark b { background:var(--paper); color:var(--ink); box-shadow:none; }
+.dv-core { padding:0 .55em; box-shadow:inset 0 0 0 1px var(--ink); font-size:11.5px; font-weight:900; letter-spacing:.04em; white-space:nowrap; color:var(--ink); }
+.dv-card[data-core] .dv-bar { border-top:2px solid var(--ink); }
 .dv-card[data-core] .dv-lead { font-size:20px; }
 /* A design principle: a rule all the steps are built under. Its name stands in a box on the plain bar, so it is not
    read as one of the core decisions and does not stand over them. */
@@ -1886,7 +1921,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv-card-h:hover~.dv-fold[open]>summary i,.dv-fold[open]>summary:hover i { translate:0 -3px; }
 /* What was tried or weighed and dropped. */
 .dv-dropped { display:grid; gap:8px; }
-.dv-dropped li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 12px; padding:9px 12px 10px; border-left:2px solid var(--ink-3); background:var(--wash); font-size:13.5px; line-height:1.65; }
+.dv-dropped li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 12px; padding:9px 12px 10px; border-left:2px solid var(--ink-3); background:var(--wash); font-size:14.5px; line-height:1.65; }
 .dv-dropped b { font-weight:800; } .dv-dropped em { font-style:normal; font-size:11px; font-weight:800; color:var(--ink-2); white-space:nowrap; }
 .dv-dropped span { grid-column:1 / -1; color:var(--ink-2); }
 /* A measured result: the values, and under them what was measured and on what. */
@@ -1988,12 +2023,11 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
    a boxed name, as their cards do. Opened: the note under the number, the unit's picture, the way it went from
    constraint to improvement, then its cards. */
 .dv-units { margin-top:0; }
-.dv-unit { border-top:1px solid var(--line); scroll-margin-top:var(--bar); }
+.dv-unit { padding:26px 0 30px; border-top:1px solid var(--ink-3); scroll-margin-top:var(--bar); }
 .dv-unit[data-label] { border-top:2px solid var(--ink); }
-.dv-unit:last-child { border-bottom:1px solid var(--line); }
-.dv-unit-head { display:grid; grid-template-columns:minmax(0,1fr) auto 20px; align-items:center; gap:6px 20px; width:100%; padding:14px 0 15px; border:0; background:none; text-align:left; cursor:pointer; }
-.dv-unit-what { display:grid; justify-items:start; gap:3px; min-width:0; }
-.dv-unit-tag { display:flex; align-items:center; gap:10px; font-size:10.5px; font-weight:700; line-height:1.5; color:var(--ink-3); }
+.dv-unit+.dv-unit { margin-top:18px; }
+.dv-unit-head { display:grid; justify-items:start; gap:8px; }
+.dv-unit-tag { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; line-height:1.5; color:var(--ink-3); }
 .dv-unit-label { padding:.1em .55em; background:var(--ink); color:var(--paper); font-weight:900; letter-spacing:.04em; }
 .dv-unit[data-label=principle] .dv-unit-label { background:none; color:var(--ink); box-shadow:inset 0 0 0 1.5px var(--ink); }
 /* A hypothesis's verdict: drawn, not filled, so it does not read as a core label; a rejection is the quieter one. */
@@ -2002,70 +2036,66 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* Four steps down from the detail's sentence: a core unit's title, another unit's title, what was measured; the number
    after is the loudest thing on the row, smaller for a unit that is not core. Inside a unit its cards' lines stand
    below the unit's own title. */
-.dv-unit-title { font-size:18px; font-weight:900; letter-spacing:-.025em; line-height:1.4; word-break:keep-all; text-wrap:pretty; }
-.dv-unit:not([data-label]) .dv-unit-title { font-size:16px; font-weight:800; letter-spacing:-.02em; }
-.dv-unit-measure { font-size:12px; line-height:1.55; color:var(--ink-2); word-break:keep-all; }
-.dv-unit-num { display:flex; align-items:baseline; gap:.4em; white-space:nowrap; }
-.dv-unit-num span { font-size:13px; font-weight:700; color:var(--ink-2); }
-.dv-unit-num i { font-style:normal; font-size:13px; font-weight:700; color:var(--ink-3); }
-.dv-unit-num b { font-size:25px; font-weight:900; letter-spacing:-.03em; line-height:1.15; }
-.dv-unit:not([data-label]) .dv-unit-num b { font-size:19px; letter-spacing:-.02em; }
-.dv-unit-arrow { grid-column:-2; justify-self:center; width:9px; height:9px; border:solid var(--ink-2); border-width:0 1.5px 1.5px 0; rotate:45deg; translate:0 -2px; transition:rotate .15s,translate .15s,border-color .15s; }
-.dv-unit[data-open] .dv-unit-arrow { rotate:225deg; translate:0 2px; }
-.dv-unit-head:hover .dv-unit-arrow { border-color:var(--ink); }
-.dv-unit-head:hover .dv-unit-title { text-decoration:underline; text-decoration-thickness:1.5px; text-underline-offset:4px; }
+.dv-unit-title { font-size:21px; font-weight:800; letter-spacing:-.025em; line-height:1.4; word-break:keep-all; text-wrap:pretty; }
+.dv-unit:not([data-label]) .dv-unit-title { font-size:19px; }
+/* A number and, right under it, what was measured and on what. */
+.dv-result-of { display:grid; justify-items:start; gap:2px; margin-top:4px; }
+.dv-unit-measure { font-size:14px; line-height:1.6; color:var(--ink-2); word-break:keep-all; }
+.dv-unit-note { font-size:13px; line-height:1.6; color:var(--ink-3); word-break:keep-all; }
+.dv-unit-num { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .4em; }
+.dv-unit-num span { font-size:15px; font-weight:700; color:var(--ink-2); }
+.dv-unit-num i { font-style:normal; font-size:14px; font-weight:700; color:var(--ink-3); }
+.dv-unit-num b { font-size:28px; font-weight:800; letter-spacing:-.03em; line-height:1.2; }
+.dv-unit:not([data-label]) .dv-unit-num b { font-size:24px; letter-spacing:-.02em; }
+/* What opens is named on the row that opens it. */
+.dv-unit-more { display:flex; justify-content:center; align-items:center; gap:10px; width:100%; margin-top:16px; padding:11px 0 12px; border:1px solid var(--line); background:none; color:var(--ink); font:inherit; font-size:13.5px; font-weight:800; cursor:pointer; transition:border-color .15s; }
+.dv-unit-more i { width:8px; height:8px; border:solid currentColor; border-width:0 1.5px 1.5px 0; rotate:45deg; translate:0 -2px; transition:rotate .15s,translate .15s; }
+.dv-unit-more[aria-expanded=true] i { rotate:225deg; translate:0 2px; }
+.dv-unit-more:hover { border-color:var(--ink); }
 /* An open unit lifts off its section: the section's other colour, its own frame, its head kept in sight while it is
    read, and a row at its end that folds it. The units still shut stay rows on the section. */
 .dv-unit { --open-bg:var(--paper); }
 .dv-main>section:nth-of-type(odd) .dv-unit { --open-bg:var(--tint); }
-.dv-unit[data-open] { --wash:var(--tint); margin:14px calc(-1 * var(--open-pad)) 22px; padding:0 var(--open-pad); border-top:3px solid var(--ink); background:var(--open-bg); box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 16%,transparent); }
+.dv-unit[data-open] { --wash:var(--tint); margin-inline:calc(-1 * var(--open-pad)); padding:26px var(--open-pad) 8px; border-top:3px solid var(--ink); background:var(--open-bg); box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 16%,transparent); }
+.dv-unit[data-open]+.dv-unit { margin-top:32px; }
 .dv-main>section:nth-of-type(odd) .dv-unit[data-open] { --wash:var(--paper); }
-.dv-unit[data-open]+.dv-unit { border-top-width:2px; }
-.dv-unit[data-open]:last-child { border-bottom:0; }
-.dv-unit[data-open]>.dv-unit-head { position:sticky; top:var(--stick,0px); z-index:1; background:var(--open-bg); box-shadow:0 1px 0 var(--line); }
 .dv-main { --open-pad:16px; }
 .dv-unit-in { padding:0 0 4px; }
-.dv-unit-fold { display:flex; justify-content:center; align-items:center; gap:8px; width:100%; margin-top:30px; padding:12px 0 14px; border:0; border-top:1px solid var(--line); background:none; color:var(--ink-2); font-size:12px; font-weight:800; cursor:pointer; }
+/* The same row again at the end of an open unit: it glides back to the unit's head, then folds (DetailView). */
+.dv-unit-fold { display:flex; justify-content:center; align-items:center; gap:10px; width:100%; margin:30px 0 18px; padding:11px 0 12px; border:1px solid var(--line); background:none; color:var(--ink); font:inherit; font-size:13.5px; font-weight:800; cursor:pointer; transition:border-color .15s; }
 .dv-unit-fold i { width:8px; height:8px; border:solid currentColor; border-width:1.5px 0 0 1.5px; rotate:45deg; translate:0 2px; }
-.dv-unit-fold:hover { color:var(--ink); }
-.dv-unit-note { font-size:12px; line-height:1.6; color:var(--ink-2); }
+.dv-unit-fold:hover { border-color:var(--ink); }
 .dv-unit-in>.dv-reach { margin-top:14px; }
-.dv-unit-in>.dv-arc { margin-top:18px; }
-.dv-unit-cards { margin-top:34px; }
+.dv-unit-cards { margin-top:30px; }
 .dv-unit-cards>.dv-card:last-child { padding-bottom:0; }
-.dv-unit-cards .dv-lead { font-size:16px; }
-.dv-unit-cards .dv-card[data-core] .dv-lead { font-size:17px; }
+.dv-unit-cards .dv-lead { font-size:17px; }
+.dv-unit-cards .dv-card[data-core] .dv-lead { font-size:18px; }
 /* What a unit taught, after its cards: under a thin rule and its small name. */
 .dv-unit-notes { margin-top:30px; padding-top:14px; border-top:1px solid var(--line); }
 .dv-unit-notes .dv-sub-h { margin-bottom:12px; }
 /* The process by date: a line down the left, a filled dot for a step of the work (its line opens the card in its
    unit), a hollow one for a commit (what changed in the code that day, said once, not pressed). */
 .dv-log { margin-left:4px; padding-left:24px; border-left:1px solid var(--ink-3); }
-.dv-log>li { position:relative; }
-.dv-log>li+li { margin-top:8px; }
-.dv-log>li::before { content:""; position:absolute; left:-30px; top:14px; width:11px; height:11px; border-radius:50%; background:var(--ink); box-shadow:0 0 0 4px var(--sec-bg); }
-.dv-log>li[data-kind=commit]::before { left:-29px; width:9px; height:9px; background:var(--sec-bg); box-shadow:inset 0 0 0 1.5px var(--ink),0 0 0 4px var(--sec-bg); }
-.dv-log button { display:grid; grid-template-columns:minmax(0,1fr) 16px; align-items:center; gap:3px 14px; width:100%; padding:9px 14px 11px; border:0; border-top:2px solid var(--ink-3); background:var(--wash); color:inherit; font:inherit; text-align:left; cursor:pointer; transition:border-color .15s; }
-.dv-log li[data-label] button { border-top-color:var(--ink); }
-.dv-log button:hover,.dv-log button:focus-visible { border-top-color:var(--ink); }
-.dv-log-meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; grid-column:1; font-size:12px; font-weight:700; line-height:1.5; color:var(--ink-2); }
-.dv-log-meta time { font-size:13px; font-weight:900; color:var(--ink); }
+.dv-log>li { position:relative; border-top:1px solid var(--line); }
+.dv-log>li:last-child { border-bottom:1px solid var(--line); }
+.dv-log>li::before { content:""; position:absolute; left:-29px; top:17px; width:9px; height:9px; border-radius:50%; background:var(--ink-2); box-shadow:0 0 0 4px var(--sec-bg); }
+.dv-log>li[data-label]::before { background:var(--ink); }
+.dv-log>li[data-kind=commit]::before { background:var(--sec-bg); box-shadow:inset 0 0 0 1.5px var(--ink-3),0 0 0 4px var(--sec-bg); }
+.dv-log button { display:grid; grid-template-columns:minmax(0,1fr) 16px; align-items:center; gap:4px 14px; width:100%; padding:11px 10px 13px; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; transition:background-color .15s; }
+.dv-log button:hover,.dv-log button:focus-visible { background:color-mix(in srgb,var(--ink) 4%,transparent); }
+.dv-log-meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; grid-column:1; font-size:13px; font-weight:600; line-height:1.5; color:var(--ink-2); }
+.dv-log-meta time { font-size:13px; font-weight:700; color:var(--ink-2); }
 .dv-log-step { display:inline-flex; align-items:center; gap:.5em; }
-.dv-log-step b { padding:0 .45em; box-shadow:inset 0 0 0 1px var(--ink-3); font-size:11px; }
-.dv-log-meta em { padding:0 .5em; background:var(--ink); color:var(--paper); font-size:11px; font-style:normal; font-weight:900; }
-.dv-log-line { grid-column:1; font-size:15px; font-weight:800; letter-spacing:-.015em; line-height:1.5; word-break:keep-all; text-wrap:pretty; }
+.dv-log-step b { padding:0 .45em; box-shadow:inset 0 0 0 1px var(--ink-3); font-size:11.5px; color:var(--ink); }
+.dv-log-meta em { padding:0 .5em; box-shadow:inset 0 0 0 1px var(--ink); color:var(--ink); font-size:11.5px; font-style:normal; font-weight:800; }
+.dv-log-line { grid-column:1; font-size:15.5px; font-weight:600; letter-spacing:-.01em; line-height:1.6; word-break:keep-all; text-wrap:pretty; }
 .dv-log-go { grid-column:2; grid-row:1 / span 2; width:9px; height:9px; border:solid var(--ink-2); border-width:1.5px 1.5px 0 0; rotate:45deg; transition:translate .15s,border-color .15s; }
 .dv-log button:hover .dv-log-go { translate:2px 0; border-color:var(--ink); }
-.dv-log li[data-kind=commit] { padding:4px 14px 6px; }
-.dv-log li[data-kind=commit] .dv-log-meta code { padding:0 6px; box-shadow:inset 0 0 0 1px var(--ink); font-family:var(--font); font-size:11px; font-weight:700; color:var(--ink); }
-.dv-log li[data-kind=commit] .dv-log-line { display:block; margin-top:2px; font-size:14px; }
-.dv-log li[data-kind=commit] p { margin-top:2px; font-size:13px; line-height:1.65; color:var(--ink-2); }
+.dv-log li[data-kind=commit] { padding:11px 10px 13px; }
+.dv-log li[data-kind=commit] .dv-log-meta code { padding:0 6px; box-shadow:inset 0 0 0 1px var(--ink-3); font-family:var(--font); font-size:11.5px; font-weight:700; color:var(--ink-2); }
+.dv-log li[data-kind=commit] .dv-log-line { display:block; margin-top:4px; font-size:15px; }
+.dv-log li[data-kind=commit] p { margin-top:2px; font-size:14px; line-height:1.65; color:var(--ink-2); }
 .dv-log+.figure-note { margin-top:18px; }
-@media (max-width:640px) {
-  .dv-unit-head { grid-template-columns:minmax(0,1fr) 20px; }
-  .dv-unit-num { grid-area:2 / 1; }
-  .dv-unit-arrow { grid-area:1 / 2; }
-}
 /* A chain of reasons under a card's line: each step under a bar, as a card is; the answer under the filled bar a core
    card carries; an aside joined by a plus under a broken rule. */
 .dv-flow { margin-top:22px; }
@@ -2080,7 +2110,15 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv-flow li[data-key] b { font-weight:900; }
 .dv-flow li[data-plus] p { border-top:2px dashed var(--ink-3); background:none; color:var(--ink-2); }
 .dv-flow li[data-plus]::before { content:"+"; }
-.dv-links { display:grid; gap:10px; font-size:14px; line-height:1.55; }
+.dv .dv-arc { margin-top:18px; }
+.dv .dv-arc ol { grid-template-columns:minmax(0,1fr); gap:0; margin-top:0; border-top:1px solid var(--line); }
+.dv .dv-arc li { grid-template-columns:5.6em minmax(0,1fr); align-items:baseline; gap:0 16px; padding:10px 0 11px; border-bottom:1px solid var(--line); }
+.dv .dv-arc li p { display:block; height:auto; margin:0; padding:0; border:0; background:none; color:var(--ink-2); font-size:13px; font-weight:800; letter-spacing:.02em; line-height:1.5; }
+.dv .dv-arc li span { font-size:15.5px; line-height:1.65; color:var(--ink); }
+.dv .dv-arc li+li::before { content:none; }
+.dv .dv-arc li[data-key] p { background:none; color:var(--ink); }
+.dv .dv-arc li[data-key] span { font-weight:700; }
+.dv-links { display:grid; gap:10px; font-size:15px; line-height:1.55; }
 .dv-links li { display:grid; gap:1px; }
 .dv-links a { justify-self:start; font-weight:800; text-decoration:underline; text-underline-offset:4px; } .dv-links span { font-size:12.5px; color:var(--ink-2); }
 /* The papers a card cites: a note under the card's own sentence, set off by a line, in smaller and lighter type. */
@@ -2090,11 +2128,11 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv-refs a { margin-right:.9em; font-weight:700; color:var(--ink); text-decoration:underline; text-decoration-color:var(--ink-3); text-underline-offset:3px; }
 /* Under verification and retrospective, each point is set off from the one before it by a line. */
 .dv-item { padding-bottom:26px; } .dv-item:last-child { padding-bottom:0; }
-.dv-item+.dv-item { padding-top:24px; border-top:1px solid var(--ink-3); }
-.dv-item .dv-lead { margin-top:0; font-size:16.5px; } .dv-item .dv-mark+.dv-lead { margin-top:10px; }
+.dv-item+.dv-item { padding-top:24px; border-top:1px solid var(--line); }
+.dv-item .dv-lead { margin-top:0; font-size:17px; font-weight:700; } .dv-item .dv-mark+.dv-lead { margin-top:10px; }
 .dv .drawer-sub { margin-top:0; }
 /* Beside the text: the picture, where the reader is in it, and the steps. It stays while the text moves. */
-.dv-rail { position:sticky; top:0; z-index:2; display:grid; gap:14px; padding:20px 0 12px; background:var(--paper); }
+.dv-rail { position:sticky; top:0; z-index:2; display:grid; gap:14px; max-height:var(--pane-h,none); padding:20px 0 12px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; background:var(--paper); }
 /* The way back in the place bar shows only where that bar runs across the top; the head's then goes. */
 .dv-rail .dv-back { display:none; }
 .project-browser[data-across] .drawer-h>.drawer-close { display:none; }
@@ -2104,7 +2142,13 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv-from { display:grid; gap:1px; padding:8px 10px; border:1px solid var(--line); background:none; font-size:11px; line-height:1.45; text-align:left; cursor:pointer; }
 .dv-from span { font-weight:700; color:var(--ink-3); } .dv-from b { font-size:12.5px; font-weight:800; }
 .dv-from:hover { border-color:var(--ink); }
-.dv-steps { display:grid; }
+.dv-steps,.dv-toc { display:grid; }
+.dv-toc button { display:flex; align-items:baseline; gap:.6em; width:100%; padding:3px 0 3px 10px; border:0; border-left:2px solid var(--line); background:none; color:var(--ink-2); font:inherit; font-size:12.5px; line-height:1.5; text-align:left; cursor:pointer; }
+.dv-toc button span { flex:none; font-size:10.5px; font-weight:700; letter-spacing:.04em; color:var(--ink-3); }
+.dv-toc button b { min-width:0; overflow:hidden; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.dv-toc button:hover { border-color:var(--ink-3); color:var(--ink); }
+.dv-toc button[aria-current] { border-color:var(--ink); color:var(--ink); }
+.dv-toc button[aria-current] b { font-weight:900; }
 .dv-steps button { display:flex; align-items:baseline; gap:.7em; width:100%; padding:3px 0 3px 9px; border:0; border-left:2px solid var(--line); background:none; font-size:12px; font-weight:600; line-height:1.5; color:var(--ink-2); text-align:left; white-space:nowrap; overflow:hidden; cursor:pointer; }
 .dv-steps button:hover:not(:disabled) { border-color:var(--ink-3); color:var(--ink); }
 .dv-steps button[aria-current] { border-color:var(--ink); color:var(--ink); font-weight:900; }
@@ -2139,12 +2183,12 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* A narrow pane: the picture and the place become a bar across the top, and the text takes the width. */
 @container detail (max-width:820px) {
   .dv-in { --bar:92px; --stick:var(--bar); grid-template-columns:minmax(0,1fr); }
-  .dv-rail { --across:1; grid-template-columns:104px minmax(0,1fr) auto; align-items:center; gap:0 14px; margin-bottom:18px; padding:10px 0 8px; border-bottom:1px solid var(--line); }
+  .dv-rail { --across:1; grid-template-columns:104px minmax(0,1fr) auto; align-items:center; gap:0 14px; max-height:none; margin-bottom:18px; padding:10px 0 8px; overflow:visible; border-bottom:1px solid var(--line); }
   .dv-main { padding-top:0; }
   .sy-parts { display:none; }
   /* The ring's mark for the step the home was on goes: the line that names it is not shown here. */
   .dv-symbol .sy-stage>.entry { display:none; }
-  .dv-steps,.dv-from { display:none; }
+  .dv-steps,.dv-toc,.dv-from { display:none; }
   .dv-rail .dv-back { display:flex; }
   .dv-main { max-width:none; }
 }
@@ -2152,9 +2196,8 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .dv-in { --bar:78px; --stick:var(--bar); }
   .dv-rail { grid-template-columns:76px minmax(0,1fr) auto; gap:0 10px; }
   .dv-where b { font-size:13px; }
-  .dv-main { font-size:14.5px; }
-  .dv-rows>div,.dv-stack li { grid-template-columns:minmax(0,1fr); gap:2px; }
-  .dv-rows dt { padding-top:0; }
+  .dv-main { font-size:15.5px; }
+  .dv-stack li,.dv-tech .dv-stack li { grid-template-columns:minmax(0,1fr); gap:2px; }
   .dv-refs li { display:grid; justify-items:start; }
   .dv-bar-l { flex-wrap:wrap; gap:2px 12px; } .dv-card[data-core] .dv-lead { font-size:18px; }
   .dv-sentence { font-size:17px; } .dv-lead { font-size:16.5px; }

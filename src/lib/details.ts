@@ -39,6 +39,9 @@ export type Detail = {
   validation: { id: string; lead: string; body: string; metricIds: string[] }[];
   reflection: { id: string; step: string; stepName: string; lead: string; body: string }[];
   links: DetailLink[]; units?: DetailUnit[];
+  // The results the detail leads with, under its scope: up to three units of work, each read by its number before and
+  // after and what was measured, so the condition is never further than the number.
+  highlights?: string[];
 };
 
 const directory = path.join(process.cwd(), "content", "details");

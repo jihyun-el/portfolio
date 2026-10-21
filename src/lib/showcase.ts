@@ -14,6 +14,8 @@ const vqaFirst = metrics.vqa.stages[0].score, vqaLast = metrics.vqa.stages.at(-1
 const metricViews: Record<string, () => MetricView> = {
   frontend: () => ({ value: `${metrics.engine.frontendBeforeMs} → ${metrics.engine.frontendAfterMs}`, unit: "ms", label: "반주 엔진 전처리 실기기 계산 시간" }),
   compute: () => ({ value: `${metrics.engine.computeMs} / ${metrics.engine.budgetMs}`, unit: "ms", label: "전처리·신경망 실기기 계산 · 10ms 처리 예산 안" }),
+  // The same time read as one line under a title that claims real time: what is done in it, and how often.
+  computeEach: () => ({ value: `${metrics.engine.computeMs}`, unit: "ms", label: `${metrics.engine.budgetMs}ms마다 하는 전처리 · 신경망 계산 · iOS 실기기` }),
   controlTicks: () => ({ value: ko(metrics.engine.controlTicks), unit: "프레임", label: "Rust 이식 제어 출력 · Python 참조와 비트 동일" }),
   publicScore: () => ({ value: vqaLast.toFixed(5), label: `VQA Public 점수 · 베이스라인 ${vqaFirst.toFixed(5)}` }),
   publicGain: () => ({ value: `${vqaFirst.toFixed(5)} → ${vqaLast.toFixed(5)}`, label: "Public 점수 · 제공 베이스라인에서 최종 답안까지" }),

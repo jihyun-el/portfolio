@@ -162,7 +162,7 @@ for (const folder of ["projects", "writing", "mini"]) {
 // A project detail (content/details/<id>.json) is public: it carries review IDs only, never the paths behind them.
 // One for each unit, for a product with parts, and for each mini project.
 const detailIds = [...cases.map(item => item.id), ...projects.filter(project => project.parts?.length).map(project => project.id), ...miniProjects.map(item => `mini-${item.id}`)];
-const detailKeys = new Set(["schemaVersion", "id", "projectId", "title", "sentence", "period", "scope", "stack", "resultMetricIds", "metrics", "steps", "cards", "validation", "reflection", "links", "sources", "units"]);
+const detailKeys = new Set(["schemaVersion", "id", "projectId", "title", "sentence", "period", "scope", "stack", "resultMetricIds", "metrics", "steps", "cards", "validation", "reflection", "links", "sources", "units", "highlights"]);
 const day = /^\d{4}-\d{2}(-\d{2})?$/, cardIds = new Set();
 for (const id of detailIds) {
   const file = path.join(content, "details", `${id}.json`);
@@ -202,6 +202,8 @@ for (const id of detailIds) {
     if (held.length !== detail.cards.length || detail.cards.some(card => held.filter(item => item === card.id).length !== 1)) throw new Error(`${id}: every card must be in exactly one unit`);
     for (const step of new Set(detail.cards.map(card => card.step).filter(step => step !== "전체"))) if (stepped.filter(item => item === step).length !== 1) throw new Error(`${id}: step ${step} must be in exactly one unit`);
   }
+  // The results a detail leads with are its own units that carry a number, three at most.
+  if (detail.highlights && (detail.highlights.length > 3 || detail.highlights.some(key => !detail.units?.find(unit => unit.id === key)?.metric))) throw new Error(`${id}: highlights must name up to three of its units with a number`);
   for (const link of [...detail.links, ...detail.cards.flatMap(card => [...card.links, ...(card.borrowed?.links ?? [])])]) {
     const post = link.href.match(/^\/writing\/([a-z0-9-]+)\/$/);
     if (!link.label || !/^(\/|https:\/\/)/.test(link.href) || (post && !fs.existsSync(path.join(content, "writing", `${post[1]}.md`)))) throw new Error(`${id}: invalid link ${link.href}`);

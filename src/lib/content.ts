@@ -30,9 +30,10 @@ export type Project = {
   defaultOpen: boolean;
   links?: { label: string; url: string }[];
   parts?: { id: string; title: string; description: string }[];
-  // The head of a product's own scene: its largest line and the line under it. Its problem line is its first part's.
+  // The head of a product's own scene: what was built under which constraint as its largest line, the words of it in
+  // the signal's colour, then what the lead did, how far it got, the team in the small line, and the numbers behind it.
   // A line break in the title is kept on screen.
-  home?: { title: string; sub?: string };
+  home?: { title: string; accent?: string; sub?: string; line?: string; team?: string; stats?: string[] };
   // What a project without parts consists of, for its summary on the first screen.
   highlights?: { label: string; line: string }[];
 };
