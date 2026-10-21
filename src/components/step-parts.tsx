@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Fragment, createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { setSceneStep } from "@/lib/scene-step";
+import { useSceneLeave } from "@/lib/scene-shown";
+import { useSceneMiddle } from "@/lib/scene-middle";
 
 // The frame the home figures share once a screen is told one step at a time: on the left what the step is, whose it
 // is, its one line, its verdict and its reasons (open at first, folded on demand); on the right its picture; the
@@ -72,11 +74,14 @@ export type StepPart<P> = { name: string; Part: (props: P & { open: (part: numbe
 // `scene` names the screen, so a detail that opens over it knows which step was showing; with `project`, the address
 // of that detail, every step carries the link into its text.
 export function StepParts<P extends object>({ parts, props, label, scene, project }: { parts: StepPart<P>[]; props: P; label: string; scene?: string; project?: string }) {
-  const [current, setCurrent] = useState(0);
-  const root = useRef<HTMLDivElement>(null), nav = useRef<HTMLOListElement>(null), press = useRef<number | null>(null), turned = useRef(false);
+  const [current, setCurrent] = useState(0), [visit, setVisit] = useState(0);
+  const root = useRef<HTMLDivElement>(null), nav = useRef<HTMLOListElement>(null), press = useRef<number | null>(null), turned = useRef(false), stage = useRef<HTMLDivElement>(null);
+  useSceneMiddle(stage);
   const count = parts.length;
   const go = useCallback((step: number) => setCurrent((i) => (i + step + count) % count), [count]);
   useEffect(() => { if (scene) setSceneStep(scene, String(current).padStart(2, "0")); }, [scene, current]);
+  // Leaving the screen sends it back to its first step, with the step's picture drawn afresh.
+  useSceneLeave(() => { setCurrent(0); setVisit((n) => n + 1); if (nav.current) nav.current.scrollLeft = 0; });
 
   // On a phone the tab row scrolls sideways; after a turn it brings the open tab into view, sideways only, so the
   // page itself never moves. The first render leaves it where it is.
@@ -84,7 +89,9 @@ export function StepParts<P extends object>({ parts, props, label, scene, projec
     if (!turned.current) { turned.current = true; return; }
     const row = nav.current, tab = row?.querySelector<HTMLElement>("[aria-current]");
     if (!row || !tab || row.scrollWidth <= row.clientWidth) return;
-    row.scrollTo({ left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
+    // Measured on screen: a tab's own offset is taken from its list item, not from the row.
+    const left = row.scrollLeft + tab.getBoundingClientRect().left - row.getBoundingClientRect().left;
+    row.scrollTo({ left: left - (row.clientWidth - tab.offsetWidth) / 2, behavior: "smooth" });
   }, [current]);
 
   // The arrow keys turn the steps while this figure is the one on screen.
@@ -116,14 +123,14 @@ export function StepParts<P extends object>({ parts, props, label, scene, projec
   // How many tabs a chapter covers: from its first step to the next chapter's.
   const span = (i: number) => { let n = 1; while (i + n < count && !parts[i + n].group) n++; return n; };
   return <div className="vp" ref={root} role="group" aria-label={label}>
-    <div className="vp-stage" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { press.current = null; }}>
+    <div className="vp-stage" ref={stage} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { press.current = null; }}>
       {prevSide}
-      <Shown.Provider value={scene && project ? { project, scene, step: pad(current) } : null}><Facts.Provider value={facts(parts[current])}><Part key={current} {...props} open={setCurrent} /></Facts.Provider></Shown.Provider>
+      <Shown.Provider value={scene && project ? { project, scene, step: pad(current) } : null}><Facts.Provider value={facts(parts[current])}><Part key={`${visit}-${current}`} {...props} open={setCurrent} /></Facts.Provider></Shown.Provider>
       {nextSide}
     </div>
     <div className="vp-foot">
       {prevFoot}
-      <ol className="vp-nav" ref={nav} data-ledger={ledger ? "" : undefined} data-groups={parts.some((item) => item.group) ? "" : undefined}>{parts.map((item, i) => { const fact = facts(item); return <li key={item.name}>{item.group && <span className="vp-tab-group" aria-hidden="true" style={{ "--span": span(i) } as CSSProperties}>{item.group}</span>}<button type="button" aria-current={i === current ? "step" : undefined} onClick={() => setCurrent(i)}>
+      <ol className="vp-nav" ref={nav} data-ledger={ledger ? "" : undefined} data-groups={parts.some((item) => item.group) ? "" : undefined}>{parts.map((item, i) => { const fact = facts(item); return <li key={item.name}>{item.group && <span className="vp-tab-group" aria-hidden="true" style={{ "--span": span(i) } as CSSProperties}>{item.group}</span>}<button type="button" aria-label={`${pad(i)} ${item.name}`} aria-current={i === current ? "step" : undefined} onClick={() => setCurrent(i)}>
         <span className="num">{pad(i)}</span><span className="vp-tab-name">{item.name}</span>
         {ledger && <span className="vp-tab-row">
           {fact.by ? <span className="vp-tab-by" data-lead={fact.by.startsWith("팀장") ? "" : undefined}>{fact.by}</span> : <span />}

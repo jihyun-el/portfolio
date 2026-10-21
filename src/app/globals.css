@@ -1024,10 +1024,13 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* A tall window (8:9, half of a 16:9 screen): the rail folds into a strip and the scene stacks. */
 @media (max-aspect-ratio:5/4) and (min-width:681px) {
   .project-browser { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); }
-  .browser-side { display:grid; grid-template-columns:minmax(0,1fr) auto auto; grid-template-areas:"identity resources contact" "choices choices choices"; align-items:center; gap:8px clamp(14px,2vw,24px); padding:10px clamp(20px,2.2vw,36px) 12px; }
-  .browser-identity { grid-area:identity; display:flex; align-items:center; gap:14px; }
-  .browser-identity h1 { font-size:25px; }
-  .browser-identity p { margin:0; font-size:12px; }
+  /* The first row: the name with the role beside it, the resources and the contact, and the theme switch at its far
+     right end. The name's own boxes give way so their parts take places in the strip's grid. */
+  .browser-side { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto auto; grid-template-areas:"name role resources contact theme" "choices choices choices choices choices"; align-items:center; gap:8px clamp(14px,2vw,24px); padding:10px clamp(20px,2.2vw,36px) 12px; }
+  .browser-identity,.browser-id-row { display:contents; }
+  .browser-identity h1 { grid-area:name; align-self:last baseline; font-size:25px; }
+  .browser-identity p { grid-area:role; align-self:last baseline; margin:0; font-size:12px; }
+  .browser-id-row .icon-button { grid-area:theme; }
   .browser-identity .browser-fields { display:none; }
   /* The product takes four of the six places: its name over its parts. */
   .browser-choices { grid-area:choices; grid-template-columns:minmax(0,4.3fr) minmax(0,1.25fr) minmax(0,1fr); grid-template-rows:auto auto; align-items:stretch; gap:0 12px; margin:0; border-top:0; }
@@ -1078,11 +1081,12 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .project-browser { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); }
   .browser-side { display:grid; grid-template-columns:1fr auto; grid-template-areas:"identity identity" "choices choices" "resources contact"; gap:8px 10px; padding:10px 12px 8px; }
   .browser-identity { grid-area:identity; display:flex; align-items:center; gap:10px; }
-  .browser-id-row { flex:1; }
-  .browser-identity h1 { font-size:22px; }
-  .browser-identity p { margin:0; font-size:11px; }
+  /* The name row: the name with the role beside it, the theme switch at its right end. */
+  .browser-id-row { display:contents; }
+  .browser-identity h1 { align-self:last baseline; font-size:22px; }
+  .browser-identity p { order:1; align-self:last baseline; margin:0; font-size:11px; }
   .browser-identity .browser-fields { display:none; }
-  .browser-id-row .icon-button { width:28px; height:28px; }
+  .browser-id-row .icon-button { order:2; width:28px; height:28px; margin-left:auto; }
   .browser-choices { grid-area:choices; grid-template-columns:minmax(0,4fr) minmax(0,1.15fr) minmax(0,1.1fr); grid-template-rows:auto auto; align-items:stretch; gap:0 6px; margin:0; border-top:0; }
   .browser-choices>a { grid-row:2; }
   .browser-choices a,.browser-choices a:last-child { gap:2px; padding:6px 6px 7px; border-top:2px solid var(--ink); border-bottom:0; }
@@ -1179,7 +1183,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .browser-figure .is-solo .clock-strip { position:absolute; left:0; right:0; bottom:22px; z-index:5; background:var(--stage); transition:opacity .35s,transform .35s; }
 .browser-figure .no-clocks .clock-strip { opacity:0; transform:translateY(10px); pointer-events:none; }
 .browser-figure .is-solo .pano-hud,.browser-figure .is-solo .pano-title,.browser-figure .is-solo .chain-head { display:none; }
-.browser-figure .is-solo .pano-side { top:50%; }
+.browser-figure .is-solo .pano-side { top:var(--mid,50%); }
 .browser-figure .is-solo .pano-side.is-prev { left:calc((var(--egut) - 44px) / 2); } .browser-figure .is-solo .pano-side.is-next { right:calc((var(--egut) - 44px) / 2); }
 .pano-say { --soft:color-mix(in srgb,var(--stage-ink) 58%,var(--stage)); min-width:0; color:var(--stage-ink); }
 .pano-say-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
@@ -1247,10 +1251,10 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .vp-part { height:100%; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2.1fr); grid-template-rows:minmax(0,1fr); align-items:center; gap:0 var(--colgap); }
 /* Turning: a round button at each side in a margin of its own (--gut, wider than the button), so it never lies on the
    picture, and one named tab per step underneath. A stacked frame moves the pair to the ends of the tab row (.vp-step). */
-.vp-arrow { position:absolute; top:50%; z-index:2; display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid color-mix(in srgb,var(--stage-ink) 42%,transparent); border-radius:50%; background:var(--stage); color:var(--stage-ink); cursor:pointer; transform:translateY(-50%); transition:background .2s,color .2s,border-color .2s; }
+.vp-arrow { position:absolute; top:var(--mid,50%); z-index:2; display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid color-mix(in srgb,var(--stage-ink) 42%,transparent); border-radius:50%; background:var(--stage); color:var(--stage-ink); cursor:pointer; transform:translateY(-50%); transition:background .2s,color .2s,border-color .2s; }
 .vp-arrow svg,.vp-step svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
 .vp-arrow:hover,.vp-arrow:focus-visible,.vp-step:hover,.vp-step:focus-visible { background:var(--stage-ink); border-color:var(--stage-ink); color:var(--stage); }
-.vp-arrow.is-prev { left:0; } .vp-arrow.is-next { right:0; }
+.vp-arrow.is-prev { left:calc((var(--gut) - 44px) / 2); } .vp-arrow.is-next { right:calc((var(--gut) - 44px) / 2); }
 .vp-foot { min-width:0; display:grid; grid-template-columns:minmax(0,1fr); align-items:center; gap:10px; }
 .vp-step { display:none; place-items:center; width:34px; height:34px; padding:0; border:1px solid color-mix(in srgb,var(--stage-ink) 42%,transparent); border-radius:50%; background:var(--stage); color:var(--stage-ink); cursor:pointer; transition:background .2s,color .2s,border-color .2s; }
 .vp-step svg { width:18px; height:18px; }
@@ -1601,15 +1605,22 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .vp-side > .vp-chart { width:auto; height:100%; max-width:100%; max-height:none; }
 }
 @container (max-width:560px) { .vp-more { columns:auto; } }
+/* Every large screen turns from the sides of the picture, half way down; only a phone turns from a bar at its foot. */
+@media (max-aspect-ratio:5/4) and (min-width:681px) {
+  .vp { --gut:clamp(60px,5cqw,76px); --pic-w:calc(100cqw - 2 * var(--gut)); }
+  .vp-stage { padding-inline:var(--gut); }
+  .vp-arrow { display:grid; }
+  .vp-step { display:none; }
+  .vp-foot { grid-template-columns:minmax(0,1fr); }
+  .browser-figure .is-solo .pano-wrap { padding-inline:var(--egut); }
+  .browser-figure .is-solo .pano-side { display:grid; }
+  .browser-figure .chain-step { display:none; }
+}
 /* A short wide window (a 16:9 laptop under the browser's bars, about 1440 × 670): the picture takes the room the
-   turning buttons and the head gave. The buttons go to the ends of the tab row, as in a stacked frame; the words keep
-   their column and the picture widens. */
+   head gave. The turning buttons keep the sides, half way down, as on every large screen; the words keep their column
+   and the picture widens. */
 @media (max-height:800px) and (min-aspect-ratio:5/4) and (min-width:681px) {
-  .vp { --gut:0px; --pic-w:calc((100cqw - var(--colgap)) * 2.5 / 3.5); }
-  .vp-stage { padding-inline:0; }
-  .vp-arrow { display:none; }
-  .vp-foot { grid-template-columns:auto minmax(0,1fr) auto; }
-  .vp-step { display:grid; }
+  .vp { --pic-w:calc((100cqw - 2 * var(--gut) - var(--colgap)) * 2.5 / 3.5); }
   .vp-part { grid-template-columns:minmax(0,1fr) minmax(0,2.5fr); }
   .browser-scenes>article { gap:10px; padding-top:14px; padding-bottom:10px; }
   .stage-context { margin-top:4px; font-size:clamp(13px,1.05vw,16px); }
@@ -1758,24 +1769,33 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* Narrow figures stack their columns. */
 @container (max-width:900px) {
 }
-/* A phone lets the step frame take its own height and the scene scroll: the tab row with its buttons first, where it
-   stays put while the steps change, then the picture at its own shape, then the words. */
+/* A phone lets the step frame take its own height and the scene scroll: the picture at its own shape, then the words,
+   and the tab row with its buttons in a bar held at the foot of the screen, the same place on every screen. */
 @media (max-width:680px) {
-  .browser-scenes>article:has(.vp) { grid-template-rows:auto auto; }
-  .browser-figure:has(> .vp) { container-type:inline-size; }
-  .vp { height:auto; container-type:inline-size; display:flex; flex-direction:column; gap:12px; }
-  .vp-foot { order:-1; }
-  .vp-nav { display:flex; overflow-x:auto; scrollbar-width:none; overscroll-behavior-x:contain; }
+  .browser-scenes>article:has(.vp) { grid-template-rows:auto minmax(0,1fr); }
+  .browser-figure:has(> .vp) { container-type:inline-size; display:flex; flex-direction:column; }
+  .vp { flex:1 0 auto; height:auto; container-type:inline-size; display:flex; flex-direction:column; gap:12px; }
+  .vp-foot { order:1; position:sticky; bottom:0; z-index:6; margin-top:auto; padding:8px 0 calc(10px + env(safe-area-inset-bottom)); align-items:center; background:var(--stage); box-shadow:0 -1px 0 color-mix(in srgb,var(--stage-ink) 14%,var(--stage)); }
+  /* The tab row is the engine's bar of stages: one short rule per step, the open one in ink, no words. */
+  .vp-nav { display:flex; gap:5px; }
   .vp-nav[data-groups] { padding-top:0; } .vp-tab-group { display:none; }
-  .vp-nav::-webkit-scrollbar { display:none; }
-  .vp-nav li { flex:none; }
-  .vp-nav button { padding-right:12px; }
+  .vp-nav li { flex:1 1 0; min-width:0; }
+  .vp-nav button,.vp-nav[data-ledger] button { display:block; padding:7px 0; border:0; }
+  .vp-nav button>* { display:none; }
+  .vp-nav button::before { content:""; display:block; height:3px; background:var(--line); transition:background .3s; }
+  .vp-nav button[aria-current]::before { background:var(--ink); }
   .vp-part { height:auto; display:flex; flex-direction:column; gap:14px; }
   .vp-picture,.vp-picture[data-wide] { order:-1; grid-template-columns:minmax(0,1fr); grid-template-rows:auto; gap:12px; }
   .vp-photo { width:min(100%, calc(300px * var(--r))); height:auto; justify-self:center; }
   .vp-side { max-height:none; }
   .vp-picture[data-wide] .vp-side:has(> .vp-chart) { height:auto; }
   .vp-side > .vp-chart { width:100%; height:auto; max-height:none; }
+}
+/* The engine's bar of stages stands where the other screens keep their tab row: held at the foot of a phone. */
+@media (max-width:680px) {
+  .browser-scenes>article { padding-bottom:0; }
+  .browser-figure .chain-nav { position:sticky; bottom:0; z-index:6; margin-top:auto; padding:8px 0 calc(10px + env(safe-area-inset-bottom)); align-items:center; background:var(--stage); box-shadow:0 -1px 0 color-mix(in srgb,var(--stage-ink) 14%,var(--stage)); }
+  .browser-figure .chain-step { background:var(--stage); color:var(--stage-ink); }
 }
 
 /* A project detail (src/components/detail-view.tsx): the text in one column, and beside it the small picture of the
@@ -1994,7 +2014,20 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv-unit[data-open] .dv-unit-arrow { rotate:225deg; translate:0 2px; }
 .dv-unit-head:hover .dv-unit-arrow { border-color:var(--ink); }
 .dv-unit-head:hover .dv-unit-title { text-decoration:underline; text-decoration-thickness:1.5px; text-underline-offset:4px; }
-.dv-unit-in { padding:0 0 30px; }
+/* An open unit lifts off its section: the section's other colour, its own frame, its head kept in sight while it is
+   read, and a row at its end that folds it. The units still shut stay rows on the section. */
+.dv-unit { --open-bg:var(--paper); }
+.dv-main>section:nth-of-type(odd) .dv-unit { --open-bg:var(--tint); }
+.dv-unit[data-open] { --wash:var(--tint); margin:14px calc(-1 * var(--open-pad)) 22px; padding:0 var(--open-pad); border-top:3px solid var(--ink); background:var(--open-bg); box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 16%,transparent); }
+.dv-main>section:nth-of-type(odd) .dv-unit[data-open] { --wash:var(--paper); }
+.dv-unit[data-open]+.dv-unit { border-top-width:2px; }
+.dv-unit[data-open]:last-child { border-bottom:0; }
+.dv-unit[data-open]>.dv-unit-head { position:sticky; top:var(--stick,0px); z-index:1; background:var(--open-bg); box-shadow:0 1px 0 var(--line); }
+.dv-main { --open-pad:16px; }
+.dv-unit-in { padding:0 0 4px; }
+.dv-unit-fold { display:flex; justify-content:center; align-items:center; gap:8px; width:100%; margin-top:30px; padding:12px 0 14px; border:0; border-top:1px solid var(--line); background:none; color:var(--ink-2); font-size:12px; font-weight:800; cursor:pointer; }
+.dv-unit-fold i { width:8px; height:8px; border:solid currentColor; border-width:1.5px 0 0 1.5px; rotate:45deg; translate:0 2px; }
+.dv-unit-fold:hover { color:var(--ink); }
 .dv-unit-note { font-size:12px; line-height:1.6; color:var(--ink-2); }
 .dv-unit-in>.dv-reach { margin-top:14px; }
 .dv-unit-in>.dv-arc { margin-top:18px; }
@@ -2062,6 +2095,9 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .dv .drawer-sub { margin-top:0; }
 /* Beside the text: the picture, where the reader is in it, and the steps. It stays while the text moves. */
 .dv-rail { position:sticky; top:0; z-index:2; display:grid; gap:14px; padding:20px 0 12px; background:var(--paper); }
+/* The way back in the place bar shows only where that bar runs across the top; the head's then goes. */
+.dv-rail .dv-back { display:none; }
+.project-browser[data-across] .drawer-h>.drawer-close { display:none; }
 .dv-where { display:grid; gap:1px; min-height:38px; font-size:12px; line-height:1.45; }
 .dv-where span { font-weight:700; color:var(--ink-3); } .dv-where b { font-size:14px; font-weight:900; }
 .dv-where i,.dv-from i { margin-right:.5em; font-style:normal; }
@@ -2079,42 +2115,42 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 /* The small pictures (src/components/detail-symbols.tsx): one thin stroke that keeps its width, four tones of ink. */
 .sy { --hi:var(--ink); --edge:color-mix(in srgb,var(--ink) 58%,var(--paper)); --mid:color-mix(in srgb,var(--ink) 32%,var(--paper)); --lo:color-mix(in srgb,var(--ink) 15%,var(--paper)); display:block; width:100%; height:auto; overflow:visible; }
 .sy :where(path,line,circle,ellipse,polygon,polyline,rect) { fill:none; stroke:var(--mid); stroke-width:.9; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; }
-.sy .plate { fill:var(--paper); } .sy .edge { stroke:var(--edge); } .sy .lo { stroke:var(--lo); } .sy .hi { stroke:var(--hi); stroke-width:1.3; }
+.sy .edge { stroke:var(--edge); }
 .sy text { fill:var(--mid); font-size:8.5px; font-weight:700; font-variant-numeric:tabular-nums; }
 .sy .pt { fill:var(--mid); stroke:none; } .sy .pt.on { fill:var(--hi); }
-.sy .node { fill:var(--paper); stroke:var(--edge); } .sy .node.on { fill:var(--hi); stroke:var(--hi); }
 .sy .hit { fill:transparent; stroke:none; pointer-events:all; }
 .sy-stage { cursor:pointer; } .sy-stage .dot { fill:var(--paper); stroke:var(--edge); }
 .sy-stage.is-hover .dot { stroke:var(--hi); } .sy-stage.is-hover text { fill:var(--hi); }
 .sy-stage.is-lit .dot { fill:var(--hi); stroke:var(--hi); } .sy-stage.is-lit text { fill:var(--hi); font-weight:900; }
 .sy-stage.is-empty { cursor:default; } .sy-stage.is-empty .dot { stroke:var(--lo); stroke-dasharray:1.5 2; } .sy-stage.is-empty text { fill:var(--lo); }
 .sy .sy-act { fill:var(--hi); font-size:12px; font-weight:900; letter-spacing:-.02em; }
-.sy .paper { fill:#fff; stroke:none; } .sy .stop { fill:color-mix(in srgb,#0b0b0b 9%,transparent); stroke:none; } .sy .stop.on { fill:color-mix(in srgb,#0b0b0b 28%,transparent); }
-.sy .gap { stroke-dasharray:2 2; }
-.sy-cell { cursor:pointer; } .sy-cell-in { opacity:.4; } .sy-cell-in image { filter:grayscale(1); }
-.sy-cell.is-hover .sy-cell-in { opacity:.8; } .sy-cell.is-lit .sy-cell-in { opacity:1; } .sy-cell.is-lit .sy-cell-in image { filter:none; }
-.sy-cell .frame { stroke:var(--lo); } .sy-cell.is-hover .frame { stroke:var(--edge); } .sy-cell.is-lit .frame { stroke:var(--hi); stroke-width:1.4; }
-.sy-cell .tag { fill:var(--paper); stroke:none; } .sy-cell text { font-size:7.5px; } .sy-cell.is-lit text { fill:var(--hi); font-weight:900; }
-.sy-cell .mark { fill:var(--hi); stroke:none; }
 .sy-parts { display:grid; gap:2px; }
 .sy-parts a { text-decoration:none; display:grid; grid-template-columns:92px minmax(0,1fr); align-items:center; gap:14px; padding:6px 8px 6px 0; border-left:2px solid var(--line); padding-left:10px; font-size:12px; font-weight:600; line-height:1.4; color:var(--ink-2); }
 .sy-parts a:hover { border-color:var(--ink-3); color:var(--ink); }
 .sy-parts li[data-on] a { border-color:var(--ink); color:var(--ink); font-weight:900; }
 .sy-mini svg { display:block; width:100%; height:auto; }
+/* The parts' marks: strokes in the picture's units, so they thicken with it. */
+.sy-mark { --hi:var(--ink); --edge:color-mix(in srgb,var(--ink) 62%,var(--paper)); --mid:color-mix(in srgb,var(--ink) 36%,var(--paper)); --lo:color-mix(in srgb,var(--ink) 16%,var(--paper)); display:block; width:100%; height:auto; overflow:visible; }
+.sy-mark :where(path,line,circle,ellipse,polygon,polyline,rect) { fill:none; stroke:var(--mid); stroke-linecap:round; stroke-linejoin:round; }
+.sy-mark .hi { stroke:var(--hi); } .sy-mark .edge { stroke:var(--edge); } .sy-mark .lo { stroke:var(--lo); } .sy-mark .bar { stroke-linecap:butt; }
+.sy-mark .plate { fill:var(--paper); } .sy-mark .fill { fill:var(--mid); stroke:none; } .sy-mark .fill-hi { fill:var(--hi); stroke:none; }
 /* A short pane keeps the picture; the list of steps goes. */
 @media (max-height:660px) { .dv-steps { display:none; } }
 /* A narrow pane: the picture and the place become a bar across the top, and the text takes the width. */
 @container detail (max-width:820px) {
-  .dv-in { --bar:92px; grid-template-columns:minmax(0,1fr); }
-  .dv-rail { grid-template-columns:104px minmax(0,1fr); align-items:center; gap:0 14px; margin-bottom:18px; padding:10px 0 8px; border-bottom:1px solid var(--line); }
+  .dv-in { --bar:92px; --stick:var(--bar); grid-template-columns:minmax(0,1fr); }
+  .dv-rail { --across:1; grid-template-columns:104px minmax(0,1fr) auto; align-items:center; gap:0 14px; margin-bottom:18px; padding:10px 0 8px; border-bottom:1px solid var(--line); }
   .dv-main { padding-top:0; }
   .sy-parts { display:none; }
+  /* The ring's mark for the step the home was on goes: the line that names it is not shown here. */
+  .dv-symbol .sy-stage>.entry { display:none; }
   .dv-steps,.dv-from { display:none; }
+  .dv-rail .dv-back { display:flex; }
   .dv-main { max-width:none; }
 }
 @container detail (max-width:560px) {
-  .dv-in { --bar:78px; }
-  .dv-rail { grid-template-columns:76px minmax(0,1fr); gap:0 10px; }
+  .dv-in { --bar:78px; --stick:var(--bar); }
+  .dv-rail { grid-template-columns:76px minmax(0,1fr) auto; gap:0 10px; }
   .dv-where b { font-size:13px; }
   .dv-main { font-size:14.5px; }
   .dv-rows>div,.dv-stack li { grid-template-columns:minmax(0,1fr); gap:2px; }
@@ -2122,7 +2158,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .dv-refs li { display:grid; justify-items:start; }
   .dv-bar-l { flex-wrap:wrap; gap:2px 12px; } .dv-card[data-core] .dv-lead { font-size:18px; }
   .dv-sentence { font-size:17px; } .dv-lead { font-size:16.5px; }
-  .dv-h,.dv .drawer-sub { font-size:19px; } .dv-main>section { padding:16px 14px 28px; } .dv-main>section+section { margin-top:32px; }
+  .dv-h,.dv .drawer-sub { font-size:19px; } .dv-main>section { padding:16px 14px 28px; } .dv-main { --open-pad:10px; } .dv-main>section+section { margin-top:32px; }
   .dv-metric ul[data-many] { grid-template-columns:minmax(0,1fr); }
 }
 /* Too narrow for five columns: the steps go down the page, each bar beside its words. */
@@ -2132,4 +2168,60 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .dv-flow li p { grid-row:1 / span 2; align-self:start; margin:0; }
   .dv-flow li b { align-self:center; min-height:var(--tab); display:grid; align-items:center; }
   .dv-flow li+li::before { content:"↓"; left:0; top:-24px; width:84px; height:24px; line-height:24px; }
+}
+
+/* The app bar at every other width, where something rides (data-ride, set by the script: the site's rail is a strip
+   over the scene, or the detail's place bar runs across its top). An open detail's head lies over the top of its text
+   and its foot over the bottom, the head carrying the pane's top margin; both move with the bar (--bar-shift,
+   --bar-hide) while the text keeps its full height. Where nothing rides the pane is laid out as it always was. */
+@media (min-width:681px) {
+  .project-browser[data-ride] .browser-main .drawer-inline { --pane-t:clamp(14px,2.6vh,26px); --pane-x:clamp(20px,2.2vw,36px); padding:0 var(--pane-x); }
+  .project-browser[data-ride] .drawer-inline>.drawer-h { position:absolute; left:var(--pane-x); right:var(--pane-x); top:var(--side-h,0px); z-index:15; padding-top:var(--pane-t); background:var(--paper); translate:0 var(--bar-shift,0px); }
+  .project-browser[data-ride] .drawer-inline>.drawer-body { height:100%; padding-top:calc(var(--side-h,0px) + var(--head-h,0px) + 20px); padding-bottom:calc(var(--foot-h,0px) + 40px); }
+  .project-browser[data-ride] .drawer-inline>.drawer-body:has(>.dv) { padding-top:calc(var(--side-h,0px) + var(--head-h,0px)); }
+  .project-browser[data-ride] .drawer-inline>.drawer-f { position:absolute; left:var(--pane-x); right:var(--pane-x); bottom:0; z-index:15; padding-bottom:12px; background:var(--paper); translate:0 calc(var(--bar-hide,0) * 100%); }
+  .project-browser[data-snap] .drawer-inline>.drawer-h,.project-browser[data-snap] .drawer-inline>.drawer-f { transition:translate .2s ease-out; }
+  /* What sticks in the text counts from the inside of its top padding, so it moves by the shift alone; a jump to a
+     part counts from the top of the pane and stops under the head (and under the place bar where that runs across). */
+  .project-browser[data-ride] .dv-rail { top:var(--bar-shift,0px); }
+  .project-browser[data-ride] .dv-in { --bar:calc(var(--side-h,0px) + var(--head-h,0px) + 10px); --stick:var(--bar-shift,0px); }
+  @container detail (max-width:820px) {
+    .project-browser[data-ride] .dv-in { --bar:calc(var(--side-h,0px) + var(--head-h,0px) + var(--rail-h,92px)); --stick:calc(var(--bar-shift,0px) + var(--rail-h,92px)); }
+  }
+}
+/* A tall window: the strip lies over the scene as a phone's bar does and slides up under its first row (the name,
+   the resources, the contact), which stays. Unmoved, it looks as it did; until the script has measured it, it keeps
+   its own row, so nothing moves when the page loads. */
+@media (max-aspect-ratio:5/4) and (min-width:681px) {
+  .project-browser[data-bar] { grid-template-rows:minmax(0,1fr); }
+  .project-browser[data-bar]>.browser-side { grid-row:1; grid-column:1; align-self:start; position:relative; z-index:20; overflow:visible; background:var(--paper); translate:0 var(--bar-shift,0px); }
+  .project-browser[data-bar]>.browser-main { grid-row:1; grid-column:1; padding-top:var(--side-h,0px); }
+  .project-browser>.browser-side::before { content:""; position:absolute; left:0; right:0; top:0; z-index:1; height:calc(var(--keep-row,0px) + min(var(--keep-pad,0px), -1 * var(--bar-shift,0px))); background:var(--paper); translate:0 calc(-1 * var(--bar-shift,0px)); }
+  .project-browser>.browser-side>:is(.browser-resources,.browser-contact),.project-browser>.browser-side>.browser-identity :is(h1,p,.icon-button) { position:relative; z-index:2; translate:0 calc(-1 * var(--bar-shift,0px)); }
+  .project-browser[data-collapsed]>.browser-side::before { box-shadow:0 1px 0 var(--line); }
+  .project-browser[data-snap]>.browser-side,.project-browser[data-snap]>.browser-side::before,.project-browser[data-snap]>.browser-side>*,.project-browser[data-snap]>.browser-side>.browser-identity :is(h1,p,.icon-button) { transition:translate .2s ease-out; }
+}
+
+/* A phone's app bar: the rail lies over the scene and slides away as the text is read down, back as it is read up
+   (--bar-shift, set by the script; --bar-hide is the same as a fraction). An open detail's head rides with it and its
+   foot slides down out of the way; the text area keeps its full height and only the bars move. */
+@media (max-width:680px) {
+  .project-browser { grid-template-rows:minmax(0,1fr); }
+  .project-browser>.browser-side { grid-row:1; grid-column:1; align-self:start; position:relative; z-index:20; overflow:visible; background:var(--paper); box-shadow:0 1px 0 var(--line); translate:0 var(--bar-shift,0px); }
+  .project-browser>.browser-main { grid-row:1; grid-column:1; padding-top:var(--side-h,0px); }
+  /* The name row stays: the rest of the bar slides up under it. */
+  .project-browser>.browser-side>.browser-identity { position:relative; z-index:2; margin:-10px -12px -6px; padding:10px 12px 6px; background:var(--paper); translate:0 calc(-1 * var(--bar-shift,0px)); }
+  .project-browser>.browser-side>.browser-identity::after { content:""; position:absolute; left:0; right:0; top:100%; height:min(var(--keep-pad,0px), -1 * var(--bar-shift,0px)); background:var(--paper); }
+  .project-browser[data-collapsed]>.browser-side>.browser-identity::after { box-shadow:0 1px 0 var(--line); }
+  .project-browser[data-snap]>.browser-side>.browser-identity,.project-browser[data-snap]>.browser-side,.project-browser[data-snap] .drawer-inline>.drawer-h,.project-browser[data-snap] .drawer-inline>.drawer-f { transition:translate .2s ease-out; }
+  .project-browser .browser-main .drawer-inline { padding:0; }
+  .project-browser .drawer-inline>.drawer-h { position:absolute; left:0; right:0; top:var(--side-h,0px); z-index:15; padding:10px 12px; background:var(--paper); translate:0 var(--bar-shift,0px); }
+  .project-browser .drawer-inline>.drawer-body,.project-browser .drawer-inline>.drawer-body:has(>.dv) { height:100%; padding:calc(var(--side-h,0px) + var(--head-h,0px) + 14px) 12px calc(var(--foot-h,0px) + 24px); }
+  .project-browser .drawer-inline>.drawer-body:has(>.dv) { padding-top:calc(var(--side-h,0px) + var(--head-h,0px)); }
+  .project-browser .drawer-inline>.drawer-f { position:absolute; left:0; right:0; bottom:0; z-index:15; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:var(--paper); translate:0 calc(var(--bar-hide,0) * 100%); }
+  /* The detail's own place bar sticks under the app bar. A sticky offset counts from the inside of the text's top
+     padding, which the app bar covers, so it moves by the bar's shift alone (--stick); a jump to a part counts from
+     the top of the screen and stops under all three (--bar). */
+  .project-browser .dv-rail { top:var(--bar-shift,0px); }
+  .project-browser .dv-in { --bar:calc(var(--side-h,0px) + var(--head-h,0px) + var(--rail-h,78px)); --stick:calc(var(--bar-shift,0px) + var(--rail-h,78px)); }
 }

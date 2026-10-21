@@ -7,16 +7,17 @@ import { BUILD_MS, DIVE_MS, ProductAssembly, type AssemblyPart, type Dive, type 
 // does and leading to its screen. A reader who arrives at the root of the site sees this first, while the engine's 3D
 // is fetched behind it. When the parts are together the picture dives into the engine's ring until it lies on the ring
 // the engine's screen opens on, and the two screens cross-fade there; a link to the engine from this screen goes the
-// same way. Reaching for anything keeps this screen where it is, as does a reduced-motion setting, and the product's
-// name in the list always brings it back to stay.
+// same way. It moves on by itself unless the reader goes somewhere else first; a pointer resting on it, a wheel or a
+// touch does not hold it. A reduced-motion setting keeps it, and the product's name in the list always brings it back
+// to stay.
 export type ProductPart = AssemblyPart;
-const STAY_MS = BUILD_MS + 400, CROSS_MS = 800, WAIT_MS = 1600, SETTLE_MS = 200;
+const STAY_MS = BUILD_MS + 3000, CROSS_MS = 800, WAIT_MS = 1600, SETTLE_MS = 200;
 const still = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // The styles that lay the engine's screen unseen over this one while it draws.
 const OVER = ["position", "left", "top", "width", "height", "opacity", "pointer-events", "z-index", "transition"];
 
 export function ProductLanding({ engine, model, app, pipeline, score }: { engine: ProductPart; model: ProductPart; app: ProductPart; pipeline: ProductPart; score: string }) {
-  const root = useRef<HTMLDivElement>(null), keep = useRef<() => void>(() => {}), going = useRef(false), steps = useRef<number[]>([]), undo = useRef<() => void>(() => {});
+  const root = useRef<HTMLDivElement>(null), going = useRef(false), steps = useRef<number[]>([]), undo = useRef<() => void>(() => {});
   const [leaving, setLeaving] = useState(false), [dive, setDive] = useState<Dive | null>(null);
 
   // To the engine's screen: lay it out unseen over this one so its 3D draws the ring where it will stand, read where
@@ -65,11 +66,11 @@ export function ProductLanding({ engine, model, app, pipeline, score }: { engine
     // Only a first arrival at the root moves on by itself: an address that names a screen is shown as asked.
     if (location.hash || !root.current?.offsetParent || still()) return;
     let timer = 0, kept = false;
-    const signs = ["pointerdown", "keydown", "wheel", "touchstart", "hashchange", "portfolio:navigate"];
+    // Only going somewhere else holds it: a link, the list, the address.
+    const signs = ["hashchange", "portfolio:navigate"];
     const release = () => { for (const sign of signs) window.removeEventListener(sign, stay); };
     const stay = () => { kept = true; window.clearTimeout(timer); release(); setLeaving(false); };
-    for (const sign of signs) window.addEventListener(sign, stay, { passive: true });
-    keep.current = stay;
+    for (const sign of signs) window.addEventListener(sign, stay);
     // The engine's 3D is the large download of the site; it is fetched while this screen is read.
     const fetched = import("@/components/signal-chain-3d").then(() => undefined, () => undefined);
     setLeaving(true);
@@ -90,7 +91,7 @@ export function ProductLanding({ engine, model, app, pipeline, score }: { engine
   return <div className="pm" ref={root}>
     <ProductAssembly score={score} parts={{ engine, model, app, pipeline }} dive={dive}
       label={`${pipeline.name}이 조판한 악보에서 음표가 빛이 되어 ${app.name}의 휴대폰 안으로 날아들고, 가수의 목소리가 음높이 곡선으로 들어와 ${model.name}의 음높이 분포를 밝히며, 그 위에서 ${engine.name}의 빛점 고리가 선율에 맞춰 뛴다.`}>
-      {(kind, item) => <a className="pm-part" href={`#${item.id}`} onClick={kind === "engine" ? toEngine : undefined} onPointerEnter={() => keep.current()} onFocus={() => keep.current()}>
+      {(kind, item) => <a className="pm-part" href={`#${item.id}`} onClick={kind === "engine" ? toEngine : undefined}>
         <span className="pm-name"><i className="num">{item.no}</i><b>{item.name}</b>{kind === "engine" && <em>핵심 솔루션</em>}</span>
         {/* The line breaks only between its items, each keeping the dot that follows it. */}
         <span className="pm-line">{item.line.split(" · ").flatMap((piece, i, all) => [i > 0 ? " " : null, <span key={piece}>{piece}{i < all.length - 1 && " ·"}</span>])}</span>

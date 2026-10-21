@@ -55,7 +55,7 @@ export default function HomePage() {
     vqa: <VqaParts project={home("vqa")} photos={{ sign: sitePath("/images/vqa-question-sign.jpg"), vote: sitePath("/images/vqa-vote-sign.jpg"), clock: sitePath("/images/vqa-clock-street.jpg") }} gain={metrics.vqa.checks.confirmed[0]} />,
   };
   // What the small pictures in a detail are drawn from: the pipeline's engraving and the contest's photos.
-  const assets = { base: sitePath("/").replace(/\/$/, ""), score: sitePath("/images/pipeline-debussy-p1.svg"), sign: sitePath("/images/vqa-question-sign.jpg"), vote: sitePath("/images/vqa-vote-sign.jpg"), clock: sitePath("/images/vqa-clock-street.jpg") };
+  const assets = { base: sitePath("/").replace(/\/$/, ""), sign: sitePath("/images/vqa-question-sign.jpg") };
   // The pictures at the head of an opened unit of work, by part and unit.
   const unitPictures: Record<string, Record<string, ReactNode>> = { engine: { "engine-unit-future": <FutureReach window={contracts.engine.window} /> } };
   // The pictures under a card's line, by part and card.

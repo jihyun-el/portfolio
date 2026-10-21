@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 export type DrawerPanel = { key: string; group: string; kicker: string; title: string; body: ReactNode };
+// The way back from an inline pane, for a part of its body that carries its own button (a detail's place bar, where
+// that bar is what stays on screen).
+export const DrawerBack = createContext<(() => void) | null>(null);
 
 // With `inline`, project and writing details slide into the home's right pane.
 // Closing reveals the selected overview again. The key lives in the URL hash
@@ -113,7 +116,8 @@ export function DrawerHost({ panels, basePath, routes, inline = false }: { panel
   useEffect(() => {
     if (!openKey) return;
     if (!inline) document.documentElement.classList.add("drawer-open");
-    closeRef.current?.focus({ preventScroll: true });
+    // The way back that is on screen: the head's, or the place bar's where that one holds it.
+    [closeRef.current, bodyRef.current?.querySelector<HTMLElement>(".dv-back")].find((button) => button?.offsetParent)?.focus({ preventScroll: true });
     const body = bodyRef.current;
     if (body) body.scrollTop = 0;
     // A unit's record shows one step at a time; the event lets it bring the linked step forward first.
@@ -154,7 +158,7 @@ export function DrawerHost({ panels, basePath, routes, inline = false }: { panel
         <div><p className="drawer-kicker">{panel.kicker}</p><h2 id="drawer-title">{panel.title}</h2></div>
         <button ref={closeRef} type="button" className="drawer-close" onClick={close}>{inline ? "← 돌아가기" : <>닫기 <span aria-hidden="true">✕</span></>}</button>
       </header>
-      <div className="drawer-body" ref={bodyRef}>{panel.body}</div>
+      <div className="drawer-body" ref={bodyRef}><DrawerBack.Provider value={inline ? close : null}>{panel.body}</DrawerBack.Provider></div>
       {siblings.length > 1 && <footer className="drawer-f">
         {prev ? <button type="button" onClick={() => open(prev.key, null)}>← {prev.title}</button> : <span />}
         {next ? <button type="button" onClick={() => open(next.key, null)}>{next.title} →</button> : <span />}

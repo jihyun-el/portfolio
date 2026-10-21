@@ -25,7 +25,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const whole = getDetail(project.parts?.length ? project.id : views[0].id);
   const parts = (project.parts ?? []).map((part) => ({ part, detail: getDetail(part.id), view: views.find((item) => item.part === part.id)!, key: `${id}/${part.id}` }));
   const base = sitePath("/").replace(/\/$/, "");
-  const assets = { base, score: sitePath("/images/pipeline-debussy-p1.svg"), sign: sitePath("/images/vqa-question-sign.jpg"), vote: sitePath("/images/vqa-vote-sign.jpg"), clock: sitePath("/images/vqa-clock-street.jpg") };
+  const assets = { base, sign: sitePath("/images/vqa-question-sign.jpg") };
   // Where each fragment of this address lives on the home: nothing named is the project's scene, a part its detail,
   // a card or a step the detail that holds it.
   const places: Record<string, string> = { "": id, commits: "commits" };

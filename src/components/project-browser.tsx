@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type ReactNode, type MouseEvent } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SceneShown } from "@/lib/scene-shown";
 
 // `title` is the scene's largest line: what the unit achieved or the problem it answers, not its name.
 // The line above it is the problem it answers when `contextLabel` says so. The name stays in the list. `also` lists the other addresses that show this scene, such as the details
@@ -28,6 +29,8 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
   mini: { count: number; grid: ReactNode }; stackCount: number; details: ReactNode;
 }) {
   const [selected, setSelected] = useState(projects[0].id);
+  const root = useRef<HTMLElement>(null);
+  useAppBar(root);
   useEffect(() => {
     const sync = () => {
       const hash = decodeURIComponent(location.hash.slice(1));
@@ -64,7 +67,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
       {projects.filter((item) => item.group === group.id && !item.head).map(choice)}
     </div>];
   });
-  return <section className="wrap project-browser" id="about" aria-label="소개와 대표 프로젝트">
+  return <section className="wrap project-browser" id="about" ref={root} aria-label="소개와 대표 프로젝트">
     <noscript><style>{"html:has(.project-browser){overflow:auto}.project-browser{height:auto}.browser-scenes>article[hidden]{display:grid!important}.browser-scenes>article{min-height:700px;margin-bottom:40px}.browser-main{overflow:visible}"}</style></noscript>
     <aside className="browser-side">
       <div className="browser-identity"><div className="browser-id-row"><h1>{name}</h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p></div>
@@ -90,7 +93,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
           {project.stats.length > 0 && <ul className="stage-stats">{project.stats.map((item) => <li key={item.label}><b className="num">{item.value}{item.unit && <small>{item.unit}</small>}</b><span>{item.label}</span></li>)}</ul>}
           <div className="stage-actions">{project.actions}</div>
         </header>
-        <div className="browser-figure stage-figure">{project.figure}</div>
+        <div className="browser-figure stage-figure"><SceneShown.Provider value={selected === project.id}>{project.figure}</SceneShown.Provider></div>
       </article>)}
       <article className="stage stage-mini" id="featured-mini" hidden={selected !== "mini"} aria-labelledby="featured-title-mini">
         <header className="stage-head" id="mini"><p className="stage-kicker num"><b>{no(numbered.length)}</b><span>{mini.count}개 프로젝트</span></p><h2 className="stage-title" id="featured-title-mini">미니 프로젝트</h2></header>
@@ -100,4 +103,76 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
       {details}
     </div>
   </section>;
+}
+
+// An app bar for every layout. The name row and the way back always stay on screen; what slides away depends on
+// which of the two rails has moved to the top. Where the site's rail lies over the scene (a phone, or a tall window
+// where it folds into a strip), its rows under the name slide away. Where a detail is narrow enough that its place
+// bar runs across the top, the detail's head slides away as well, and that bar, which then holds the way back, stays
+// under the name. Where both rails stand at the side nothing moves. Scrolling down slides them by as much as the
+// text moved, scrolling up brings them back, and a stop settles them all the way out or in; the detail's foot slides
+// down out of the way with them. The text area keeps its size throughout; only the bars move. A new screen or detail
+// shows them again.
+const PHONE = "(max-width:680px)", OVER = `${PHONE}, (max-aspect-ratio:5/4)`;
+function useAppBar(ref: { current: HTMLElement | null }) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const phone = window.matchMedia(PHONE), over = window.matchMedia(OVER), last = new WeakMap<Element, number>();
+    let shift = 0, total = 0, settle = 0, down = false;
+    const px = (name: string, value: number) => el.style.setProperty(name, `${Math.round(value)}px`);
+    const flag = (name: string, on: boolean) => { if (on) el.dataset[name] = ""; else delete el.dataset[name]; };
+    const apply = () => { if (shift < 0) el.dataset.collapsed = ""; else delete el.dataset.collapsed; px("--bar-shift", shift); el.style.setProperty("--bar-hide", total ? (-shift / total).toFixed(3) : "0"); };
+    const measure = () => {
+      const pane = el.querySelector<HTMLElement>(".drawer-inline:not(.is-leaving)");
+      const bar = el.querySelector<HTMLElement>(".browser-side"), name = bar?.querySelector<HTMLElement>(".browser-identity");
+      // What stays: on a phone the name row; in a strip its whole first row (the name, the resources, the contact),
+      // which ends where the list starts. Folded, it gets as much room under it as it has above (`pad`), which opens
+      // only as the rest slides away, so the unfolded bar keeps its size.
+      const list = bar?.querySelector<HTMLElement>(".browser-choices"), style = bar ? getComputedStyle(bar) : null;
+      const side = over.matches ? bar?.offsetHeight ?? 0 : 0, head = pane?.querySelector<HTMLElement>(".drawer-h")?.offsetHeight ?? 0;
+      let row = 0, pad = 0;
+      if (over.matches && name && style) {
+        if (phone.matches || !list) { const own = getComputedStyle(name); row = name.offsetTop + name.offsetHeight; pad = Math.max(0, parseFloat(own.paddingTop) - parseFloat(own.paddingBottom)); }
+        else { row = list.offsetTop - (parseFloat(style.rowGap) || 0); pad = parseFloat(style.paddingTop) || 0; }
+      }
+      const keep = row + pad;
+      px("--side-h", side); px("--head-h", head); px("--keep-row", row); px("--keep-pad", pad);
+      px("--foot-h", pane?.querySelector<HTMLElement>(".drawer-f")?.offsetHeight ?? 0);
+      const rail = pane?.querySelector<HTMLElement>(".dv-rail"), across = !!rail && getComputedStyle(rail).getPropertyValue("--across").trim() === "1";
+      px("--rail-h", rail?.offsetHeight ?? 0);
+      total = Math.max(0, side - keep + (across ? head : 0)); shift = Math.max(shift, -total); apply();
+      flag("bar", true); flag("ride", over.matches || across); flag("across", across);
+    };
+    const show = () => { delete el.dataset.snap; shift = 0; apply(); requestAnimationFrame(measure); };
+    const onScroll = (event: Event) => {
+      const box = event.target;
+      if (!(box instanceof HTMLElement) || !box.matches(".browser-main,.drawer-body")) return;
+      const top = Math.max(0, box.scrollTop), before = last.get(box) ?? top;
+      last.set(box, top); delete el.dataset.snap;
+      // Near the top the bars stay attached to the text, so no empty strip ever opens above it.
+      shift = Math.min(0, Math.max(-total, shift - (top - before), -top)); apply();
+      if (top !== before) down = top > before;
+      window.clearTimeout(settle);
+      // A stop settles the bars the way the text was last moving.
+      settle = window.setTimeout(() => {
+        const to = down && top >= total ? -total : 0;
+        if (to !== shift) { el.dataset.snap = ""; shift = to; apply(); }
+      }, 160);
+    };
+    const sized = new ResizeObserver(measure), changed = new MutationObserver(() => { measure(); sized.disconnect(); for (const part of el.querySelectorAll(".browser-side,.drawer-h,.drawer-f,.dv-rail")) sized.observe(part); });
+    changed.observe(el.querySelector(".browser-main") ?? el, { childList: true, subtree: true });
+    for (const part of el.querySelectorAll(".browser-side")) sized.observe(part);
+    const signs = ["hashchange", "popstate", "portfolio:navigate"];
+    el.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    for (const sign of signs) window.addEventListener(sign, show);
+    for (const media of [phone, over]) media.addEventListener("change", show);
+    measure();
+    return () => {
+      window.clearTimeout(settle); sized.disconnect(); changed.disconnect(); for (const name of ["bar", "ride", "across"]) flag(name, false);
+      el.removeEventListener("scroll", onScroll, { capture: true });
+      for (const sign of signs) window.removeEventListener(sign, show);
+      for (const media of [phone, over]) media.removeEventListener("change", show);
+    };
+  }, [ref]);
 }

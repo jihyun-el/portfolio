@@ -14,6 +14,8 @@ import { StepGo, heading, phrase } from "@/components/step-parts";
 import { exampleTime } from "@/lib/example-clock";
 import { clockStates, drawStrip } from "@/lib/three-clocks";
 import { setSceneStep } from "@/lib/scene-step";
+import { useSceneLeave } from "@/lib/scene-shown";
+import { useSceneMiddle } from "@/lib/scene-middle";
 
 // Every stage is a group in one world seen by one camera. A stage draws in its own coordinates, as it did when it
 // was a card of its own; the panorama places, turns and tilts the group so it is seen from the same angle as before.
@@ -643,6 +645,14 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
   useEffect(() => { if (solo) setSceneStep("engine", wide ? null : pad(current + 1)); }, [solo, wide, current]);
   // The camera position in stages, gliding from one stage to the next or following a drag.
   const scroll = useRef({ s: 0, from: 0, to: 0, start: 0, glide: false, drag: null as { x: number; s: number } | null });
+  // Leaving the home screen sends the figure back to where it opens: the whole ring where there is one, the first
+  // stage otherwise, playing. The camera is set there without a flight (`jump` holds the shot to land on).
+  const jump = useRef<boolean | null>(null), wrapRef = useRef<HTMLDivElement>(null);
+  useSceneMiddle(wrapRef);
+  useSceneLeave(() => {
+    const c = scroll.current; c.s = c.from = c.to = 0; c.glide = false; c.drag = null;
+    jump.current = roomy; setWide(roomy); setPlaying(!reduceRef.current); held.current = false;
+  });
 
   const glideTo = useCallback((to: number) => {
     const c = scroll.current;
@@ -787,6 +797,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       // Where the words stand beside the picture the view changes size when the shot changes. The flight starts from
       // the camera that draws the same picture in the new view, and the stage it started on keeps its way across the
       // view, so it never leaves the picture. A view that changes size for another reason is simply redrawn.
+      if (jump.current !== null && wideNow === jump.current) { jump.current = null; wasWide = wideNow; flight = null; }
       if (wideNow !== wasWide) {
         wasWide = wideNow;
         if (!reduced && drawn.w > 0) { const px = drawn.w / drawn.W; flight = { x: drawn.x + (cx - drawn.cx) / px, y: drawn.y - (cy - drawn.cy) / px, W: w / px, spread: drawn.spread, anchor: index, at: [...spots[index + 1]], start: now }; }
@@ -991,7 +1002,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
         <button type="button" className="chain-play" onClick={() => setPlaying(!playing)}>{playing ? "일시정지" : "자동 재생"}</button>
       </div>
     </div>
-    <div className="pano-wrap">
+    <div className="pano-wrap" ref={wrapRef}>
     <div className={`pano${dragging ? " is-dragging" : ""}`} ref={viewportRef} role="img" aria-label={wide ? ACTS.map((act) => `${act.what} ${act.name}`).join(" → ") : shown.map((i) => `${pad(i + 1)} ${OBJECTS[i].title}: ${OBJECTS[i].line}`).join(" / ")}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}>
       <canvas className="chain-gl" ref={canvasRef} aria-hidden="true" />

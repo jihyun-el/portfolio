@@ -1,8 +1,9 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as Press, type ReactNode } from "react";
+import { Fragment, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as Press, type ReactNode } from "react";
 import { getSceneStep } from "@/lib/scene-step";
 import { DetailSymbol, type SymbolAssets, type SymbolKind } from "@/components/detail-symbols";
+import { DrawerBack } from "@/components/drawer";
 
 // A project detail as it is read: beside the text, the picture of the screen it opened over, with the step the reader
 // came from marked and the step being read lit; then its parts, each a panel of its own: the scope, what was done,
@@ -42,6 +43,7 @@ export function DetailView({ id, name, kind, assets, steps, meta, list, byDate, 
   const [place, setPlace] = useState<Place | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [entry, setEntry] = useState<string | null>(null);
+  const back = useContext(DrawerBack);
   // Where to go once what holds it has been opened.
   const [move, setMove] = useState<Move | null>(null);
   // What the reader has opened: units, and cards by date in a grouped detail.
@@ -164,6 +166,10 @@ export function DetailView({ id, name, kind, assets, steps, meta, list, byDate, 
         {unit.body}
         <div className="dv-unit-cards">{unit.cards.map((card) => <Fragment key={card}>{cards[card]}</Fragment>)}</div>
         {unit.notes}
+        {/* The open unit ends in a row that folds it, and the reader lands back on its head. */}
+        <button type="button" className="dv-unit-fold" aria-controls={`${unit.id}-in`} onClick={() => { toggle(unit.id); requestAnimationFrame(() => document.getElementById(unit.id)?.scrollIntoView({ block: "start" })); }}>
+          <span>접기</span><i aria-hidden="true" />
+        </button>
       </>}</div>
     </article>;
   };
@@ -179,6 +185,8 @@ export function DetailView({ id, name, kind, assets, steps, meta, list, byDate, 
         <button type="button" disabled={!reach(item)} aria-current={item.step === lit ? "step" : undefined} data-entry={item.step === entry ? "" : undefined}
           onClick={() => pick(item.step)} onPointerEnter={() => setHover(item.step)} onPointerLeave={() => setHover(null)}><span className="num">{item.step}</span>{item.name}</button>
       </li>)}</ol>}
+      {/* Where the bar runs across the top it is what stays on screen, so it holds the way back. */}
+      {back && <button type="button" className="drawer-close dv-back" onClick={back}>← 돌아가기</button>}
     </aside>
     <div className="dv-main">
       <section className="dv-sec dv-scope" id={`${id}-scope`} data-spy="" aria-label="개발 범위">{scope}</section>
