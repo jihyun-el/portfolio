@@ -1,6 +1,7 @@
 "use client";
 
-import { type PointerEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type PointerEvent, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
@@ -8,13 +9,14 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { BLOOM_RADIUS, FALLOFF, LIGHT_BLOOM, LIGHT_FALLOFF, LIGHT_RADIUS, RAMP, ZOOM, cloud, glowTexture, isDark, ribbon, segments } from "@/lib/glow-3d";
-import { BEAT, BIN_CENTS, CHORDS, C_HI, C_LO, PF_PARTICLES, STATES, TOTAL, accompTempo, accompU, pfTempo, shapedTempo, anchorU, belief, beliefFlow, centOf, chordAt, clamp, confirmAge, coupleGain, engineEvents, recentEvents, type EngineEvents, confirmedIndex, followerTempo, frozenFor, hash, latestAnchor, modBeat, observationAt, phraseFactor, playheadU, predictedIndex, prepareFollower, salience, schedulerLead, singerTempo, singerU, tempoLayers, voiceAt, vqtParts } from "@/lib/example-score";
+import { BEAT, BIN_CENTS, CHORDS, C_HI, C_LO, LOOP, PF_PARTICLES, STATES, TOTAL, accompTempo, accompU, pfTempo, shapedTempo, anchorU, belief, beliefFlow, centOf, chordAt, clamp, coupleGain, engineEvents, recentEvents, type EngineEvents, confirmedIndex, followerTempo, frozenFor, hash, latestAnchor, modBeat, observationAt, passShift, passStart, phraseFactor, playheadU, predictedIndex, prepareFollower, salience, schedulerLead, singerTempo, singerU, sungNote, tempoLayers, voiceInScore, voiceWave, vqtParts, wrapTime } from "@/lib/halt-score";
 import { StepGlyph } from "@/components/step-glyphs";
 import { StepGo, heading, phrase } from "@/components/step-parts";
-import { exampleTime } from "@/lib/example-clock";
+import { SoundMark } from "@/components/sound-mark";
+import { exampleTime, followSound } from "@/lib/example-clock";
 import { clockStates, drawStrip } from "@/lib/three-clocks";
 import { setSceneStep } from "@/lib/scene-step";
-import { useSceneLeave } from "@/lib/scene-shown";
+import { SceneShown, useSceneLeave } from "@/lib/scene-shown";
 import { useSceneMiddle } from "@/lib/scene-middle";
 
 // Every stage is a group in one world seen by one camera. A stage draws in its own coordinates, as it did when it
@@ -56,7 +58,7 @@ function chordWave(tau: number, u: number, w: number) {
   return c.amp * c.notes.reduce((sum, m, i) => sum + carrier(m, u, w, i), 0) / c.notes.length;
 }
 function micWave(tau: number, u: number, w: number) {
-  const v = voiceAt(singerU(tau));
+  const v = voiceWave(tau);
   const voice = v.pitch === null ? 0 : v.amp * (0.75 * carrier(v.pitch, u, w) + 0.25 * carrier(v.pitch, 2 * u, w));
   return 0.85 * voice + 0.3 * chordWave(tau, u, w);
 }
@@ -70,12 +72,14 @@ const audioView: Maker = (map, pixelRatio) => {
   // Dozens of stacked waveforms add up quickly, so these scenes take less bloom.
   return { root, bloom: 0.3, dispose: () => { lines.dispose(); sparks.dispose(); }, update: (t, wall) => {
     let seg = 0, dot = 0;
+    // Sound from before this pass of the take is not drawn: the waves start again from silence where it starts again.
+    const start = passStart(t) + 0.02;
     lanes.forEach((lane) => {
       for (let k = 0; k < HISTORY; k++) {
         const z = -k * 0.15, fade = k ? (1 - k / HISTORY) ** 2.2 * lane.gain * 0.5 : lane.gain, t0 = t - k * 0.06, w0 = wall - k * 0.3;
         let prev: number[] = [];
         for (let i = 0; i < SAMPLES; i++) {
-          const u = i / (SAMPLES - 1), v = lane.wave(t0 - (1 - u) * WINDOW, u, w0), point = [-1.7 + 3.4 * u, lane.y + v * lane.scale, z];
+          const u = i / (SAMPLES - 1), tau = t0 - (1 - u) * WINDOW, v = tau < start ? 0 : lane.wave(tau, u, w0), point = [-1.7 + 3.4 * u, lane.y + v * lane.scale, z];
           if (i) lines.set(seg++, prev, point, fade);
           if (k === 0) sparks.set(dot++, point[0], point[1], z, 2 + 9 * Math.abs(v), lane.gain * (0.25 + 0.75 * Math.abs(v)));
           prev = point;
@@ -117,9 +121,10 @@ const vqtView: Maker = (map, pixelRatio) => {
     rect(4, wx0 + 0.04, ky, wx0 + 0.16, ky + 0.12, 1);
     box.commit();
     let i = 0;
+    const start = passStart(t) + 0.02;
     walls.forEach(({ lane, bottom, gain }) => {
       for (let c = 0; c < COLS; c++) {
-        const parts = vqtParts(t - (1 - (c + 1) / COLS) * WINDOW, lane), x = -1.7 + 3.4 * c / (COLS - 1), edge = c === COLS - 1 ? 1.6 : 1;
+        const tau = t - (1 - (c + 1) / COLS) * WINDOW, parts = tau < start ? [] : vqtParts(tau, lane), x = -1.7 + 3.4 * c / (COLS - 1), edge = c === COLS - 1 ? 1.6 : 1;
         for (let r = 0; r < ROWS; r++) {
           let value = 0;
           for (const [cent, amp] of parts) value += amp * Math.exp(-((rowCents[r] - cent) ** 2) / (2 * 45 * 45));
@@ -141,7 +146,7 @@ const salienceView: Maker = (map, pixelRatio) => {
   return { root, dispose: () => { bars.dispose(); tips.dispose(); grid.dispose(); }, update: (t, wall) => {
     [36, 48, 60, 72, 84].forEach((midi, i) => { const x = xOf(Math.round((1200 * Math.log2(440 * 2 ** ((midi - 69) / 12) / 10) - C_LO) / (C_HI - C_LO) * 359)); grid.set(i, [x, 0, 0.35], [x, 0, -0.95], 0.16); });
     grid.commit();
-    [salience(t - 0.01), salience(t)].forEach((frame, fi) => {
+    [salience(Math.max(t - 0.01, passStart(t))), salience(t)].forEach((frame, fi) => {
       const z = fi ? 0 : -0.6, gain = fi ? 1 : 0.5;
       frame.forEach((v, b) => {
         const x = xOf(b), top = v * 1.35;
@@ -154,81 +159,133 @@ const salienceView: Maker = (map, pixelRatio) => {
 };
 
 /* ---------- Shared axes for the score and time views ---------- */
-const stateX = (j: number) => -1.6 + 3.2 * (j + 0.5) / STATES.length;
-const pitchY = (m: number) => -0.15 + (m - 62) / 12 * 1.1;
+// A real voice leaves no evidence for a few frames at every consonant; the pictures call it silence once it lasts.
+const STILL_FOR = 0.3;
+const pitchY = (m: number) => -0.15 + (m - 67) / 12 * 1.1;
 const SPAN = 3.2;
 const timeX = (k: number, n: number) => -1.7 + 3.4 * k / (n - 1);
 const scoreWindow = (t: number) => { const cur = singerU(t), lo = cur - 9, hi = cur + 1; return (v: number) => -1 + 2 * (v - lo) / (hi - lo); };
 
 /* ---------- 04 Observation: the sung pitch as a sheet of light that notes catch ---------- */
+// The song has more notes than fit across, so a window of them slides along with the note the singer is predicted at.
+// Each note's likelihood fills its own stem from the floor up to its head, so the light stands under the note it
+// belongs to from every angle; a note the sheet passes through is the one whose stem is full.
+const OBS_SPAN = 24, OBS_BEHIND = 8, STEM_GAP = 0.034;
 const observationView: Maker = (map, pixelRatio) => {
   const root = new THREE.Group();
-  const J = STATES.length, LEVELS = 40, SX = 56, SY = 9, FLOOR = -0.95, COLUMN = 1.05, BACK = -0.45, FRONT = 0.3;
-  const notes = segments(J * 3 + 1), sheet = cloud(SX * SY, map, pixelRatio), columns = cloud(J * LEVELS, map, pixelRatio);
+  const J = OBS_SPAN + 2, SX = 56, SY = 9, FLOOR = -0.95, REST = 0.32, BACK = -0.45, LEVELS = Math.ceil((pitchY(84) - FLOOR) / STEM_GAP) + 1;
+  const notes = segments(J * 8 + 1), sheet = cloud(SX * SY, map, pixelRatio), columns = cloud(J * LEVELS, map, pixelRatio);
   root.add(notes.object, sheet.object, columns.object);
+  let first = 0, lastWall = -1, lastPass = NaN;
+  // A frame round a note, as bright as the chance the engine now puts on the singer being there.
+  const frame = (s: number, x0: number, y0: number, x1: number, y1: number, c: number) => {
+    notes.set(s, [x0, y0, BACK], [x1, y0, BACK], c); notes.set(s + 1, [x1, y0, BACK], [x1, y1, BACK], c);
+    notes.set(s + 2, [x1, y1, BACK], [x0, y1, BACK], c); notes.set(s + 3, [x0, y1, BACK], [x0, y0, BACK], c);
+    return s + 4;
+  };
   return { root, dispose: () => { notes.dispose(); sheet.dispose(); columns.dispose(); }, update: (t, wall) => {
-    const sal = salience(t), obs = observationAt(t), v = voiceAt(singerU(t)), strength = Math.max(...sal);
+    const sal = salience(t), obs = observationAt(t), v = voiceInScore(t), strength = Math.max(...sal), bel = belief(t);
+    // The window follows where the belief stands, slowly, so the notes drift past rather than jump; where the take
+    // starts again it starts again from the first notes.
+    const target = clamp(beliefFlow(t).center - OBS_BEHIND, 0, STATES.length - OBS_SPAN), dt = wall - lastWall, pass = passStart(t);
+    first = dt > 0 && dt < 0.5 && pass === lastPass ? first + (target - first) * Math.min(1, dt * 2.5) : target; lastWall = wall; lastPass = pass;
+    const stateX = (j: number) => -1.6 + 3.2 * (j - first + 0.5) / OBS_SPAN, shown = (x: number) => x > -1.72 && x < 1.72;
     let s = 0;
     STATES.forEach((state, j) => {
-      const x = stateX(j);
-      if (state.pitch === null) { for (let d = 0; d < 3; d++) notes.set(s++, [x - 0.09 + d * 0.07, FLOOR, BACK], [x - 0.06 + d * 0.07, FLOOR, BACK], 0.2); return; }
+      const x = stateX(j), here = Math.min(1, bel[j] * 1.8);
+      if (!shown(x)) return;
+      if (state.pitch === null) {
+        for (let d = 0; d < 3; d++) notes.set(s++, [x - 0.09 + d * 0.07, FLOOR, BACK], [x - 0.06 + d * 0.07, FLOOR, BACK], 0.2);
+        if (here > 0.03) s = frame(s, x - 0.13, FLOOR - 0.045, x + 0.13, FLOOR + 0.055, here);
+        return;
+      }
       const y = pitchY(state.pitch), c = 0.28 + 0.72 * obs[j].score ** 2;
+      notes.set(s++, [x - 0.09, y - 0.011, BACK], [x + 0.09, y - 0.011, BACK], c * 0.7);
       notes.set(s++, [x - 0.09, y, BACK], [x + 0.09, y, BACK], c);
-      notes.set(s++, [x - 0.09, y + 0.012, BACK], [x + 0.09, y + 0.012, BACK], c * 0.6);
-      notes.set(s++, [x, y, BACK], [x, FLOOR, BACK], 0.035);
+      notes.set(s++, [x - 0.09, y + 0.011, BACK], [x + 0.09, y + 0.011, BACK], c * 0.7);
+      notes.set(s++, [x, y, BACK], [x, FLOOR, BACK], 0.03);
+      if (here > 0.03) s = frame(s, x - 0.13, y - 0.045, x + 0.13, y + 0.055, here);
     });
-    notes.set(s++, [-1.75, FLOOR, FRONT], [1.75, FLOOR, FRONT], 0.15);
-    notes.commit();
+    notes.set(s++, [-1.75, FLOOR, BACK], [1.75, FLOOR, BACK], 0.15);
+    notes.clear(s); notes.commit();
     let i = 0;
     const sheetY = v.pitch === null ? 0 : pitchY(v.pitch);
     for (let a = 0; a < SX; a++) for (let b = 0; b < SY; b++) {
-      const dy = (b - (SY - 1) / 2) / ((SY - 1) / 2) * 0.14, glow = v.pitch === null ? 0 : strength * Math.exp(-((dy / 0.069) ** 2) / 2);
-      sheet.set(i++, -1.75 + 3.5 * a / (SX - 1), sheetY + dy, BACK + 0.02, 5.5, glow * 0.45);
+      const dy = (b - (SY - 1) / 2) / ((SY - 1) / 2) * 0.14, glow = v.pitch === null ? 0 : strength * Math.exp(-((dy / 0.06) ** 2) / 2);
+      sheet.set(i++, -1.75 + 3.5 * a / (SX - 1), sheetY + dy, BACK + 0.02, 5.5, glow * 0.7);
     }
     sheet.commit();
     i = 0;
     obs.forEach((o, j) => {
-      for (let l = 0; l < LEVELS; l++) {
-        const frac = l / (LEVELS - 1), lit = frac <= o.score;
-        columns.set(i++, stateX(j), FLOOR + frac * COLUMN, FRONT, lit ? 6 : 1.4, lit ? (o.rest ? 0.32 : 1) * (0.55 + 0.45 * frac) : 0.035);
+      const x = stateX(j), pitch = STATES[j].pitch;
+      if (!shown(x)) return;
+      const top = pitch === null ? FLOOR + REST : pitchY(pitch), lit = FLOOR + o.score * (top - FLOOR);
+      for (let y = FLOOR; y <= lit; y += STEM_GAP) {
+        const frac = (y - FLOOR) / (top - FLOOR);
+        columns.set(i++, x, y, BACK + 0.01, 7, (o.rest ? 0.32 : 1) * (0.5 + 0.5 * frac));
       }
     });
-    columns.commit();
+    columns.hide(i); columns.commit();
   } };
 };
 
 /* ---------- 05 Belief: the score as tiles on the floor, probability as columns of light ---------- */
 // A piano roll lies on the floor (time across, pitch into depth). Over each note stands a column of light as tall
 // as the chance that the singer is there. Notes left behind stay lit (confirmed); silence freezes the columns.
+// The record confirms notes in bursts, up to about eight beats behind the singer, so the floor keeps more of what lies
+// behind the singer than ahead. A burst stamps its notes one after another from the moment it happened, and each
+// confirmed note keeps a pin of light at its onset.
+const BELIEF_AHEAD = 2, STAMP_STEP = 0.05, STAMP_RING = 0.5, PIN = 4, RING_DOTS = 20;
 const beliefView: Maker = (map, pixelRatio, stage) => {
   const root = new THREE.Group();
-  const J = STATES.length, FLOOR = -0.72, HEIGHT = 1.45, LEVELS = 56, ARC = 40, KEEP = 6;
-  // The floor scrolls with the singer: seven beats either side of where the singer is.
-  let centreBeat = 0;
-  const bx = (beat: number) => (beat - centreBeat) / 7 * 1.7, zOf = (pitch: number | null) => (pitch === null ? 0.66 : clamp(0.34 - (pitch - 64) / 8 * 0.8, -0.95, 0.5));
+  const J = STATES.length, FLOOR = -0.72, HEIGHT = 1.45, LEVELS = 56, ARC = 40;
+  // The floor scrolls with the singer, who stands a little right of the middle.
+  let centreBeat = 0, lastWall = -1, lastPass = NaN, stamped = -1, stampAt = 0;
+  const stampTimes = new Array<number>(J).fill(-Infinity);
+  const bx = (beat: number) => (beat - centreBeat + BELIEF_AHEAD) / 7 * 1.7, zOf = (pitch: number | null) => (pitch === null ? 0.66 : clamp(0.34 - (pitch - 67) / 10 * 0.9, -0.95, 0.5));
   const middle = (j: number) => [bx(STATES[j].start + STATES[j].dur * 0.45), FLOOR, zOf(STATES[j].pitch)];
-  const tiles = segments(J * 8), columns = cloud(J * (LEVELS + 1), map, pixelRatio), flow = cloud(ARC * 2 + 28 + 6, map, pixelRatio);
-  root.add(tiles.object, columns.object, flow.object);
-  const tags = tagger(stage, root), hereTag = tags.make("현재 위치 · 예측", "strong"), passTag = tags.make("확정 · 지난 음표"), singerTag = tags.make("가수", "faint");
+  const onset = (j: number) => [Math.max(-1.75, bx(STATES[j].start) + 0.012), FLOOR, zOf(STATES[j].pitch)];
+  const tiles = segments(J * 8), columns = cloud(J * (LEVELS + 1), map, pixelRatio), flow = cloud(ARC * 2 + 6 + LEVELS + 8, map, pixelRatio), pins = cloud(J * PIN + RING_DOTS * 12, map, pixelRatio);
+  root.add(tiles.object, columns.object, flow.object, pins.object);
+  const tags = tagger(stage, root), hereTag = tags.make("현재 위치 · 예측", "strong"), passTag = tags.make("확정 · 지난 음표", "", "down"), singerTag = tags.make("가수", "faint", "right");
   const arc = (from: number[], to: number[], lift: number, u: number) => [from[0] + (to[0] - from[0]) * u, from[1] + (to[1] - from[1]) * u + lift * 4 * u * (1 - u), from[2] + (to[2] - from[2]) * u];
-  return { root, dispose: () => { tiles.dispose(); columns.dispose(); flow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
-    centreBeat = modBeat(singerU(t));
-    const bel = belief(t), pred = predictedIndex(t), conf = confirmedIndex(t), still = frozenFor(t), age = confirmAge(t), { center, leak } = beliefFlow(t);
-    const lag = conf >= 0 ? pred - conf : -1;
+  return { root, dispose: () => { tiles.dispose(); columns.dispose(); flow.dispose(); pins.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
+    // The singer's place within this pass of the take: before the first beat it is still at the start of the score,
+    // not wrapped round to its end.
+    const pass = passStart(t), target = singerU(t) - passShift(t), dt = wall - lastWall, moving = dt > 0 && dt < 0.5 && pass === lastPass;
+    centreBeat = moving && Math.abs(target - centreBeat) < 4 ? centreBeat + (target - centreBeat) * Math.min(1, dt * 5) : target;
+    const bel = belief(t), pred = predictedIndex(t), conf = confirmedIndex(t), still = frozenFor(t), { center, leak } = beliefFlow(t);
+    // A still picture, a return after a pause or a new pass of the take lands on the record's confirmation at once.
+    if (!moving || conf < stamped) { stamped = conf; stampAt = wall; }
+    else if (conf > stamped && wall - stampAt >= STAMP_STEP) { stamped++; stampAt = wall; stampTimes[stamped] = wall; }
+    lastWall = wall; lastPass = pass;
     let s = 0;
     STATES.forEach((st, j) => {
-      const x0 = Math.max(-1.75, bx(st.start) + 0.012), x1 = Math.min(1.75, bx(st.start + st.dur) - 0.03), z = zOf(st.pitch), behind = pred - j;
+      const x0 = Math.max(-1.75, bx(st.start) + 0.012), x1 = Math.min(1.75, bx(st.start + st.dur) - 0.03), z = zOf(st.pitch);
       if (x1 <= x0) return;
-      const passed = lag >= 0 && behind >= lag && behind < lag + KEEP, level = j === pred ? 1 : passed ? 0.8 - 0.1 * (behind - lag) : 0.2;
+      // Confirmed notes stay lit, the further behind the dimmer; notes the prediction has passed but not yet confirmed
+      // are drawn between the two.
+      const confirmed = j <= stamped, level = j === pred ? 1 : confirmed ? Math.max(0.35, 0.85 - 0.05 * (stamped - j)) : j < pred ? 0.4 : 0.2;
       if (st.pitch === null) {
         for (let d = 0; d < 4; d++) { const a = x0 + (x1 - x0) * d / 4; tiles.set(s++, [a, FLOOR, z], [a + (x1 - x0) * 0.14, FLOOR, z], level * 0.8); }
         return;
       }
       tiles.set(s++, [x0, FLOOR, z - 0.05], [x1, FLOOR, z - 0.05], level); tiles.set(s++, [x1, FLOOR, z - 0.05], [x1, FLOOR, z + 0.05], level);
       tiles.set(s++, [x1, FLOOR, z + 0.05], [x0, FLOOR, z + 0.05], level); tiles.set(s++, [x0, FLOOR, z + 0.05], [x0, FLOOR, z - 0.05], level);
-      if (passed || j === pred) for (let h = 1; h <= 3; h++) tiles.set(s++, [x0, FLOOR, z - 0.05 + 0.025 * h], [x1, FLOOR, z - 0.05 + 0.025 * h], level * 0.75);
+      if (confirmed || j === pred) for (let h = 1; h <= 3; h++) tiles.set(s++, [x0, FLOOR, z - 0.05 + 0.025 * h], [x1, FLOOR, z - 0.05 + 0.025 * h], level * 0.75);
     });
     tiles.clear(s); tiles.commit();
+
+    // The pins of the confirmed onsets, and a ring opening round each one as it is stamped.
+    let n = 0;
+    for (let j = 0; j <= stamped; j++) {
+      const [x, y, z] = onset(j), age = wall - stampTimes[j];
+      if (STATES[j].pitch === null || bx(STATES[j].start) < -1.75 || x > 1.75) continue;
+      const fresh = age < STAMP_RING ? 1 - age / STAMP_RING : 0, level = Math.max(0.45, 0.95 - 0.05 * (stamped - j));
+      for (let k = 0; k < PIN; k++) pins.set(n++, x, y + 0.035 * k, z, (k === PIN - 1 ? 7 : 4) * (1 + 0.8 * fresh), level);
+      if (fresh > 0) for (let i = 0; i < RING_DOTS; i++) { const ang = i / RING_DOTS * Math.PI * 2, rad = 0.04 + (1 - fresh) * 0.32; pins.set(n++, x + rad * Math.cos(ang), y, z + rad * Math.sin(ang) * 0.6, 3.5, fresh); }
+    }
+    pins.hide(n); pins.commit();
 
     let c = 0;
     bel.forEach((p, j) => {
@@ -254,19 +311,23 @@ const beliefView: Maker = (map, pixelRatio, stage) => {
       const a = top(pred), b = top(pred + 1);
       for (let i = 0; i < ARC; i++) { const u = (i / ARC + wall * 0.7) % 1, p = arc(a, b, 0.22, u); flow.set(f++, p[0], p[1], p[2], 3, leak * 2.2 * Math.sin(Math.PI * u)); }
     }
-    // A ring opens on the floor when a note is confirmed.
-    if (age < 0.6 && conf >= 0) {
-      const [x, y, z] = middle(conf);
-      for (let i = 0; i < 28; i++) { const ang = i / 28 * Math.PI * 2, rad = 0.06 + age * 0.55; flow.set(f++, x + rad * Math.cos(ang), y, z + rad * Math.sin(ang) * 0.6, 4, 1 - age / 0.6); }
-    }
     // The singer, for comparison: keeps moving through rests while the columns stand still.
-    const sb = modBeat(singerU(t)), sv = voiceAt(singerU(t)), sx = bx(sb), sz = zOf(sv.pitch ?? null);
+    const sb = singerU(t) - passShift(t), sv = sungNote(t), sx = bx(sb), sz = zOf(sv.pitch ?? null);
     for (let i = 0; i < 6; i++) flow.set(f++, sx, FLOOR + 0.04 * i, sz, i === 5 ? 10 : 3, 0.55);
+    // The floor follows the singer, so a prediction left far behind (the follower still on the intro's rest after the
+    // singer came in) would leave the picture. It stays at the left edge instead, with a short trail pointing back.
+    const [px, , pz] = middle(pred), behind = px < -1.75, edge = -1.72;
+    if (behind) {
+      for (let l = 0; l < LEVELS; l++) { const y = FLOOR + l / (LEVELS - 1) * HEIGHT; if (y <= FLOOR + bel[pred] * HEIGHT) flow.set(f++, edge, y, pz, 8, (0.25 + 0.75 * l / (LEVELS - 1)) * Math.min(1, bel[pred] * 2.2)); }
+      for (let i = 0; i < 8; i++) flow.set(f++, edge - 0.03 * i, FLOOR + 0.02, pz, 4 - 0.4 * i, 0.6 * (1 - i / 8));
+    }
     flow.hide(f); flow.commit();
 
-    hereTag(top(pred).map((v, i) => (i === 1 ? v + 0.1 : v)), width, height, still > 0.08 ? "무음 · 추정 정지" : "현재 위치 · 예측");
-    passTag(lag > 0 && Math.abs(middle(conf)[0]) < 1.7 ? middle(conf) : null, width, height);
-    singerTag([sx, FLOOR + 0.24, sz], width, height);
+    hereTag(behind ? [edge, FLOOR + bel[pred] * HEIGHT + 0.1, pz] : top(pred).map((v, i) => (i === 1 ? v + 0.1 : v)), width, height,
+      behind ? (pred === 0 ? "추정 · 전주 쉼에 머묾" : "추정 · 뒤에 있음") : still > STILL_FOR ? "무음 · 추정 정지" : "현재 위치 · 예측");
+    // The confirmed note is named under the floor, the singer beside its mark, the prediction over its column.
+    passTag(stamped >= 0 && bx(STATES[stamped].start) > -1.7 ? onset(stamped) : null, width, height);
+    singerTag([sx, FLOOR + 0.12, sz], width, height);
   } };
 };
 
@@ -280,12 +341,17 @@ const anchorsView: Maker = (map, pixelRatio, stage) => {
   root.add(lines.object, glow.object);
   const tags = tagger(stage, root), headTag = tags.make("추정 위치", "strong", "right"), anchorTag = tags.make("기준점 · 예측 음표가 바뀐 시점", "", "left"), easeTag = tags.make("이차 곡선으로 수렴"), singerTag = tags.make("가수", "faint", "down");
   return { root, dispose: () => { lines.dispose(); glow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
-    const Y = scoreWindow(t), now = singerU(t);
+    // A position far from the singer (the follower still waiting after the singer came in) stays on the box's edge.
+    const window_ = scoreWindow(t), Y = (v: number) => clamp(window_(v), -1, 1), now = singerU(t);
     let s = 0, d = 0;
     for (let g = 0; g < GRID; g++) { const beat = Math.floor(now) - g, y = Y(beat); if (y > -1 && y < 1) lines.set(s++, [-1.7, y, -0.3], [NOW, y, -0.3], 0.03); }
-    let prevA = anchorU(t - SPAN), prevX = -1.7;
+    // The curves begin where this pass of the take began; nothing is drawn across the seam where it starts again.
+    const start = passStart(t), oldest = Math.max(t - SPAN, start);
+    let prevA = anchorU(oldest), prevX = X(t, oldest);
     for (let k = 0; k < N; k++) {
-      const tau = t - (1 - k / (N - 1)) * SPAN, a = anchorU(tau), x = X(t, tau), fresh = Math.exp(-(t - tau) / 0.6);
+      const tau = t - (1 - k / (N - 1)) * SPAN;
+      if (tau < start) continue;
+      const a = anchorU(tau), x = X(t, tau), fresh = Math.exp(-(t - tau) / 0.6);
       lines.set(s++, [prevX, Y(prevA), 0], [x, Y(prevA), 0], 0.55);
       if (a !== prevA) { lines.set(s++, [x, Y(prevA), 0], [x, Y(a), 0], 0.55 + 0.45 * fresh); glow.set(d++, x, Y(a), 0, 10 + 26 * fresh, 0.35 + 0.65 * fresh); }
       if (k % 3 === 0) glow.set(d++, x, Y(singerU(tau)), -0.3, 2.4, 0.4);
@@ -293,20 +359,22 @@ const anchorsView: Maker = (map, pixelRatio, stage) => {
       prevA = a; prevX = x;
     }
     // The dashed target line from the latest anchor at the tracked rate, and the easing window.
-    const la = latestAnchor(t), ax = X(t, la.time), since = t - la.time;
+    // An anchor can be older than the window (a long wait); its line is drawn only where the window reaches.
+    const la = latestAnchor(t), ax = X(t, la.time), from = Math.max(la.time, oldest), since = t - from;
     for (let i = 0; i < 20; i += 2) {
-      const u0 = la.time + since * i / 20, u1 = la.time + since * (i + 1) / 20;
+      const u0 = from + since * i / 20, u1 = from + since * (i + 1) / 20;
       lines.set(s++, [X(t, u0), Y(la.beat + (u0 - la.time) * la.rate / BEAT), 0.06], [X(t, u1), Y(la.beat + (u1 - la.time) * la.rate / BEAT), 0.06], 0.7);
     }
     const easing = t < la.settle, bx1 = X(t, la.settle);
-    if (easing) for (let i = 0; i < 60; i++) glow.set(d++, ax + (Math.min(bx1, NOW) - ax) * (i % 6) / 5, -0.95 + 1.9 * Math.floor(i / 6) / 9, -0.15, 9, 0.05 * (la.settle - t) / (la.settle - la.time));
+    const ex = X(t, from);
+    if (easing) for (let i = 0; i < 60; i++) glow.set(d++, ex + (Math.min(bx1, NOW) - ex) * (i % 6) / 5, -0.95 + 1.9 * Math.floor(i / 6) / 9, -0.15, 9, 0.05 * (la.settle - t) / (la.settle - la.time));
     glow.set(d++, X(t, t), Y(playheadU(t)), 0.12, 30, 1);
     lines.set(s++, [-1.7, -1, 0], [NOW, -1, 0], 0.14);
     lines.clear(s); glow.hide(d);
     lines.commit(); glow.commit();
     headTag([X(t, t), Y(playheadU(t)), 0.12], width, height);
     anchorTag(ax > -1.6 ? [ax, Y(la.beat), 0] : null, width, height);
-    easeTag(easing ? [(ax + Math.min(bx1, NOW)) / 2, -0.78, -0.15] : null, width, height);
+    easeTag(easing ? [(ex + Math.min(bx1, NOW)) / 2, -0.78, -0.15] : null, width, height);
     singerTag([X(t, t), Y(singerU(t)), -0.3], width, height);
   } };
 };
@@ -316,12 +384,15 @@ const anchorsView: Maker = (map, pixelRatio, stage) => {
 // guess: the ones that fit light up, the rest fade, and the survivors are copied and nudged apart. The median of the
 // survivors is the estimate. Below, the phrase shaping planned from the score multiplies it.
 const ease01 = (x: number) => { const v = clamp(x); return v * v * (3 - 2 * v); };
+// The engine keeps a thousand guesses; 150 of them are drawn, taken evenly through the cloud (numbered by the guess
+// each was copied from), and the same 150 go on to the next note, so the cloud does not reshuffle at every event.
+const SHOWN_GUESSES = 150;
 const tempoView: Maker = (map, pixelRatio, stage) => {
   const root = new THREE.Group();
-  const N = PF_PARTICLES, ARCH_N = 160, RULER = -0.12, TOP = 0.6;
+  const N = PF_PARTICLES, ARCH_N = 160, RULER = -0.12, TOP = 0.6, SHOW = Array.from({ length: Math.min(SHOWN_GUESSES, N) }, (_, k) => Math.floor((k + 0.5) * N / Math.min(SHOWN_GUESSES, N)));
   const X = (v: number) => clamp((v - 1) / 0.3, -1.1, 1.1) * 1.5, Yp = (i: number) => 0.28 + (hash(i * 5.5) - 0.5) * 0.62, Zp = (i: number) => (hash(i * 2.3) - 0.5) * 0.2;
   const AX = (b: number) => -1.55 + 3.1 * b / TOTAL, AY = (f: number) => -0.74 + (f - 1) * 1.25;
-  const dots = cloud(N * 2 + ARCH_N + 8, map, pixelRatio), lines = segments(28);
+  const dots = cloud(SHOW.length * 2 + ARCH_N + 8, map, pixelRatio), lines = segments(28);
   root.add(lines.object, dots.object);
   const tags = tagger(stage, root), medianTag = tags.make("추정 템포", "strong"), measureTag = tags.make("직전 측정 템포", "", "right"), archTag = tags.make("프레이즈", "faint", "right");
   const ticks = [0.8, 1, 1.2].map((v) => ({ v, tag: tags.make(`${v.toFixed(1)}×`, "faint", "down") }));
@@ -330,10 +401,10 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
     const rise = ease01(since / 0.12), split = ease01((since - 0.12) / 0.3), settle = ease01((since - 0.25) / 0.17);
     let d = 0, s = 0;
     // The guesses going in: lit by how well each fits the gap just measured, then fading as the survivors take over.
-    cur.before.forEach((v, j) => { const fit = cur.fit[j]; dots.set(d++, X(v), Yp(j), Zp(j), 3 + 7 * fit * rise, (1 - split) * (0.7 * (1 - rise) + rise * (0.06 + 0.94 * fit))); });
+    SHOW.forEach((j) => { const v = cur.before[j], fit = cur.fit[j]; dots.set(d++, X(v), Yp(j), Zp(j), 3 + 7 * fit * rise, (1 - split) * (0.7 * (1 - rise) + rise * (0.06 + 0.94 * fit))); });
     // The survivors: each starts on the good guess it was copied from and drifts to its nudged value.
-    cur.cloud.forEach((v, i) => {
-      const p = cur.parent[i], u = split;
+    SHOW.forEach((i) => {
+      const v = cur.cloud[i], p = cur.parent[i], u = split;
       dots.set(d++, X(cur.before[p]) + (X(v) - X(cur.before[p])) * u, Yp(p) + (Yp(i) - Yp(p)) * u, Zp(p) + (Zp(i) - Zp(p)) * u, 4, 0.7 * u);
     });
     // The measured tempo rises as a dashed line; the median needle then slides to the new estimate.
@@ -363,10 +434,13 @@ const tempoView: Maker = (map, pixelRatio, stage) => {
 // Each position differentiated once. The three tempos nearly coincide, so each clock stands in its own lane, from the
 // follower at the back through the accompaniment to the singer in front, with its own floor, its own 1× line and a
 // faint wall under its curve. The singer's tempo is the one inherent in its true position, so it runs on through rests.
-// The playhead's frame-to-frame speed is left unsmoothed on purpose: it stalls while waiting for evidence and rushes
-// when it arrives. Each lane's floor runs on past its right end into its name, so a name never sits on another lane.
-const HEAD_DT = 0.01;
-const headTempo = (t: number) => (playheadU(t) - playheadU(t - HEAD_DT)) / HEAD_DT * BEAT;
+// The playhead's speed is taken over 0.2 s, not smoothed further: it still stalls while waiting for evidence and rushes
+// when it arrives, without a real voice's frame-to-frame jitter. Each lane's floor runs on past its right end into its
+// name, so a name never sits on another lane.
+const HEAD_DT = 0.2;
+// The difference never reaches back across the seam where the take starts again: in a pass's first 0.2 s it is taken
+// over those 0.2 s.
+const headTempo = (t: number) => { const hi = Math.max(t, passStart(t) + HEAD_DT); return (playheadU(hi) - playheadU(hi - HEAD_DT)) / HEAD_DT * BEAT; };
 const LANES = [
   { name: "추정", z: -1.05, line: 0.6, wall: 0.07, tempo: headTempo },
   { name: "재생", z: -0.3, line: 0.65, wall: 0.09, tempo: accompTempo },
@@ -382,11 +456,14 @@ const accompView: Maker = (map, pixelRatio, stage) => {
   const ticks = [0, 1, 2].map((v) => ({ v, tag: tags.make(`${v}×`, "faint", "left") }));
   return { root, dispose: () => { walls.forEach((w) => w.dispose()); paths.dispose(); glow.dispose(); tags.dispose(); }, update: (t, wall, width, height) => {
     let s = 0;
+    // The lanes begin where this pass of the take began; before that the wall is folded flat onto its first point.
+    const first = clamp(Math.ceil((1 - (t - passStart(t)) / SPAN) * (N - 1)), 0, N - 1);
     LANES.forEach((lane, j) => {
       let prev: number[] = [];
-      for (let k = 0; k < N; k++) {
+      for (let k = 0; k < first; k++) walls[j].set(k, X(first), FLOOR, FLOOR, lane.z, 0);
+      for (let k = first; k < N; k++) {
         const tau = t - (1 - k / (N - 1)) * SPAN, x = X(k), pt = [x, Y(lane.tempo(tau)), lane.z];
-        if (k) paths.set(s++, prev, pt, lane.line);
+        if (k > first) paths.set(s++, prev, pt, lane.line);
         walls[j].set(k, x, pt[1], FLOOR, lane.z, lane.wall);
         prev = pt;
       }
@@ -406,27 +483,30 @@ const accompView: Maker = (map, pixelRatio, stage) => {
 };
 
 /* ---------- 09 Schedule: notes cross a curtain of light and fire ---------- */
+// The piano part the engine played, one chord a beat: its notes on the floor, by pitch into depth, crossing the curtain.
+const CHORD_LO = Math.min(...CHORDS.flatMap((c) => c.notes)), CHORD_HI = Math.max(...CHORDS.flatMap((c) => c.notes));
 const scheduleView: Maker = (map, pixelRatio) => {
   const root = new THREE.Group();
-  const CHORD_SLOTS = 6, SPARKS = 16, FLOOR = -0.6, CURTAIN = 12 * 16;
-  const bars = segments(CHORD_SLOTS * 3 * 2 + 5), light = cloud(CURTAIN + CHORD_SLOTS * 3 * (SPARKS + 1), map, pixelRatio);
+  const CHORD_SLOTS = 6, VOICES = 4, SPARKS = 16, FLOOR = -0.6, CURTAIN = 12 * 16;
+  const bars = segments(CHORD_SLOTS * VOICES * 2 + 5), light = cloud(CURTAIN + CHORD_SLOTS * VOICES * (SPARKS + 1), map, pixelRatio);
   root.add(bars.object, light.object);
-  const zOf = (m: number) => 0.85 - (m - 40) / 18 * 1.7;
+  const zOf = (m: number) => 0.88 - (m - CHORD_LO) / Math.max(1, CHORD_HI - CHORD_LO) * 1.76;
   return { root, dispose: () => { bars.dispose(); light.dispose(); }, update: (t, wall) => {
-    const a = accompU(t), lo = a - 1.5, hi = a + 4.5, look = schedulerLead(t);
+    const a = modBeat(accompU(t)), lo = a - 1.5, hi = a + 4.5, look = schedulerLead(t);
     const X = (b: number) => -1.7 + 3.4 * (b - lo) / (hi - lo), xa = X(a);
-    let s = 0, d = 0;
+    let s = 0, d = 0, slots = 0;
     for (let r = 0; r < 12; r++) for (let c = 0; c < 16; c++) light.set(d++, xa, FLOOR + 1.3 * r / 11, -0.9 + 1.8 * c / 15, 4, 0.18 + 0.12 * (1 - r / 11));
     bars.set(s++, [xa, FLOOR, -0.95], [xa, FLOOR, 0.95], 0.9);
     bars.set(s++, [xa, FLOOR + 1.3, -0.95], [xa, FLOOR + 1.3, 0.95], 0.6);
     bars.set(s++, [xa, FLOOR, -0.95], [xa, FLOOR + 1.3, -0.95], 0.6);
     bars.set(s++, [xa, FLOOR, 0.95], [xa, FLOOR + 1.3, 0.95], 0.6);
     bars.set(s++, [X(a + look), FLOOR, -0.95], [X(a + look), FLOOR, 0.95], 0.5);
-    const first = Math.floor(lo / 2);
-    for (let k = first; k < first + CHORD_SLOTS; k++) {
-      const start = k * 2, [root, steps] = CHORDS[((k % CHORDS.length) + CHORDS.length) % CHORDS.length];
-      steps.forEach((step, si) => {
-        const z = zOf(root + step), x0 = Math.max(-1.75, X(start)), x1 = Math.min(1.75, X(start + 1.9)), fired = start <= a + look, soon = !fired && start <= a + look + 0.25;
+    CHORDS.forEach((chord, k) => {
+      if (chord.end <= lo || chord.start >= hi || slots >= CHORD_SLOTS) return;
+      slots++;
+      const { start } = chord, length = (chord.end - chord.start) * 0.95;
+      chord.notes.slice(0, VOICES).forEach((m, si) => {
+        const z = zOf(m), x0 = Math.max(-1.75, X(start)), x1 = Math.min(1.75, X(start + length)), fired = start <= a + look, soon = !fired && start <= a + look + 0.25;
         if (x1 > x0) {
           bars.set(s++, [x0, FLOOR, z], [x1, FLOOR, z], fired ? 1 : soon ? 0.6 : 0.22);
           bars.set(s++, [x0, FLOOR + 0.02, z], [x1, FLOOR + 0.02, z], fired ? 0.45 : 0.07);
@@ -438,7 +518,7 @@ const scheduleView: Maker = (map, pixelRatio) => {
           light.set(d++, X(start) + r * Math.cos(angle), FLOOR + age * (0.5 + 0.9 * h), z + r * Math.sin(angle), 3.5, Math.exp(-age / 0.3) * 0.9);
         }
       });
-    }
+    });
     bars.clear(s); light.hide(d);
     bars.commit(); light.commit();
   } };
@@ -452,11 +532,13 @@ const outputView: Maker = (map, pixelRatio) => {
   root.add(lines.object, glow.object);
   return { root, bloom: 0.3, dispose: () => { lines.dispose(); glow.dispose(); }, update: (t, wall) => {
     let s = 0, d = 0;
+    // As at the first stage, sound from before this pass of the take is not drawn.
+    const start = passStart(t) + 0.02;
     for (let k = 0; k < HISTORY; k++) {
       const z = -k * 0.15, fade = k ? (1 - k / HISTORY) ** 2.2 * 0.5 : 1, t0 = t - k * 0.06, w0 = wall - k * 0.3;
       let prev: number[] = [];
       for (let i = 0; i < SAMPLES; i++) {
-        const u = i / (SAMPLES - 1), v = chordWave(t0 - (1 - u) * WINDOW, u, w0), point = [-1.7 + 3.4 * u, 0.3 + v * 0.45, z];
+        const u = i / (SAMPLES - 1), tau = t0 - (1 - u) * WINDOW, v = tau < start ? 0 : chordWave(tau, u, w0), point = [-1.7 + 3.4 * u, 0.3 + v * 0.45, z];
         if (i) lines.set(s++, prev, point, fade);
         if (k === 0) glow.set(d++, point[0], point[1], z, 2 + 9 * Math.abs(v), 0.25 + 0.75 * Math.abs(v));
         prev = point;
@@ -464,7 +546,7 @@ const outputView: Maker = (map, pixelRatio) => {
     }
     STATES.forEach((state) => {
       if (state.pitch === null) return;
-      const y = RIBBON + (state.pitch - 62) * 0.03;
+      const y = RIBBON + (state.pitch - 65) * 0.03;
       lines.set(s++, [ax(state.start), y, 0.4], [ax(state.start + state.dur * 0.9), y, 0.4], 0.3);
     });
     const cx = ax(modBeat(accompU(t)));
@@ -493,10 +575,10 @@ const OBJECTS: Stage[] = [
   { title: "음높이 분포", line: "보컬 분리 · 음높이 추정 두 모델 → 14층 CNN 하나로 통합", make: salienceView,
     pose: { target: [0.3, 0.5, -0.3], radius: 4.3, height: 0.95, base: -0.35 },
     legend: ["C2 · C3 · C4 · C5 · C6 → 음높이"],
-    live: (t) => { const v = voiceAt(singerU(t)); if (v.pitch === null || v.amp < 0.05) return "쉼표 · 소리 없음"; const sal = salience(t); return `최대 ${Math.max(...sal).toFixed(2)} · 합 ${sal.reduce((a, x) => a + x, 0).toFixed(1)}`; } },
+    live: (t) => { const v = voiceInScore(t); if (v.pitch === null || v.amp < 0.05) return "쉼표 · 소리 없음"; const sal = salience(t); return `최대 ${Math.max(...sal).toFixed(2)} · 합 ${sal.reduce((a, x) => a + x, 0).toFixed(1)}`; } },
   { title: "음표별 우도", line: "FFT 스펙트럼 · 음표 템플릿 비교 → FCPE argmax 이전 분포를 음표별 우도로", make: observationView,
     pose: { target: [0, -0.15, 0], radius: 4.7, height: 0.7, base: -0.32 },
-    legend: ["뒤: 악보 음표 · 빛 = 가수 음높이", "앞: 음표별 우도 기둥", "같은 높이 음표는 같은 우도"] },
+    legend: ["악보 음표 · 빛 = 가수 음높이", "음표 기둥의 빛 = 음표별 우도", "같은 높이 음표는 같은 우도", "밝은 테두리 = 현재 추정 위치"] },
   { title: "악보 위치 추정", line: "무음 구간: 관측 정보 없음 → 위치 진행 없이 추정 정지", make: beliefView,
     pose: { target: [0, -0.12, 0.05], radius: 4.2, height: 1.55, base: -0.18 },
     legend: ["빛 기둥 높이 = 그 음에 있을 확률", "바닥 = 악보 음표 · 앞줄 점선 = 쉼표", "악보 →"] },
@@ -579,14 +661,14 @@ const stagesAcross = (w: number, h: number) => (pairs(w, h) ? clamp(w / h * 0.92
 // The stages reach this far down from the top of the view, as a share of the width one stage is given.
 const STAGE_DEPTH = 0.68;
 // What is flowing out of each stage right now; the step symbol after the stage lights with it.
-const voiceLevel = (t: number) => { const v = voiceAt(singerU(t)); return v.pitch === null ? 0 : v.amp; };
+const voiceLevel = (t: number) => { const v = sungNote(t); return v.pitch === null ? 0 : v.amp; };
 const LINK_LEVEL: ((t: number) => number)[] = [
   (t) => clamp(0.12 + 0.75 * voiceLevel(t) + 0.25 * chordAt(accompU(t)).amp),
   (t) => 0.1 + 0.9 * voiceLevel(t),
   (t) => 0.1 + 0.9 * voiceLevel(t),
   // The Forward only moves on evidence; an octave slip is sound but not evidence.
-  (t) => (frozenFor(t) > 0 ? 0.06 : 0.85),
-  (t) => (frozenFor(t) > 0 ? 0.06 : 0.4),
+  (t) => (frozenFor(t) > STILL_FOR ? 0.06 : 0.85),
+  (t) => (frozenFor(t) > STILL_FOR ? 0.06 : 0.4),
   // The playhead keeps extrapolating through silence.
   () => 0.35,
   (t) => 0.25 + 0.75 * coupleGain(t),
@@ -620,8 +702,51 @@ function StepLabel({ text }: { text: string }) {
 export type StageResults = Record<number, { value: string; unit?: string; label: string }>;
 // With `solo` one stage is on screen at a time and its text stands beside the picture instead of under it. A view
 // with room opens on the wide shot of all the stages, and `note` is the one line that shot carries.
-export function SignalChain3D({ title = "소리가 들어와 반주가 되기까지", solo = false, results, note, project }: { title?: string; solo?: boolean; results?: StageResults; note?: string; project?: string }) {
+// What a figure that cannot move shows: a moment of the take with the singer singing.
+const STILL = 8.6;
+export function SignalChain3D({ title = "소리가 들어와 반주가 되기까지", solo = false, results, note, project, sound }: { title?: string; solo?: boolean; results?: StageResults; note?: string; project?: string; sound?: string }) {
   const [current, setCurrent] = useState(0);
+  // The take's sound loops while the figure is on screen, muted until the reader turns it on, and the figure's clock
+  // follows it, so every stage shows what is being heard. Off screen, on another screen or in a hidden tab it pauses.
+  // Away from the figure's own address (another screen, or a detail or list opened over this one) it is muted however
+  // the reader left it; back at that address it plays as the reader last chose.
+  const [muted, setMuted] = useState(true);
+  const soundRef = useRef<HTMLAudioElement | null>(null), mutedRef = useRef(true), onScreen = useRef(false), shownRef = useRef(true);
+  const wantRef = useRef(false), hereRef = useRef(false), homeHash = useRef<string | null>(null);
+  const sceneShown = useContext(SceneShown);
+  const applyMute = useCallback(() => {
+    const el = soundRef.current;
+    if (!el) return;
+    const quiet = !wantRef.current || !hereRef.current;
+    if (el.muted !== quiet) el.muted = quiet;
+    mutedRef.current = quiet; setMuted(quiet);
+  }, []);
+  const syncSound = useCallback(() => {
+    const el = soundRef.current;
+    if (!el) return;
+    const here = homeHash.current !== null && location.hash === homeHash.current;
+    if (here !== hereRef.current) { hereRef.current = here; applyMute(); }
+    const want = shownRef.current && onScreen.current && !document.hidden && !(reduceRef.current && mutedRef.current);
+    if (want && el.paused) el.play().catch(() => undefined);
+    else if (!want && !el.paused) el.pause();
+  }, [applyMute]);
+  useEffect(() => {
+    if (!sound) return;
+    const el = new Audio(sound);
+    el.loop = true; el.muted = true; el.preload = "auto";
+    // The figure's own address is its screen's: the scene `featured-engine` is at `#engine`.
+    const scene = sectionRef.current?.closest("article")?.id;
+    homeHash.current = scene?.startsWith("featured-") ? `#${scene.slice("featured-".length)}` : null;
+    soundRef.current = el; followSound(el, LOOP); syncSound();
+    const signs = ["hashchange", "popstate", "portfolio:navigate"];
+    document.addEventListener("visibilitychange", syncSound); signs.forEach((sign) => window.addEventListener(sign, syncSound));
+    return () => { document.removeEventListener("visibilitychange", syncSound); signs.forEach((sign) => window.removeEventListener(sign, syncSound)); el.pause(); followSound(null); soundRef.current = null; };
+  }, [sound, syncSound]);
+  useEffect(() => { shownRef.current = sceneShown; syncSound(); }, [sceneShown, syncSound]);
+  const toggleSound = () => {
+    if (!soundRef.current) return;
+    wantRef.current = mutedRef.current; applyMute(); syncSound();
+  };
   const [playing, setPlaying] = useState(true);
   const [dragging, setDragging] = useState(false);
   const [roomy, setRoomy] = useState(() => solo && window.matchMedia(ROOMY).matches);
@@ -639,6 +764,9 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
   // Titles above the stages and captions at the bottom travel with their stage.
   const titles = useRef<(HTMLElement | null)[]>([]), captions = useRef<(HTMLElement | null)[]>([]), lives = useRef<(HTMLElement | null)[]>([]), steps = useRef<(HTMLElement | null)[]>([]);
   const sectionRef = useRef<HTMLElement>(null), stripRef = useRef<HTMLCanvasElement>(null), statusRefs = useRef<(HTMLElement | null)[]>([]);
+  // The sound switch stands right after the screen's title, where every layout and every shot of the figure can see it.
+  const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { if (sound) setTitleSlot(sectionRef.current?.closest("article")?.querySelector<HTMLElement>(".stage-title") ?? null); }, [sound]);
   const held = useRef(false), visible = useRef(true), sectionVisible = useRef(true), reduceRef = useRef(false), currentRef = useRef(0);
   const soloRef = useRef(solo), soloLive = useRef<HTMLParagraphElement>(null);
   // On the home, a detail that opens over this figure reads the stage that was showing; the whole ring is none.
@@ -717,7 +845,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     let size = "", band = 0;
     const seen = new IntersectionObserver(([entry]) => { visible.current = entry.isIntersecting; }); seen.observe(viewport);
-    const sectionSeen = new IntersectionObserver(([entry]) => { sectionVisible.current = entry.isIntersecting; }); sectionSeen.observe(sectionRef.current!);
+    const sectionSeen = new IntersectionObserver(([entry]) => { sectionVisible.current = onScreen.current = entry.isIntersecting; syncSound(); }); sectionSeen.observe(sectionRef.current!);
     // The strip is a plain 2D canvas sized to its box at the device pixel ratio.
     const paint = (el: HTMLCanvasElement | null, draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) => {
       if (!el) return;
@@ -747,11 +875,19 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       return best;
     };
     const start = performance.now();
-    let frame = 0, told = false, box = viewport.getBoundingClientRect();
+    let frame = 0, told = false, box = viewport.getBoundingClientRect(), dipped = 1;
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
       if (!sectionVisible.current) return;
-      const wall = (now - start) / 1000, t = reduced ? 2.1 : exampleTime(now), motion = reduced ? 0 : wall;
+      // A detail opened over this screen changes the address without an event.
+      if (homeHash.current !== null && (location.hash === homeHash.current) !== hereRef.current) syncSound();
+      const wall = (now - start) / 1000, t = reduced && mutedRef.current ? STILL : exampleTime(now), motion = reduced ? 0 : wall;
+      // Where the take starts again the picture dips for a moment, as the sound starts again: out over 0.15 s, back over 0.3 s.
+      const u = wrapTime(t), seam = reduced ? 1 : 0.35 + 0.65 * Math.min(ease01((LOOP - u) / 0.15), ease01(u / 0.3));
+      if (seam !== dipped && (seam === 1 || Math.abs(seam - dipped) > 0.004)) {
+        dipped = seam;
+        for (const el of [viewport, stripRef.current]) if (el) el.style.opacity = seam === 1 ? "" : seam.toFixed(3);
+      }
       paint(stripRef.current, (ctx, w, h) => drawStrip(ctx, w, h, t, font, dark));
       const states = clockStates(t), texts = [states.scene.name, states.scene.note, states.singer, states.follower, states.accomp];
       texts.forEach((value, k) => { const el = statusRefs.current[k]; if (el && el.textContent !== value) el.textContent = value; });
@@ -1020,6 +1156,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
         </div>)}
       </div>
     </div>
+    {sound && titleSlot && createPortal(<SoundMark muted={muted} onToggle={toggleSound} note="「Halt!」 녹음으로 엔진을 돌린 기록" />, titleSlot)}
     {/* Side buttons sit over the scene but outside its image role, so they stay real, focusable controls. */}
     <button type="button" className="pano-side is-prev" aria-label="이전 단계" onClick={() => go(-1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
     <button type="button" className="pano-side is-next" aria-label="다음 단계" onClick={() => go(1)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>

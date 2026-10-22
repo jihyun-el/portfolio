@@ -9,7 +9,7 @@ import type { StageResults } from "@/components/signal-chain-3d";
 const hold = <div className="pano-hold" aria-hidden="true" />;
 const SignalChain3D = dynamic(() => import("@/components/signal-chain-3d").then((m) => m.SignalChain3D), { ssr: false, loading: () => hold });
 
-export function SignalChainSection({ title, solo, results, note, project }: { title?: string; solo?: boolean; results?: StageResults; note?: string; project?: string }) {
+export function SignalChainSection({ title, solo, results, note, project, sound }: { title?: string; solo?: boolean; results?: StageResults; note?: string; project?: string; sound?: string }) {
   const [near, setNear] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -18,6 +18,6 @@ export function SignalChainSection({ title, solo, results, note, project }: { ti
     return () => seen.disconnect();
   }, []);
   return <div className="part-inside" id="signal-chain" ref={ref}>
-    {near ? <SignalChain3D title={title} solo={solo} results={results} note={note} project={project} /> : hold}
+    {near ? <SignalChain3D title={title} solo={solo} results={results} note={note} project={project} sound={sound} /> : hold}
   </div>;
 }

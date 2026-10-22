@@ -2268,3 +2268,20 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .project-browser .dv-rail { top:var(--bar-shift,0px); }
   .project-browser .dv-in { --bar:calc(var(--side-h,0px) + var(--head-h,0px) + var(--rail-h,78px)); --stick:calc(var(--bar-shift,0px) + var(--rail-h,78px)); }
 }
+/* The engine's sound switch, right after the screen's title on every layout: a mark of light points that hops now and
+   then while muted and leaps with the chords while the sound plays. The note beside it says what is heard; a phone
+   keeps only the mark. */
+.title-sound { display:inline-flex; align-items:center; gap:.65rem; margin-left:.28em; vertical-align:-.16em; white-space:nowrap; }
+.title-sound button { display:block; padding:0; border:0; background:none; line-height:0; cursor:pointer; }
+.title-sound button:focus-visible { outline:2px solid var(--stage-ink); outline-offset:3px; }
+.title-sound canvas { display:block; width:1.3em; max-width:68px; height:auto; aspect-ratio:50/40; }
+.title-sound.is-muted canvas { animation:sound-hop 2.88s infinite; }
+.title-sound small { max-width:12em; font-size:11.5px; font-weight:600; letter-spacing:0; line-height:1.35; white-space:normal; color:color-mix(in srgb,var(--stage-ink) 58%,var(--stage)); }
+@keyframes sound-hop {
+  0%,14%,100% { transform:translateY(0); animation-timing-function:ease-out; }
+  4% { transform:translateY(-24%); animation-timing-function:ease-in; }
+  8% { transform:translateY(0); animation-timing-function:ease-out; }
+  11% { transform:translateY(-10%); animation-timing-function:ease-in; }
+}
+@media (prefers-reduced-motion:reduce) { .title-sound.is-muted canvas { animation:none; } }
+@media (max-width:680px) { .title-sound small { display:none; } }

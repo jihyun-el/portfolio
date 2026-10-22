@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { LOOP, accompU, anchorU, prepareFollower, sceneAt, singerU, voiceAt } from "@/lib/example-score";
+// The engine's run over a real take is large, so the figure that reads it fetches it when it is drawn.
+type Take = typeof import("@/lib/halt-score");
 
 // Pictures for the cards of a detail, drawn in the detail's own grammar (src/components/future-reach.tsx): ink on
 // paper, a 1.5px line for what the engine does, a dashed one for what it does not, small type in the card's words.
@@ -28,23 +29,24 @@ function Frame({ caption, legend, note, label, children }: { caption: string; le
 }
 
 /* ---------- 08 · three positions: playing the estimate as it is, against a playback of its own ---------- */
-// The stretch of the example around the long rest, its re-entry and the octave slip. Above, the accompaniment is
-// drawn as if it played the follower's estimate as it is; below, as the engine plays it, on its own position. The
-// singer is the thin line in both, the accompaniment the thick one.
-const FROM_BEAT = 9, TO_BEAT = 22;
+// The stretch of the take around the long rest and its re-entry. Above, the accompaniment is drawn as if it played
+// the follower's estimate as it is; below, as the engine plays it, on its own position. The singer is the thin line
+// in both, the accompaniment the thick one.
 export function ThreePositions() {
   const [box, width] = useWidth(680);
-  const [ready, setReady] = useState(false);
-  useEffect(() => { prepareFollower(); setReady(true); }, []);
+  const [take, setTake] = useState<Take | null>(null);
+  useEffect(() => {
+    let live = true;
+    import("@/lib/halt-score").then((m) => { m.prepareFollower(); if (live) setTake(m); });
+    return () => { live = false; };
+  }, []);
   const data = useMemo(() => {
-    if (!ready) return null;
-    const step = 0.02, at: number[] = [];
-    for (let t = 0; t < LOOP; t += step) at.push(t);
-    const start = at.find((t) => singerU(t) >= FROM_BEAT) ?? 0, end = at.find((t) => singerU(t) >= TO_BEAT) ?? LOOP;
-    const rows = at.filter((t) => t >= start && t <= end).map((t) => {
-      const s = singerU(t), v = voiceAt(s);
-      return { t, singer: s, follow: anchorU(t), play: accompU(t), heard: v.pitch !== null && v.amp >= 0.25 };
-    });
+    if (!take) return null;
+    const { LOOP, SCENES, accompU, anchorU, sceneAt, singerU, sungNote } = take;
+    const pause = SCENES.find((s) => s.name === "긴 쉼") ?? SCENES[0];
+    const step = 0.02, start = Math.max(0, pause.start - 5), end = Math.min(LOOP, pause.end + 5), at: number[] = [];
+    for (let t = start; t <= end; t += step) at.push(t);
+    const rows = at.map((t) => ({ t, singer: singerU(t), follow: anchorU(t), play: accompU(t), heard: sungNote(t).pitch !== null }));
     const all = rows.flatMap((r) => [r.singer, r.follow, r.play]), lo = Math.min(...all), hi = Math.max(...all);
     // Where the estimate jumps furthest: the re-entry after the long rest.
     let jump = 1;
@@ -52,7 +54,7 @@ export function ThreePositions() {
     const spans: { name: string; from: number; to: number }[] = [];
     for (const r of rows) { const name = sceneAt(r.t).name; const last = spans.at(-1); if (last?.name === name) last.to = r.t; else spans.push({ name, from: r.t, to: r.t }); }
     return { start, end, rows, lo, hi, jump, spans: spans.filter((s) => s.name === "긴 쉼" || s.name === "옥타브 오류") };
-  }, [ready]);
+  }, [take]);
   const H = 132, left = 8, right = 8, top = 22, bottom = 14;
   const path = (points: [number, number][]) => points.map(([px, py], k) => `${k ? "L" : "M"}${px.toFixed(1)},${py.toFixed(1)}`).join("");
   const panel = (kind: "follow" | "play", last: boolean) => {
@@ -85,7 +87,7 @@ export function ThreePositions() {
   };
   return <Frame caption="추정 위치를 그대로 재생할 때와 재생 위치를 분리했을 때"
     legend={<><Key kind="df-singer-on" />가수 위치<Key kind="df-play" />반주가 재생하는 위치</>}
-    note="홈 08 단계와 같은 예제 연주(만든 노래)에 엔진을 실행한 결과다. 위 칸은 같은 실행의 추정 위치를 반주가 그대로 재생했다고 놓고 그렸다. 가수 위치는 노래하는 동안만 실선이다."
+    note="홈 08 단계와 같은 실제 연주(「Halt!」 녹음)에 엔진을 실행한 결과다. 위 칸은 같은 실행의 추정 위치를 반주가 그대로 재생했다고 놓고 그렸다. 가수 위치는 노래하는 동안만 실선이다."
     label="추정 위치를 그대로 재생하면 반주는 음표마다 멈췄다가 다음 음으로 건너뛰고, 긴 쉼에서는 멈춰 있다가 노래가 돌아오면 크게 도약한다. 재생 위치를 분리하면 반주는 쉼에서도 템포대로 진행하고, 노래가 돌아오면 도약 없이 서서히 가수에게 합류한다.">
     <div ref={box} className="df-box">
       <p className="dv-fan-name"><b>추정 위치를 그대로 재생하면</b><span>음마다 멈추고 도약한다</span></p>

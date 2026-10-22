@@ -45,7 +45,7 @@ export default function HomePage() {
   const home = (unit: string) => parts.find((item) => item.id === unit)!.projectId;
   const figures: Record<string, ReactNode> = {
     // The compute time on a phone is what the stages up to the network come to, so it stands beside the third stage.
-    engine: <SignalChainSection solo project={home("engine")} results={{ 2: metricView("compute") }} note={`iOS 실기기 · ${metrics.engine.budgetMs}ms마다 · 미래 참조 ${contracts.engine.window.lookahead * contracts.engine.window.hopMs}ms`} />,
+    engine: <SignalChainSection solo project={home("engine")} results={{ 2: metricView("compute") }} note={`iOS 실기기 · ${metrics.engine.budgetMs}ms마다 · 미래 참조 ${contracts.engine.window.lookahead * contracts.engine.window.hopMs}ms`} sound={sitePath("/audio/halt-engine.mp3")} />,
     // The pitch model, app and pipeline are told one step at a time, as VQA is. The pipeline's pictures are its own
     // run on a CC0 song.
     model: <ModelParts project={home("model")} />,

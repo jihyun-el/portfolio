@@ -1,7 +1,7 @@
-// The three clocks of the engine design, drawn from the shared example performance:
+// The three clocks of the engine design, drawn from the engine's run over a real performance:
 // the singer (observed, never controlled), the follower (stops when there is no evidence) and the
 // accompaniment (never stops, never goes back, never jumps).
-import { STATES, TOTAL, accompTempo, accompU, anchorU, coupleGain, frozenFor, sceneAt, singerSeen, singerU, stateIndex, voiceAt } from "@/lib/example-score";
+import { STATES, TOTAL, accompTempo, accompU, anchorU, coupleGain, frozenFor, passShift, sceneAt, singerSeen, singerU, sungNote } from "@/lib/halt-score";
 
 // The strip sits on the panorama's stage; the light palette is the dark one inverted, like the light stage.
 const PALETTES = {
@@ -10,9 +10,10 @@ const PALETTES = {
 };
 
 export function clockStates(t: number) {
-  const scene = sceneAt(t), beat = singerU(t), v = voiceAt(beat), written = STATES[stateIndex(beat)].pitch;
-  const singer = scene.name === "전주" ? "노래 시작 전" : scene.name === "후주" ? "노래 종료" : v.pitch === null || v.amp < 0.25 ? "쉼 · 무음" : v.pitch !== written ? "옥타브 오류" : "노래 중";
-  const follower = frozenFor(t) > 0.08 ? "관측 없음 · 정지" : "관측 반영 중";
+  // The singer as sung (the notes of the take); the follower named still once the silence lasts, not at every consonant.
+  const scene = sceneAt(t), v = sungNote(t);
+  const singer = scene.name === "전주" ? "노래 시작 전" : scene.name === "후주" ? "노래 종료" : v.pitch === null ? "쉼 · 무음" : "노래 중";
+  const follower = frozenFor(t) > 0.3 ? "관측 없음 · 정지" : "관측 반영 중";
   const speed = `${accompTempo(t).toFixed(2)}×`;
   const accomp = !singerSeen(t) ? `단독 진행 ${speed}` : coupleGain(t) < 0.2 ? `고유 템포로 진행 ${speed}` : `추종 중 ${speed}`;
   return { scene, singer, follower, accomp };
@@ -20,7 +21,7 @@ export function clockStates(t: number) {
 
 // The singer has finished once the last note ends; after that only the piano plays.
 const SONG_END = (() => { const last = [...STATES].reverse().find((s) => s.pitch !== null)!; return last.start + last.dur; })();
-const singing = (tau: number) => (singerU(tau) % TOTAL) < SONG_END;
+const singing = (tau: number) => singerU(tau) - passShift(tau) < SONG_END;
 function text(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, font: string, size = 11, weight = 600, align: CanvasTextAlign = "left") {
   ctx.font = `${weight} ${size}px ${font}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
 }
