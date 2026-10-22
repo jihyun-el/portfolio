@@ -141,5 +141,5 @@ export default function HomePage() {
   return <ProjectBrowser name={profile.name} role={profile.role} fields={profile.heroLines} links={profile.links}
     mini={{ count: miniProjects.length, grid: <MiniProjectGrid compact /> }} stackCount={stack.languages.length + stack.groups.reduce((sum, group) => sum + group.items.length, 0)}
     details={<DrawerHost inline panels={panels} routes={routes} basePath={sitePath("/").replace(/\/$/, "")} />}
-    groups={groups} projects={ordered} />;
+    groups={groups} projects={ordered} home={sitePath("/")} />;
 }

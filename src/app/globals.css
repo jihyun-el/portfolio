@@ -655,6 +655,7 @@ body:has(.project-browser) #main-content { height:100dvh; }
 .browser-side { min-height:0; display:flex; flex-direction:column; padding:24px 22px 20px; overflow-y:auto; scrollbar-width:thin; }
 .browser-id-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
 .browser-identity h1 { font-size:30px; font-weight:900; letter-spacing:-.035em; line-height:1.2; }
+.browser-home { text-decoration:none; }
 .browser-identity p { font-size:14px; font-weight:600; margin-top:6px; }
 .browser-identity .browser-fields { font-size:12px; font-weight:400; color:var(--ink-2); margin-top:2px; }
 .browser-choices { display:grid; margin-top:30px; border-top:2px solid var(--ink); }

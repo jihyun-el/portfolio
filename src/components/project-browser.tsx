@@ -30,17 +30,21 @@ function accented(title: string, accent?: string): ReactNode {
   return at < 0 ? title : <>{title.slice(0, at)}<em className="stage-accent">{accent}</em>{title.slice(at + accent!.length)}</>;
 }
 
-// Server-rendered figures and links stay with their project. This boundary handles selection.
-export function ProjectBrowser({ name, role, fields, links, projects, groups, mini, stackCount, details }: {
+// Server-rendered figures and links stay with their project. This boundary handles selection. `home` is the site's
+// root, which the name leads back to.
+export function ProjectBrowser({ name, role, fields, links, projects, groups, mini, stackCount, details, home }: {
   name: string; role: string; fields: string[]; links: { label: string; url: string }[]; projects: FeaturedProject[]; groups: ProjectGroup[];
-  mini: { count: number; grid: ReactNode }; stackCount: number; details: ReactNode;
+  mini: { count: number; grid: ReactNode }; stackCount: number; details: ReactNode; home: string;
 }) {
   const [selected, setSelected] = useState(projects[0].id);
+  // The stack opens over the scene but stands in the list, so while it is open it is the list's current entry.
+  const [stack, setStack] = useState(false);
   const root = useRef<HTMLElement>(null);
   useAppBar(root);
   useEffect(() => {
     const sync = () => {
       const hash = decodeURIComponent(location.hash.slice(1));
+      setStack(hash === "skills");
       if (hash === "mini" || hash.startsWith("mini/")) { setSelected("mini"); return; }
       const project = projects.find((item) => hash === item.id || item.also?.includes(hash));
       if (project) setSelected(project.id);
@@ -57,10 +61,18 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
     history.replaceState(history.state, "", `#${id}`);
     window.dispatchEvent(new Event("portfolio:navigate"));
   };
+  // The name goes back to the root: the first scene, staying, with whatever was open over it closed.
+  const goHome = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault(); setSelected(projects[0].id);
+    history.replaceState(history.state, "", location.pathname + location.search);
+    window.dispatchEvent(new Event("portfolio:navigate"));
+  };
+  const current = (id: string) => !stack && selected === id ? "true" : undefined;
   // The numbered scenes: every scene but a product's own.
   const numbered = projects.filter((item) => !item.head);
   const no = (i: number) => String(i + 1).padStart(2, "0");
-  const choice = (project: FeaturedProject) => <a key={project.id} href={`#${project.id}`} aria-current={selected === project.id ? "true" : undefined}
+  const choice = (project: FeaturedProject) => <a key={project.id} href={`#${project.id}`} aria-current={current(project.id)}
     aria-controls={`featured-${project.id}`} onClick={(event) => choose(event, project.id)}>
     <span className="browser-no num">{no(numbered.indexOf(project))}</span><b>{project.name}</b>{project.rail && <em>{project.rail}</em>}
   </a>;
@@ -70,21 +82,21 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
     if (projects[i - 1]?.group === project.group) return [];
     const group = groups.find((item) => item.id === project.group)!;
     return [<div className="browser-group" role="group" aria-label={group.name} key={group.id}>
-      <a className="browser-group-head" href={`#${project.id}`} aria-current={project.head && selected === project.id ? "true" : undefined} aria-controls={`featured-${project.id}`} onClick={(event) => choose(event, project.id)}><b>{group.name}</b>{group.lines.map((line) => <em key={line}>{line}</em>)}</a>
+      <a className="browser-group-head" href={`#${project.id}`} aria-current={project.head ? current(project.id) : undefined} aria-controls={`featured-${project.id}`} onClick={(event) => choose(event, project.id)}><b>{group.name}</b>{group.lines.map((line) => <em key={line}>{line}</em>)}</a>
       {projects.filter((item) => item.group === group.id && !item.head).map(choice)}
     </div>];
   });
   return <section className="wrap project-browser" id="about" ref={root} aria-label="소개와 대표 프로젝트">
     <noscript><style>{"html:has(.project-browser){overflow:auto}.project-browser{height:auto}.browser-scenes>article[hidden]{display:grid!important}.browser-scenes>article{min-height:700px;margin-bottom:40px}.browser-main{overflow:visible}"}</style></noscript>
     <aside className="browser-side">
-      <div className="browser-identity"><div className="browser-id-row"><h1>{name}</h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p></div>
+      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}</a></h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p></div>
       <nav className="browser-choices" aria-label="대표 프로젝트 선택">
         {entries}
-        <a href="#mini" aria-current={selected === "mini" ? "true" : undefined} aria-controls="featured-mini" onClick={(event) => choose(event, "mini")}>
+        <a href="#mini" aria-current={current("mini")} aria-controls="featured-mini" onClick={(event) => choose(event, "mini")}>
           <span className="browser-no num">{no(numbered.length)}</span><b>미니 프로젝트</b><em>{mini.count}개 프로젝트</em>
         </a>
         {/* The stack is no project: it has no number and opens over the scene, as the resources below do. */}
-        <a className="browser-stack" href="#skills"><b>기술 스택</b><em>{stackCount}개 기술</em></a>
+        <a className="browser-stack" href="#skills" aria-current={stack ? "true" : undefined}><b>기술 스택</b><em>{stackCount}개 기술</em></a>
       </nav>
       <nav className="browser-resources" aria-label="이력과 기록"><a href="#card">이력</a><a className="is-stack" href="#skills">기술 스택</a><a href="#writing">글</a><a href="#commits">개발 기록</a></nav>
       <div className="browser-contact">{links.map((link) => <a href={link.url} key={link.url} {...(link.url.startsWith("https://") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{CONTACT_MARKS[link.label]}{link.label} ↗</a>)}</div>
