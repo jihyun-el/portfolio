@@ -138,7 +138,7 @@ export function DetailPanel({ detail, name, kind, assets, top, intros = {}, figu
   // read one step further in, inside a unit or by date, and are never kept to a line by themselves.
   const grouped = (detail.units?.length ?? 0) > 0, stepOf = (id: string) => detail.cards.find((card) => card.id === id)!.step;
   // What a core card is called: the engine's and the app's are decisions about their architecture.
-  const coreLabel = kind === "engine" || kind === "app" ? "핵심 아키텍처 판단" : "핵심 판단";
+  const coreLabel = kind === "engine" || kind === "app" ? "아키텍처 결정" : "설계 결정";
   // A step leads to its first card by home step, to the card the detail names for it by date, or to a part of the
   // retrospective when the step itself is one.
   // Grouped, a step leads to its first card in the unit that names the step.

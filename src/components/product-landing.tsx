@@ -92,7 +92,7 @@ export function ProductLanding({ engine, model, app, pipeline, score }: { engine
     <ProductAssembly score={score} parts={{ engine, model, app, pipeline }} dive={dive}
       label={`${pipeline.name}이 조판한 악보에서 음표가 빛이 되어 ${app.name}의 휴대폰 안으로 날아들고, 가수의 목소리가 음높이 곡선으로 들어와 ${model.name}의 음높이 분포를 밝히며, 그 위에서 ${engine.name}의 빛점 고리가 선율에 맞춰 뛴다.`}>
       {(kind, item) => <a className="pm-part" href={`#${item.id}`} onClick={kind === "engine" ? toEngine : undefined}>
-        <span className="pm-name"><i className="num">{item.no}</i><b>{item.name}</b>{kind === "engine" && <em>핵심 솔루션</em>}</span>
+        <span className="pm-name"><i className="num">{item.no}</i><b>{item.name}</b></span>
         {/* The line breaks only between its items, each keeping the dot that follows it. */}
         <span className="pm-line">{item.line.split(" · ").flatMap((piece, i, all) => [i > 0 ? " " : null, <span key={piece}>{piece}{i < all.length - 1 && " ·"}</span>])}</span>
       </a>}

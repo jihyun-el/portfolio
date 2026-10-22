@@ -69,7 +69,7 @@ export function DetailView({ id, name, kind, assets, steps, meta, list, byDate, 
   const root = useRef<HTMLDivElement>(null);
   const unitOf = useMemo(() => new Map(units.flatMap((unit) => [...unit.cards, ...unit.held].map((key) => [key, unit.id] as const))), [units]);
   // The contents of a grouped detail: the scope with its results, each unit by its name, then the parts after them.
-  const contents = useMemo(() => [{ id: `${id}-scope`, name: highlights.length > 0 ? "범위와 핵심 결과" : "개발 범위", steps: [] as string[] },
+  const contents = useMemo(() => [{ id: `${id}-scope`, name: highlights.length > 0 ? "범위와 주요 결과" : "개발 범위", steps: [] as string[] },
     ...units.map((unit) => ({ id: unit.id, name: short(unit.title), steps: unit.steps })),
     ...parts.map((part) => ({ ...part, steps: [] as string[] }))], [id, units, parts, highlights.length]);
 
@@ -247,7 +247,7 @@ export function DetailView({ id, name, kind, assets, steps, meta, list, byDate, 
     <div className="dv-main">
       <section className="dv-sec dv-scope" id={`${id}-scope`} data-spy="" aria-label="개발 범위">{scope}
         {/* The results the detail leads with, each with what was measured right under its number; each goes to its unit. */}
-        {highlights.length > 0 && <div className="dv-results"><p className="dv-sub-h">핵심 결과</p><ul>{highlights.map((key) => {
+        {highlights.length > 0 && <div className="dv-results"><p className="dv-sub-h">주요 결과</p><ul>{highlights.map((key) => {
           const unit = units.find((item) => item.id === key);
           return unit?.metric && <li key={key}><button type="button" onClick={() => go(key)}><span className="dv-results-name">{short(unit.title)}</span><Result metric={unit.metric} /></button></li>;
         })}</ul></div>}

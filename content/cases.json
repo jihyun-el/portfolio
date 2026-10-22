@@ -9,7 +9,7 @@
       "title": "가수를 따라가는 반주 엔진",
       "sub": "마이크 입력에서 가수의 음높이를 추출해 악보 위치와 템포를 실시간으로 추정하고, 그 흐름에 맞춰 반주를 재생한다."
     },
-    "stack": ["Python", "PyTorch", "Core ML (iOS 신경망 가속기)", "Rust (AI 에이전트 구현)"],
+    "stack": ["Python", "PyTorch", "Core ML (iOS 신경망 가속기)", "Rust (AI 구현 협업)"],
     "lead": ["문제 정의", "신경망 설계", "학습 데이터", "저전력 모드 기준"],
     "hardest": [
       {

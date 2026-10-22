@@ -139,7 +139,7 @@ function PaymentPart() {
         ["중복 차단", "거래 테이블에 (결제 제공자, 외부 거래 ID) 고유 제약, 조건부 갱신이 행을 바꾼 요청만 지급"],
         ["완료 통지", "서버 검증이 성공했을 때만 스토어에 구매 완료 통지, 실패하면 스토어가 영수증 재전송"],
         ["지갑", "유료 · 보상 · 환불 부채 세 칸, 원장은 추가 전용이며 제약으로 검사"],
-        ["검증", "DB 테스트(pgTAP)로 고정, 구현과 검수는 Codex와 Claude가 교차 수행"]]} />
+        ["검증", "DB 테스트(pgTAP)로 고정, Codex · Claude 교차 검수"]]} />
     <figure className="vp-picture" data-wide=""><PaperPayment /></figure>
   </section>;
 }

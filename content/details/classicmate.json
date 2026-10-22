@@ -9,7 +9,7 @@
     "direct": [
       "리드 엔지니어로 반주 엔진 · 모바일 앱 · 악보 파이프라인을 설계하고 개발했다.",
       "출시, QA에서 발견한 문제의 수정, 인수인계까지 맡았다.",
-      "Python과 Dart는 직접 읽고 쓴다. Rust 이식은 AI 코딩 에이전트와 협업하고, Python 출력과의 비트 단위 대조로 검수했다."
+      "Python과 Dart는 직접 읽고 쓴다. Rust는 통과 기준을 정하고 AI 코딩 에이전트와 이식해, Python 출력과 비트 단위로 대조했다."
     ],
     "team": [
       "초기팀의 요구사항과 피드백을 반영하고 팀원의 변경을 통합했다."
@@ -21,7 +21,7 @@
   "stack": [
     {
       "technology": "PyTorch · Core ML · Swift · Rust",
-      "use": "반주 엔진의 모델 학습 · 기기 추론 · 앱 연결. Rust는 AI 구현 협업"
+      "use": "반주 엔진의 모델 학습 · 기기 추론 · 앱 연결. Rust는 AI 코딩 에이전트와 이식"
     },
     {
       "technology": "Flutter · Supabase",
