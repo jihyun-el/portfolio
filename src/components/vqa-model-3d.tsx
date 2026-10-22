@@ -356,7 +356,7 @@ export function VqaModel3D({ stage, photo, fallback }: { stage: ModelStage; phot
     const groundOf = (el: HTMLElement | null): string => { for (let at = el; at; at = at.parentElement) { const bg = getComputedStyle(at).backgroundColor; if (bg && bg !== "transparent" && !/rgba\(.*,\s*0\)$/.test(bg)) return bg; } return getComputedStyle(document.body).backgroundColor || "#ffffff"; };
     const paint = () => {
       dark = document.documentElement.classList.contains("dark");
-      const c = new THREE.Color(getComputedStyle(box).getPropertyValue("--stage-ink").trim() || "#0d0d0d"), g = new THREE.Color().setStyle(groundOf(box)), o = { r: 0, g: 0, b: 0 };
+      const c = new THREE.Color(getComputedStyle(box).getPropertyValue("--stage-ink").trim() || "#232323"), g = new THREE.Color().setStyle(groundOf(box)), o = { r: 0, g: 0, b: 0 };
       c.getRGB(o, THREE.SRGBColorSpace); ink = [o.r, o.g, o.b];
       inkLin = [c.r, c.g, c.b]; groundLin = [g.r, g.g, g.b];
     };

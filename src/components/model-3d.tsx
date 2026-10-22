@@ -8,6 +8,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { BLOOM_RADIUS, LIGHT_BLOOM, LIGHT_FALLOFF, LIGHT_RADIUS, RAMP, cloud, glowTexture, isDark, segments } from "@/lib/glow-3d";
+import { stageGround } from "@/lib/stage-ground";
 import { AXIS_HI, AXIS_LO, CURSOR01, DUET, DUET_LOOP, DUET_STARTS, PIANO_GAIN, PIANO_PARTIALS, VOICE_GAIN, VOICE_HARMONICS, pianoAt, voiceAt } from "@/components/model-figures";
 
 // The pitch model's step pictures drawn in the engine's 3D light (src/lib/glow-3d.ts): what the engine's stages draw
@@ -52,7 +53,7 @@ export function GlowFigure({ make, shot, tags, label, still }: { make: (kit: Kit
     const composer = new EffectComposer(renderer), bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, BLOOM_RADIUS, 0.2), output = new OutputPass(), ramp = new ShaderPass(RAMP);
     composer.setPixelRatio(pixelRatio); composer.addPass(new RenderPass(scene, camera)); composer.addPass(bloom); composer.addPass(output); composer.addPass(ramp);
     let dark = true;
-    const theme = () => { dark = isDark(); ramp.uniforms.light.value = dark ? 0 : 1; bloom.radius = dark ? BLOOM_RADIUS : LIGHT_RADIUS; falloff.value = dark ? 1 : LIGHT_FALLOFF; };
+    const theme = () => { dark = isDark(); ramp.uniforms.light.value = dark ? 0 : 1; ramp.uniforms.ground.value.fromArray(stageGround(el, dark)); bloom.radius = dark ? BLOOM_RADIUS : LIGHT_RADIUS; falloff.value = dark ? 1 : LIGHT_FALLOFF; };
     theme();
     const watch = new MutationObserver(theme);
     watch.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });

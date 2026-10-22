@@ -5,8 +5,8 @@ import { STATES, TOTAL, accompTempo, accompU, anchorU, coupleGain, frozenFor, pa
 
 // The strip sits on the panorama's stage; the light palette is the dark one inverted, like the light stage.
 const PALETTES = {
-  dark: { INK: "#f2f2f2", MID: "#9a9a9a", DIM: "#3a3a3a", FAINT: "#1d1d1d", GUIDE: "rgba(242,242,242,.18)", GLOW: 14 },
-  light: { INK: "#0d0d0d", MID: "#656565", DIM: "#c5c5c5", FAINT: "#e2e2e2", GUIDE: "rgba(13,13,13,.18)", GLOW: 3.75 },
+  dark: { INK: "#e6e6e6", MID: "#9a9a9a", DIM: "#434343", FAINT: "#282828", GUIDE: "rgba(230,230,230,.18)", GLOW: 14 },
+  light: { INK: "#232323", MID: "#656565", DIM: "#c5c5c5", FAINT: "#e2e2e2", GUIDE: "rgba(35,35,35,.18)", GLOW: 3.75 },
 };
 
 export function clockStates(t: number) {

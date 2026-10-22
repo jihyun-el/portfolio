@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import example from "@/lib/pipeline-example.json";
 import { phoneOutline } from "@/lib/phone-outline";
+import { stageGround } from "@/lib/stage-ground";
 
 // The four parts the lead engineer built, put together in light: the pipeline's own engraving of a song glows up,
 // its notes leave the page as points of light and fly into a phone, the singer's voice comes in from the left as a
@@ -60,8 +61,7 @@ const RING_LANES = [{ out: -0.026, size: 6.5, light: 0.6 }, { out: 0, size: 9.5,
 
 // The same ramp as the engine's picture: dark stage → indigo → magenta → orange → amber, light stage → seaborn flare.
 const FINAL = `#version 300 es
-precision highp float; in vec2 vUv; out vec4 o; uniform sampler2D base, glow; uniform float light, glowK;
-const float STAGE = 5.0 / 255.0;
+precision highp float; in vec2 vUv; out vec4 o; uniform sampler2D base, glow; uniform float light, glowK; uniform vec3 ground;
 const vec3 INDIGO = vec3(0.29, 0.21, 0.71), MAGENTA = vec3(0.76, 0.13, 0.44), ORANGE = vec3(0.94, 0.40, 0.11), AMBER = vec3(1.0, 0.80, 0.29);
 vec3 ramp(float x, vec3 c0, vec3 c1, vec3 c2, vec3 c3, vec3 c4) { return x < 1.0 ? mix(c0, c1, x) : x < 2.0 ? mix(c1, c2, x - 1.0) : x < 3.0 ? mix(c2, c3, x - 2.0) : mix(c3, c4, x - 3.0); }
 vec3 flare(float t) {
@@ -71,7 +71,8 @@ vec3 flare(float t) {
 }
 void main() {
   float n = clamp(texture(base, vUv).r + glowK * texture(glow, vUv).r, 0.0, 1.0);
-  vec3 onDark = ramp(n * 4.0, vec3(STAGE), INDIGO, MAGENTA, ORANGE, AMBER), onLight = mix(vec3(1.0 - STAGE), flare(n), smoothstep(0.0, 0.35, n));
+  // No light is the theme's stage colour, so the canvas meets the panel around it without an edge.
+  vec3 onDark = ramp(n * 4.0, ground, INDIGO, MAGENTA, ORANGE, AMBER), onLight = mix(ground, flare(n), smoothstep(0.0, 0.35, n));
   o = vec4(light > 0.5 ? onLight : onDark, 1.0);
 }`;
 const QUAD = `#version 300 es
@@ -177,8 +178,8 @@ export function ProductAssembly({ score, parts, dive, label, children }: { score
 
     const named = [...marks.querySelectorAll<HTMLElement>("[data-tag]")];
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let dark = document.documentElement.classList.contains("dark");
-    const theme = new MutationObserver(() => { dark = document.documentElement.classList.contains("dark"); });
+    let dark = document.documentElement.classList.contains("dark"), ground = stageGround(el, dark);
+    const theme = new MutationObserver(() => { dark = document.documentElement.classList.contains("dark"); ground = stageGround(el, dark); });
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     let size = "", W = 0, H = 0, dpr = 1, base: ReturnType<typeof target> | null = null, half: ReturnType<typeof target> | null = null, swap: ReturnType<typeof target> | null = null;
@@ -338,7 +339,7 @@ export function ProductAssembly({ score, parts, dive, label, children }: { score
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, H); gl.useProgram(final);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, base!.tex); gl.uniform1i(u(final, "base"), 0);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, half!.tex); gl.uniform1i(u(final, "glow"), 1);
-      gl.uniform1f(u(final, "light"), dark ? 0 : 1); gl.uniform1f(u(final, "glowK"), (dark ? 0.75 : 0.8) * clamp(w / 1000, 0.5, 1));
+      gl.uniform1f(u(final, "light"), dark ? 0 : 1); gl.uniform3f(u(final, "ground"), ...ground); gl.uniform1f(u(final, "glowK"), (dark ? 0.75 : 0.8) * clamp(w / 1000, 0.5, 1));
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
     raf = requestAnimationFrame(draw);

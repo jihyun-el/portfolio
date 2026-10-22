@@ -10,9 +10,10 @@ import * as THREE from "three";
 // Light stage: the same render with stronger signal drawn darker, on seaborn's "flare" map (apricot → coral →
 // magenta → purple, six of its 256 entries); weak signal fades into the paper instead of tinting it.
 export const RAMP = {
-  uniforms: { tDiffuse: { value: null }, light: { value: 0 } },
+  // `ground` is the theme's stage colour (src/lib/stage-ground.ts), set with the theme.
+  uniforms: { tDiffuse: { value: null }, light: { value: 0 }, ground: { value: new THREE.Vector3(5 / 255, 5 / 255, 5 / 255) } },
   vertexShader: "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float light; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float light; uniform vec3 ground; varying vec2 vUv;
 const float STAGE = 5.0 / 255.0;
 const vec3 INDIGO = vec3(0.29, 0.21, 0.71), MAGENTA = vec3(0.76, 0.13, 0.44), ORANGE = vec3(0.94, 0.40, 0.11), AMBER = vec3(1.0, 0.80, 0.29);
 vec3 ramp(float x, vec3 c0, vec3 c1, vec3 c2, vec3 c3, vec3 c4) {
@@ -25,9 +26,9 @@ vec3 flare(float t) {
 }
 void main() {
   float level = dot(texture2D(tDiffuse, vUv).rgb, vec3(0.2126, 0.7152, 0.0722));
-  // The cleared stage maps to the stage colour itself, so the canvas meets the panel around it without an edge.
+  // The cleared stage (rendered at STAGE) maps to the panel's stage colour, so the canvas meets it without an edge.
   float n = clamp((level - STAGE) / (1.0 - STAGE), 0.0, 1.0);
-  vec3 onDark = ramp(n * 4.0, vec3(STAGE), INDIGO, MAGENTA, ORANGE, AMBER), onLight = mix(vec3(1.0 - STAGE), flare(n), smoothstep(0.0, 0.35, n));
+  vec3 onDark = ramp(n * 4.0, ground, INDIGO, MAGENTA, ORANGE, AMBER), onLight = mix(ground, flare(n), smoothstep(0.0, 0.35, n));
   gl_FragColor = vec4(light > 0.5 ? onLight : onDark, 1.0);
 }`,
 };

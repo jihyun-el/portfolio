@@ -1,6 +1,8 @@
 /* One gothic family with weight as the only contrast. Figure styles adapted from Chanh Dai, MIT license. */
 :root {
-  --paper:#fff; --ink:#0b0b0b; --ink-2:#4a4a4a; --ink-3:#9a9a9a; --line:#e3e3e3; --wash:#f3f3f3;
+  /* Softened ends. Light: text at GitHub's (Primer) #1f2328 level as grey. Dark (below): a step softer than GitHub's
+     #0d1117 / #e6edf3, near Material's #121212 with 87% white, as halation on a near-black ground strains the eye. */
+  --paper:#fff; --ink:#232323; --ink-2:#4a4a4a; --ink-3:#9a9a9a; --line:#e3e3e3; --wash:#f3f3f3;
   --background:var(--paper); --foreground:var(--ink); --muted:var(--wash); --muted-foreground:var(--ink-2); --border:var(--line); --accent:var(--ink);
   --fs-xs:12px; --fs-s:14px; --fs-m:16px; --fs-l:20px; --fs-xl:28px;
   /* Heading levels: page title > project > supporting section > part. Nothing below the page title outgrows it. */
@@ -8,11 +10,12 @@
   /* Improvement accent; signal colour is rendered separately inside the panorama. */
   --up:#0a7f4f; --up-ink:#ffffff;
   /* Figure panel colours. The panorama maps signal brightness to a dark spectrum or light flare palette. */
-  --stage:#fafafa; --stage-ink:#0d0d0d; --stage-line:color-mix(in srgb,var(--stage-ink) 10%,var(--stage));
+  --stage:#fafafa; --stage-ink:#232323; --stage-line:color-mix(in srgb,var(--stage-ink) 10%,var(--stage));
   --h1:clamp(38px,5.2vw,64px); --h2:clamp(28px,3.6vw,40px); --h3:clamp(22px,2.4vw,28px); --h4:20px;
   color-scheme:light;
 }
-.dark { --paper:#0a0a0a; --ink:#f2f2f2; --ink-2:#b5b5b5; --ink-3:#6b6b6b; --line:#262626; --wash:#161616; --up:#3ddc97; --up-ink:#04140c; --stage:#050505; --stage-ink:#f2f2f2; color-scheme:dark; }
+/* The stage stays a shade darker than the paper, as on the light theme. */
+.dark { --paper:#141414; --ink:#e6e6e6; --ink-2:#b5b5b5; --ink-3:#6b6b6b; --line:#2a2a2a; --wash:#1f1f1f; --up:#3ddc97; --up-ink:#04140c; --stage:#101010; --stage-ink:#e6e6e6; color-scheme:dark; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; scroll-padding-top:calc(var(--bar-h) + 16px); }
 html,body { overflow-x:clip; }

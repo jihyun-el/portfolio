@@ -15,6 +15,7 @@ import { StepGo, heading, phrase } from "@/components/step-parts";
 import { SoundMark } from "@/components/sound-mark";
 import { exampleTime, followSound } from "@/lib/example-clock";
 import { clockStates, drawStrip } from "@/lib/three-clocks";
+import { stageGround } from "@/lib/stage-ground";
 import { setSceneStep } from "@/lib/scene-step";
 import { SceneShown, useSceneLeave } from "@/lib/scene-shown";
 import { useSceneMiddle } from "@/lib/scene-middle";
@@ -839,7 +840,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     // The theme can change while the panorama is open; the strip reads the same flag every frame.
     const ramp = new ShaderPass(RAMP); composer.addPass(ramp);
     let dark = true;
-    const applyTheme = () => { dark = isDark(); ramp.uniforms.light.value = dark ? 0 : 1; bloom.radius = dark ? BLOOM_RADIUS : LIGHT_RADIUS; FALLOFF.value = dark ? 1 : LIGHT_FALLOFF; };
+    const applyTheme = () => { dark = isDark(); ramp.uniforms.light.value = dark ? 0 : 1; ramp.uniforms.ground.value.fromArray(stageGround(canvas, dark)); bloom.radius = dark ? BLOOM_RADIUS : LIGHT_RADIUS; FALLOFF.value = dark ? 1 : LIGHT_FALLOFF; };
     applyTheme();
     const theme = new MutationObserver(applyTheme);
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
