@@ -47,7 +47,7 @@ export function VqaSteps({ stages, questions, privateScore, checks }: { stages: 
     { name: "마무리", hot: [5, 7], lit: last,
       tags: [{ from: counts[4], to: counts[7], text: `마지막 ${signed(counts[7] - counts[4])}` }],
       say: <>
-        <h3>마지막 {counts[7] - counts[4]}문항은 직접 좁혔다</h3>
+        <h3>마지막 {counts[7] - counts[4]}문항을 좁힌 세 결정</h3>
         <ol className="vq-rows">
           {row("5", "나", "큰 모델 셋을 원래 정밀도로 다시 학습", signed(gain(5)))}
           {row("6", "나", "답이 흔들리는 298문항만 다시 채점", signed(gain(6)))}

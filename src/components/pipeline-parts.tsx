@@ -45,7 +45,7 @@ function FirstStepPart({ score }: Props & { open: (part: number) => void }) {
   return <section className="vp-part" aria-label="회고: 빠진 첫 단계">
     <Say kind="회고" name="빠진 첫 단계" line="악보 이미지 → MusicXML 첫 단계에 VLM 필요"
       more={[["출발점", "이미 MusicXML로 변환된 악보에서 출발, 원천은 OpenScore 같은 퍼블릭 도메인(CC0) 악보"],
-        ["재설계 시", "종이 · PDF 악보 이미지에서 VLM으로 MusicXML을 직접 생성. 기술 난도는 더 높음"]]} />
+        ["재설계 시", "종이 · PDF 악보 이미지에서 VLM으로 MusicXML을 생성. 기술 난도는 더 높음"]]} />
     <figure className="vp-picture" data-wide=""><PaperFirstStep score={score} /></figure>
   </section>;
 }

@@ -602,7 +602,7 @@ const OBJECTS: Stage[] = [
     pose: { target: [0, -0.12, 0], radius: 4.5, height: 0.3, base: -0.1 },
     legend: ["점 하나 = 템포 후보 하나", "아래 = 악보에서 미리 정한 프레이즈 템포 곡선"],
     live: (t) => { const m = pfTempo(t), s = shapedTempo(t); return `반주 템포 = ${m.toFixed(2)} × 프레이즈 ${(s / m).toFixed(2)} = ${s.toFixed(2)}×`; } },
-  { title: "세 위치의 템포", line: "추정 위치: 정확하나 지터 과다로 반주에 직접 사용 불가 → 목표는 예측 가능하고, 음악적으로 자연스러운 반주", make: accompView,
+  { title: "세 위치의 템포", line: "추정 위치: 정확하나 지터 과다로 반주에 그대로 사용 불가 → 목표는 예측 가능하고, 음악적으로 자연스러운 반주", make: accompView,
     pose: { target: [0.3, -0.45, -0.3], radius: 4.4, height: 1.3, base: 0.42, sway: 0.05 },
     legend: ["앞 → 뒤: 가수(실제 위치에서 역산) · 재생 · 추정", "높이 = 템포 · 줄마다 가운데 선 = 1×(악보 빠르기)", "연주 시간 →"],
     live: (t) => `가수 ${singerTempo(t).toFixed(2)}× · 추정 ${headTempo(t).toFixed(2)}× · 재생 ${accompTempo(t).toFixed(2)}×` },

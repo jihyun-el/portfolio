@@ -22,7 +22,7 @@ function loudness(frame: number) {
 // Frames past the moment of computing left empty on the real-time row, how far the referenced reach spreads each side
 // of the value, and how far back the engine's reach is drawn. The widths are for the picture; the frames ahead are
 // the engine's.
-const EMPTY = 5, HALF = 4, BACK = 6, STEP_MS = 700;
+const EMPTY = 5, HALF = 6, BACK = 6, STEP_MS = 700;
 
 // A sample of a fan's line, as the legend shows it.
 const Key = ({ kind }: { kind: "keep" | "drop" }) => <svg className="dv-fan-key" width="22" height="6" aria-hidden="true"><line className={`dv-fan-${kind}`} x1="0" y1="3" x2="22" y2="3" /></svg>;

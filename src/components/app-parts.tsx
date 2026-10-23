@@ -125,7 +125,7 @@ function HandwritingPart({ score }: PartProps) {
   return <section className="vp-part" aria-label="결정: 필기">
     <Say kind="결정" name="필기" line="필기는 PDF 원본 좌표로 저장 · 배율은 렌더러 담당" verdict={<>4회 실패 후</>}
       more={[["문제", "PDF 뷰어와 필기 라이브러리가 확대를 따로 처리해, 확대하면 필기만 커지고 악보는 그대로"],
-        ["시도", "필기판 배경에 뷰어 배치 · 바깥에서 한 번 더 감싸기 · 페이지 이미지 렌더링(페이지당 약 18MB) · 두 확대 값 직접 맞추기"],
+        ["시도", "필기판 배경에 뷰어 배치 · 바깥에서 한 번 더 감싸기 · 페이지 이미지 렌더링(페이지당 약 18MB) · 두 확대 값 동기화"],
         ["채택", "뷰어가 페이지마다 주는 오버레이 자리에 필기 판을 올리고, 좌표는 PDF 원본 기준으로 저장"],
         ["동기화", "곡 목록은 마지막 쓰기 우선, 필기는 페이지 단위 3-way merge"]]} />
     <figure className="vp-picture" data-wide=""><PaperStroke score={score} /></figure>
@@ -149,7 +149,7 @@ function IncidentPart({ score }: PartProps) {
     <Say kind="QA" name="계정 경계" line="계정 전환 시 곡 목록 · 필기 캐시 초기화" verdict={<>원인 3<small>곳</small> 차단</>}
       more={[["발견", "QA 중 탈퇴 후 같은 기기로 재가입한 계정에 생성 31초 만에 곡 소유 기록 133건. 수동 다운로드로는 불가능한 속도라 자동 동기화를 원인으로 추정"],
         ["조치", "원인 세 가지를 모두 차단, 로그아웃 시 캐시와 파일을 함께 정리하는 절차 추가"],
-        ["결제 검증", "샌드박스 결제 시험에서 Apple 결제 검증이 런타임의 인증서 함수 미구현으로 실패 → 검증 직접 구현"],
+        ["결제 검증", "샌드박스 결제 시험에서 Apple 결제 검증이 런타임의 인증서 함수 미구현으로 실패 → jose · PKI.js로 검증 재구현"],
         ["핫픽스", "팀원 PR 머지 후 운영 DB에 이미 반영된 보안 결함 2건 우선 수정"]]} />
     <figure className="vp-picture" data-wide=""><PaperAccount score={score} /></figure>
   </section>;

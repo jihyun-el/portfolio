@@ -267,6 +267,6 @@ export function MirrorPoseFigure() {
         </svg>
       </div>
     </div>
-    <p className="mirror-status" aria-live="polite"><b>{NAMES[selected]}</b> 카메라가 직접 본 시선과 거울로 본 시선이 만나는 곳이 이 관절의 3D 위치다.</p>
+    <p className="mirror-status" aria-live="polite"><b>{NAMES[selected]}</b> 카메라가 관절을 본 시선과 거울에 비친 관절을 본 시선이 만나는 곳이 이 관절의 3D 위치다.</p>
   </figure>;
 }
