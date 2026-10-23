@@ -4,7 +4,7 @@ import { comparison } from "@/lib/showcase";
 import { Markdown } from "@/components/markdown";
 import { EnginePerformance, MirrorIdeaFlow, OwnershipFlow, PipelineFlow, VqaProgress } from "@/components/project-figures";
 import { ThreeClocks, VqaMatrix } from "@/components/interactive-figures";
-import { MirrorPoseFigure } from "@/components/mirror-pose-figure";
+import { MirrorPoseFigure, MirrorVanishing } from "@/components/mirror-pose-figure";
 import { BlockContract, BodyWindowCube } from "@/components/contract-figures";
 import { CommitTimeline } from "@/components/history";
 import { Gain } from "@/components/gain";
@@ -24,6 +24,7 @@ const inlineFigures: Record<string, ReactNode> = {
   "vqa-progress": <VqaProgress />,
   "mirror-idea": <MirrorIdeaFlow />,
   "mirror-pose": <MirrorPoseFigure />,
+  "mirror-vanish": <MirrorVanishing />,
 };
 
 // Markdown stays plain text; `<!-- figure:name -->` places a figure between paragraphs.

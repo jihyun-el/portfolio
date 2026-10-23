@@ -12,7 +12,7 @@ import { SignalChainSection } from "@/components/signal-chain-section";
 import { DrawerHost, type DrawerPanel } from "@/components/drawer";
 import { Markdown } from "@/components/markdown";
 import { DetailPanel } from "@/components/detail-panel";
-import { MirrorPoseFigure } from "@/components/mirror-pose-figure";
+import { MirrorPoseFigure, MirrorVanishing } from "@/components/mirror-pose-figure";
 import { FutureReach } from "@/components/future-reach";
 import { ModelDistill, PaymentFlow, StrokeMerge, ThreePositions } from "@/components/detail-figures";
 import { MirrorIdeaSteps } from "@/components/project-figures";
@@ -86,8 +86,9 @@ export default function HomePage() {
     ...miniProjects.map((item): DrawerPanel => {
       const detail = getDetail(`mini-${item.id}`);
       // The mini project's own pictures: the reconstruction the reader can turn is what the project is, so the detail
-      // opens under it across the pane; how the idea came stands under the card's line.
-      return { key: `mini/${item.id}`, group: "mini", kicker: `미니 프로젝트 · ${miniTag(item)}`, title: detail.title, body: <DetailPanel detail={detail} name="미니 프로젝트" kind="mini" assets={assets} top={<MirrorPoseFigure />} intros={{ [detail.cards[0].id]: <MirrorIdeaSteps /> }} /> };
+      // opens under it across the pane; how the idea came and the mirror's relation each stand under their card's line.
+      return { key: `mini/${item.id}`, group: "mini", kicker: `미니 프로젝트 · ${miniTag(item)}`, title: detail.title, body: <DetailPanel detail={detail} name="미니 프로젝트" kind="mini" assets={assets} top={<MirrorPoseFigure />}
+        intros={{ "mirror-single-camera-stereo": <MirrorIdeaSteps />, "mirror-vanishing-relation": <MirrorVanishing /> }} /> };
     }),
     { key: "card", group: "profile", kicker: profile.name, title: "이력", body: <ProfileCard /> },
     { key: "skills", group: "profile", kicker: profile.name, title: "기술 스택", body: <StackSection units={parts} /> },

@@ -238,6 +238,17 @@ button { font:inherit; color:inherit; }
 .mp-cam rect { fill:var(--ink); } .mp-cam circle { fill:var(--pane); }
 .mp-cam.virtual rect { fill:var(--pane); stroke:var(--ink-2); stroke-width:1.2; stroke-dasharray:2.5 2; } .mp-cam.virtual circle { fill:none; stroke:var(--ink-2); stroke-width:1.2; }
 .mp-label { font-size:11px; font-weight:700; fill:var(--ink-2); text-anchor:middle; paint-order:stroke; stroke:var(--pane); stroke-width:3px; pointer-events:none; }
+.mirror-vanish { --pane:var(--wash); min-width:0; margin:22px 0 4px; }
+.mirror-vanish figcaption { margin-bottom:10px; font-size:12px; font-weight:900; line-height:1.5; }
+.mirror-vanish svg { display:block; width:100%; height:auto; border:1px solid var(--line); background:var(--pane); }
+.mirror-vanish .mv-narrow { display:none; }
+@media (max-width:640px) { .mirror-vanish .mv-wide { display:none; } .mirror-vanish .mv-narrow { display:block; } }
+.mv-line { stroke:var(--ink-3); stroke-width:.8; } .mv-line.on { stroke:var(--ink); stroke-width:1.4; } .mv-line.off { stroke:var(--line); stroke-dasharray:3 3; }
+.mv-lead { stroke:var(--ink-3); stroke-width:1; stroke-dasharray:1 3; }
+.mv-edge { stroke:var(--line); stroke-width:1; stroke-dasharray:3 4; }
+.mv-point { fill:var(--pane); stroke:var(--ink); stroke-width:1.8; }
+.mp-label.mv-end { text-anchor:end; } .mp-label.mv-start { text-anchor:start; } .mp-label.mv-key { fill:var(--ink); }
+.mp-label.mv-note { font-weight:500; fill:var(--ink-3); }
 .mirror-status { margin-top:12px; font-size:var(--fs-s); color:var(--ink-2); } .mirror-status b { margin-right:6px; color:var(--ink); }
 .activity-figure { margin:0 0 40px; }
 .activity-figure figcaption { display:flex; flex-wrap:wrap; justify-content:space-between; gap:5px 16px; margin-bottom:16px; font-size:var(--fs-s); }

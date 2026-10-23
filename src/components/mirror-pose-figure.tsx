@@ -133,6 +133,74 @@ function Scene({ yaw, pitch, selected, onSelect, margin, named }: { yaw: number;
   </>;
 }
 
+// The mirror's relation on the same photo. A joint and its reflection always lie along the mirror's normal, so the line
+// through each of the 17 pairs runs towards one point, where that direction meets the picture. The point is found much
+// as the engine's RANSAC finds its relation: from every two lines, keep the meeting point most lines pass near (within
+// 100 px of the photo), then fit it to those lines alone (least squares). Lines that miss it, where a joint was found
+// off its place, are drawn broken. Each line is drawn as its two joints give it, out to the point's column. The height
+// is drawn taller than the width's scale so the fan can be read: a stretch keeps lines straight and lines through one
+// point through one point.
+const PAIRS = sample.real2d.map((real, i) => [real, sample.mirror2d[i]] as [V2, V2]);
+const NEAR = 100, SHOULDER = 5;
+const LINES = PAIRS.map(([[x1, y1], [x2, y2]]) => {
+  const n = Math.hypot(y1 - y2, x2 - x1), a = (y1 - y2) / n, b = (x2 - x1) / n;
+  return [a, b, -(a * x1 + b * y1)] as V3;
+});
+const meet = (which: number[]): V2 => {
+  let xx = 0, xy = 0, yy = 0, bx = 0, by = 0;
+  for (const i of which) { const [a, b, c] = LINES[i]; xx += a * a; xy += a * b; yy += b * b; bx -= a * c; by -= b * c; }
+  const det = xx * yy - xy * xy;
+  return [(bx * yy - xy * by) / det, (xx * by - xy * bx) / det];
+};
+const miss = (p: V2) => LINES.map(([a, b, c]) => Math.abs(a * p[0] + b * p[1] + c));
+const [VANISH, AGREE] = (() => {
+  let best: number[] = [];
+  for (let i = 0; i < LINES.length; i++) for (let j = i + 1; j < LINES.length; j++) {
+    const p = meet([i, j]);
+    if (!Number.isFinite(p[0])) continue;
+    const near = miss(p).flatMap((d, k) => (d < NEAR ? [k] : []));
+    if (near.length > best.length) best = near;
+  }
+  const p = meet(best);
+  return [p, new Set(miss(p).flatMap((d, k) => (d < NEAR ? [k] : [])))] as const;
+})();
+
+// Drawn twice: a wide pane, and for a phone a narrow one whose labels stay readable (taller stretch, larger type).
+export function MirrorVanishing() {
+  return <figure className="mirror-vanish">
+    <figcaption>짝지은 관절의 선이 지나는 한 점</figcaption>
+    <Fan width={720} stretch={1.8} pad={200} className="mv-wide" />
+    <Fan width={430} stretch={2.6} pad={900} className="mv-narrow" />
+  </figure>;
+}
+
+function Fan({ width, stretch, pad, className }: { width: number; stretch: number; pad: number; className: string }) {
+  const left = -pad, right = VANISH[0] + 700, top = 250, bottom = 2860, sx = width / (right - left), sy = sx * stretch;
+  const height = Math.round((bottom - top) * sy);
+  const at = ([x, y]: V2): V2 => [(x - left) * sx, (y - top) * sy];
+  const real = sample.real2d.map((p) => at(p as V2)), ghost = sample.mirror2d.map((p) => at(p as V2));
+  const reach = PAIRS.map(([r, m]) => at([VANISH[0], r[1] + (m[1] - r[1]) * (VANISH[0] - r[0]) / (m[0] - r[0])]));
+  const point = at(VANISH), edge = at([sample.image[0], 0])[0];
+  const tall = (points: V2[]) => Math.max(...points.map((p) => p[1])) - Math.min(...points.map((p) => p[1]));
+  const foot = (points: V2[]): V2 => [mean(points)[0], Math.max(...points.map((p) => p[1])) + 16];
+  const kind = (i: number) => (i === SHOULDER ? "mv-line on" : AGREE.has(i) ? "mv-line" : "mv-line off");
+  return <svg className={className} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="사진 속 실제 사람의 관절과 거울상에서 좌우를 바꿔 짝지은 관절을 이은 선들이 사진 오른쪽 바깥의 한 점으로 모인다. 그 점이 거울면에 수직인 방향의 소실점이다. 검출이 어긋난 몇 쌍은 그 점을 비켜 간다.">
+      <line className="mv-edge" x1={edge} y1={0} x2={edge} y2={height} />
+      <text className="mp-label mv-start mv-note" x={edge + 5} y={12}>사진 끝</text>
+      {real.map((p, i) => <line key={i} className={kind(i)} x1={p[0]} y1={p[1]} x2={reach[i][0]} y2={reach[i][1]} />)}
+      <g className="mp-ghost"><Person points={ghost} radius={HEAD * tall(ghost) * 0.6} /><Dots points={ghost} selected={SHOULDER} /></g>
+      <g className="mp-real"><Person points={real} radius={HEAD * tall(real) * 0.6} /><Dots points={real} selected={SHOULDER} /></g>
+      <line className="mv-lead" x1={point[0]} y1={point[1] + 8} x2={point[0]} y2={height - 30} />
+      <circle className="mv-point" cx={point[0]} cy={point[1]} r={6} />
+      <text className="mp-label" x={foot(real)[0]} y={foot(real)[1]}>실제</text>
+      <text className="mp-label" x={foot(ghost)[0]} y={foot(ghost)[1]}>거울상</text>
+      <text className="mp-label mv-end" x={real[SHOULDER][0] - 8} y={real[SHOULDER][1] + 4}>왼어깨</text>
+      <text className="mp-label mv-start" x={ghost[SHOULDER][0] + 8} y={ghost[SHOULDER][1] - 6}>거울 속 오른어깨</text>
+      <text className="mp-label mv-end mv-key" x={point[0] + 6} y={height - 16}>한 점 = 거울면에 수직인 방향의 소실점</text>
+      <text className="mp-label mv-end mv-note" x={width - 8} y={12}>점선: 검출이 어긋나 비켜 간 쌍</text>
+    </svg>;
+}
+
 // A still of the scene for the card on the home page.
 export function MirrorPoseThumb() {
   return <svg className="mirror-thumb" viewBox={`0 0 ${W} ${H}`} aria-hidden="true"><Scene yaw={YAW} pitch={PITCH} selected={WRIST} margin={BARE} named={false} /></svg>;
