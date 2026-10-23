@@ -453,7 +453,7 @@ figure figcaption strong { font-weight:800; } figure figcaption>span { font-size
 
 /* 3D panorama: the stages stand in one row on the stage, with the processing steps between them */
 /* Holds the place of the panorama on the home page until three.js has loaded. */
-.pano { position:relative; height:clamp(440px,40vw,500px); background:var(--stage); border:1px solid var(--stage-line); border-top:0; overflow:hidden; touch-action:pan-y; cursor:grab; user-select:none; }
+.pano { position:relative; height:clamp(440px,40vw,500px); background:var(--stage); border:1px solid var(--stage-line); border-top:0; touch-action:pan-y; cursor:grab; user-select:none; }
 .pano.is-dragging { cursor:grabbing; }
 .pano-labels { position:absolute; inset:0; z-index:2; overflow:hidden; pointer-events:none; }
 .pano-title { position:absolute; left:0; top:0; display:flex; align-items:baseline; gap:8px; font-size:16px; font-weight:900; letter-spacing:-.02em; white-space:nowrap; color:var(--stage-ink); opacity:0; }
@@ -786,7 +786,10 @@ body:has(.project-browser) #main-content { height:100dvh; }
 .browser-figure .pano-wrap { min-height:0; container-type:size; }
 .browser-figure .pano { width:min(100%,calc((100cqh - var(--cap)) * 3.38)); height:100%; margin-inline:auto; border:0; }
 /* What shows of the stages on either side fades out instead of ending at the picture's edge. */
-.browser-figure .chain-gl,.browser-figure .pano-labels { -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+.browser-figure .pano-labels { -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+/* In the dark the canvas reaches past the picture by --bleed (set by the figure); the sides still fade within the picture. */
+.chain-gl { --b:var(--bleed,0px); --in:calc(100% - 2 * var(--b)); }
+.browser-figure .chain-gl { -webkit-mask-image:linear-gradient(90deg,transparent var(--b),#000 calc(var(--b) + var(--in) * .08),#000 calc(100% - var(--b) - var(--in) * .08),transparent calc(100% - var(--b))); mask-image:linear-gradient(90deg,transparent var(--b),#000 calc(var(--b) + var(--in) * .08),#000 calc(100% - var(--b) - var(--in) * .08),transparent calc(100% - var(--b))); }
 .browser-figure .clock-strip { padding:9px 0 0; border:0; border-top:1px solid var(--stage-line); }
 .browser-figure .clock-title strong { font-size:14px; }
 .browser-figure .clock-title span { font-size:11px; font-weight:400; }
@@ -1217,7 +1220,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .browser-figure .is-solo .pano-hud,.browser-figure .is-solo .pano-title,.browser-figure .is-solo .chain-head { display:none; }
 .browser-figure .is-solo .pano-side { top:var(--mid,50%); }
 .browser-figure .is-solo .pano-side.is-prev { left:calc((var(--egut) - 44px) / 2); } .browser-figure .is-solo .pano-side.is-next { right:calc((var(--egut) - 44px) / 2); }
-.pano-say { --soft:color-mix(in srgb,var(--stage-ink) 58%,var(--stage)); min-width:0; color:var(--stage-ink); }
+.pano-say { --soft:color-mix(in srgb,var(--stage-ink) 58%,var(--stage)); position:relative; z-index:3; min-width:0; color:var(--stage-ink); }
 .pano-say-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
 .pano-say-count { display:flex; align-items:baseline; gap:.5em; font-size:clamp(11px,1cqw,14px); font-weight:700; letter-spacing:.08em; color:var(--soft); }
 .pano-say-count b { font-weight:900; color:var(--stage-ink); }
@@ -1263,7 +1266,8 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .browser-figure .is-wide .clock-strip { display:block; visibility:hidden; transition:visibility 0s 1.5s; }
   .browser-figure .pano-side { display:none; }
   .browser-figure .chain-step { display:grid; }
-  .browser-figure .is-solo:not(.is-wide) .chain-gl,.browser-figure .is-solo:not(.is-wide) .pano-labels { -webkit-mask-image:linear-gradient(90deg,transparent 2%,#000 20%,#000 80%,transparent 98%); mask-image:linear-gradient(90deg,transparent 2%,#000 20%,#000 80%,transparent 98%); }
+  .browser-figure .is-solo:not(.is-wide) .pano-labels { -webkit-mask-image:linear-gradient(90deg,transparent 2%,#000 20%,#000 80%,transparent 98%); mask-image:linear-gradient(90deg,transparent 2%,#000 20%,#000 80%,transparent 98%); }
+  .browser-figure .is-solo:not(.is-wide) .chain-gl { -webkit-mask-image:linear-gradient(90deg,transparent calc(var(--b) + var(--in) * .02),#000 calc(var(--b) + var(--in) * .2),#000 calc(100% - var(--b) - var(--in) * .2),transparent calc(100% - var(--b) - var(--in) * .02)); mask-image:linear-gradient(90deg,transparent calc(var(--b) + var(--in) * .02),#000 calc(var(--b) + var(--in) * .2),#000 calc(100% - var(--b) - var(--in) * .2),transparent calc(100% - var(--b) - var(--in) * .02)); }
   .pano-say { display:grid; grid-template-columns:minmax(0,1fr) auto auto; column-gap:12px; padding:0 2px 6px; }
   .pano-say>* { grid-column:1 / -1; }
   /* The step's name, the controls and the link share the first row; the link keeps the far end, as on every screen. */

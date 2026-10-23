@@ -26,6 +26,17 @@ type View = { root: THREE.Group; update: (t: number, wall: number, width: number
 // Tags are stamped with the frame that placed them, so tags of stages that went off screen can be hidden.
 type World = { overlay: HTMLElement; camera: THREE.PerspectiveCamera; frame: number; focus: number };
 type Maker = (map: THREE.Texture, pixelRatio: number, stage: World) => View;
+// In the dark the canvas reaches past the picture by a margin, and the scene is drawn only inside the picture, so
+// the margin holds nothing but the bloom spreading past the picture's edge (src/lib/glow-3d.ts fades it out).
+class FramedPass extends RenderPass {
+  frame = new THREE.Vector4();
+  override render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, deltaTime: number, maskActive: boolean) {
+    readBuffer.scissorTest = false; renderer.setRenderTarget(readBuffer); renderer.clear();
+    readBuffer.scissor.copy(this.frame); readBuffer.scissorTest = true;
+    super.render(renderer, writeBuffer, readBuffer, deltaTime, maskActive);
+    readBuffer.scissorTest = false;
+  }
+}
 
 // Labels pinned to points of a stage: projected through the world camera every frame and faded with the stage.
 function tagger(stage: World, space: THREE.Object3D) {
@@ -836,7 +847,8 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     const stackedQuery = window.matchMedia(STACKED);
     let gapKey = "", rowGap = 0, under = -1, opened = -1;
     const composer = new EffectComposer(renderer), bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, BLOOM_RADIUS, 0.2), output = new OutputPass();
-    composer.setPixelRatio(pixelRatio); composer.addPass(new RenderPass(scene, camera)); composer.addPass(bloom); composer.addPass(output);
+    const framed = new FramedPass(scene, camera);
+    composer.setPixelRatio(pixelRatio); composer.addPass(framed); composer.addPass(bloom); composer.addPass(output);
     // The theme can change while the panorama is open; the strip reads the same flag every frame.
     const ramp = new ShaderPass(RAMP); composer.addPass(ramp);
     let dark = true;
@@ -844,7 +856,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     applyTheme();
     const theme = new MutationObserver(applyTheme);
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    let size = "", band = 0;
+    let size = "", band = 0, bleed = 0;
     const seen = new IntersectionObserver(([entry]) => { visible.current = entry.isIntersecting; }); seen.observe(viewport);
     const sectionSeen = new IntersectionObserver(([entry]) => { sectionVisible.current = onScreen.current = entry.isIntersecting; syncSound(); }); sectionSeen.observe(sectionRef.current!);
     // The strip is a plain 2D canvas sized to its box at the device pixel ratio.
@@ -894,7 +906,17 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       texts.forEach((value, k) => { const el = statusRefs.current[k]; if (el && el.textContent !== value) el.textContent = value; });
       if (!visible.current) return;
       const w = viewport.clientWidth, h = viewport.clientHeight;
-      if (`${w}x${h}` !== size) { size = `${w}x${h}`; renderer.setSize(w, h, false); composer.setSize(w, h); band = soloRef.current ? 0 : (viewport.querySelector<HTMLElement>(".pano-hud")?.offsetHeight ?? 0) * 0.85; }
+      const margin = dark ? Math.round(clamp(Math.min(w, h) * 0.14, 24, 72)) : 0;
+      if (`${w}x${h}x${margin}` !== size) {
+        size = `${w}x${h}x${margin}`; bleed = margin;
+        const W = w + 2 * bleed, H = h + 2 * bleed;
+        renderer.setSize(W, H, false); composer.setSize(W, H); band = soloRef.current ? 0 : (viewport.querySelector<HTMLElement>(".pano-hud")?.offsetHeight ?? 0) * 0.85;
+        canvas.style.setProperty("--bleed", `${bleed}px`);
+        canvas.style.inset = `${-bleed}px`; canvas.style.width = canvas.style.height = `calc(100% + ${2 * bleed}px)`;
+        framed.frame.set(bleed, bleed, w, h).multiplyScalar(pixelRatio);
+        ramp.uniforms.frame.value.set(bleed / W, bleed / H, 1 - bleed / W, 1 - bleed / H);
+        ramp.uniforms.bleed.value.set(Math.max(bleed, 1) / W, Math.max(bleed, 1) / H); ramp.uniforms.clear.value = bleed > 0 ? 1 : 0;
+      }
 
       const c = scroll.current;
       if (c.glide) {
@@ -1060,7 +1082,10 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       // a smudge around the ink, so the light theme uses a weaker, short-reach one.
       // In the wide shot the bloom would reach as far as a small stage is wide, so it is turned down there.
       bloom.strength = (0.8 - 0.5 * soft) * (dark ? 1 : LIGHT_BLOOM) * (1 - 0.55 * spread);
+      // The canvas reaches past the view by the margin: the lens widens by the same amount for the drawing only.
+      if (bleed > 0) { camera.setViewOffset(w, h, -bleed, raise - bleed, w + 2 * bleed, h + 2 * bleed); camera.updateProjectionMatrix(); }
       composer.render();
+      if (bleed > 0) { if (raise !== 0) camera.setViewOffset(w, h, 0, raise, w, h); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }
       // The product's screen hands over to this one: it lands its own ring on this ring and fades this screen in over
       // it, so the ring's place on the page (middle, half width and half height, in page pixels) is kept on the section.
       if (soloRef.current && far > 0.99) {
