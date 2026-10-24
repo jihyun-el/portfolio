@@ -14,8 +14,9 @@
   --h1:clamp(38px,5.2vw,64px); --h2:clamp(28px,3.6vw,40px); --h3:clamp(22px,2.4vw,28px); --h4:20px;
   color-scheme:light;
 }
-/* The stage stays a shade darker than the paper, as on the light theme. */
-.dark { --paper:#141414; --ink:#e6e6e6; --ink-2:#b5b5b5; --ink-3:#6b6b6b; --line:#2a2a2a; --wash:#1f1f1f; --up:#3ddc97; --up-ink:#04140c; --stage:#101010; --stage-ink:#e6e6e6; color-scheme:dark; }
+/* The stage stays a shade darker than the paper, as on the light theme. Each grey keeps its lightness and leans a little
+   (OKLCH chroma 0.008–0.016) toward violet, hue 305°, between the indigo and magenta the 3D light starts from. */
+.dark { --paper:#151319; --ink:#e7e5eb; --ink-2:#b7b3bb; --ink-3:#6d6973; --line:#2c2830; --wash:#211d25; --up:#3ddc97; --up-ink:#04140c; --stage:#110f15; --stage-ink:#e7e5eb; color-scheme:dark; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; scroll-padding-top:calc(var(--bar-h) + 16px); }
 html,body { overflow-x:clip; }
@@ -735,6 +736,8 @@ body:has(.project-browser) #main-content { height:100dvh; }
 .stage-product .stage-stats li { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
 .stage-product .stage-stats b { font-size:clamp(19px,1.75vw,26px); font-weight:800; }
 .stage-product .stage-stats span { max-width:none; margin-top:0; font-size:clamp(13.5px,1.08vw,15.5px); font-weight:500; }
+/* A figure inside its sentence: the number the title's claim rests on, in the title's accent. */
+.stage-stats .stage-said b { display:inline; font-size:1.18em; font-weight:800; letter-spacing:-.01em; color:var(--signal-ink); }
 .stage-product .stage-copy { align-self:start; margin-top:clamp(10px,1.8vh,16px); }
 .stage-actions { grid-area:actions; align-self:start; display:grid; justify-items:end; gap:10px; }
 .stage-go { display:flex; justify-content:space-between; align-items:center; gap:28px; min-width:220px; min-height:48px; padding:8px 16px; border:2px solid var(--stage-ink); background:var(--stage-ink); color:var(--stage); font-size:14px; font-weight:800; text-decoration:none; }
@@ -1258,8 +1261,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .pano-acts button { position:relative; display:grid; grid-template-columns:auto auto; justify-content:start; align-items:baseline; gap:1px 8px; padding:0; border:0; background:none; color:var(--stage-ink); text-align:left; cursor:pointer; }
 .pano-acts button+button::before { content:"→"; position:absolute; right:calc(100% + clamp(3px,.9cqw,13px)); bottom:.1em; font-size:clamp(13px,1.3cqw,19px); font-weight:800; color:var(--soft); }
 .is-wide .pano-acts { pointer-events:auto; }
-.pano-acts small { grid-column:1 / -1; font-size:clamp(10.5px,.95cqw,13px); font-weight:600; color:var(--soft); }
-.pano-acts b { font-size:clamp(16px,min(1.95cqw,5.4cqh),30px); font-weight:900; letter-spacing:-.03em; line-height:1.15; }
+.pano-acts b { font-size:clamp(14px,min(1.55cqw,4.4cqh),24px); font-weight:800; letter-spacing:-.02em; line-height:1.15; }
 .pano-acts i { font-size:clamp(10px,.85cqw,12px); font-style:normal; font-weight:700; letter-spacing:.1em; color:var(--soft); }
 .pano-acts button:hover b,.pano-acts button:focus-visible b { text-decoration:underline; text-decoration-thickness:.08em; text-underline-offset:.14em; }
 .pano-no { position:absolute; left:0; top:0; font-size:clamp(10px,.9cqw,12px); font-weight:800; letter-spacing:.1em; color:color-mix(in srgb,var(--stage-ink) 58%,var(--stage)); opacity:0; }
@@ -2303,3 +2305,25 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 }
 @media (prefers-reduced-motion:reduce) { .title-sound.is-muted canvas { animation:none; } }
 @media (max-width:680px) { .title-sound small { display:none; } }
+
+/* Numbers with their units, and the words inside the 3D pictures, in Geist Mono (--font-mono, set in the layout to
+   cover digits, Latin letters and number signs only); Hangul, spaces and middle dots stay in Pretendard. */
+.num, .lf-tag { font-family:var(--font-mono),var(--font); font-variant-numeric:tabular-nums slashed-zero; letter-spacing:-.01em; }
+
+/* A scene comes in as a dive into the scene it is part of (in), or as a step back out of one of its parts (out),
+   centred on where the one lies inside the other. The figure's box keeps its size; only what is in it moves. */
+.stage-figure.is-zoom-in, .stage-figure.is-zoom-out { overflow:clip; }
+.stage-figure.is-zoom-in > * { animation:zoom-in .6s cubic-bezier(.16,.8,.24,1) both; transform-origin:var(--zx,50%) var(--zy,50%); }
+.stage-figure.is-zoom-out > * { animation:zoom-out .6s cubic-bezier(.16,.8,.24,1) both; transform-origin:var(--zx,50%) var(--zy,50%); }
+@keyframes zoom-in { from { transform:scale(.12); opacity:0; filter:blur(8px); } 35% { opacity:1; } to { transform:none; opacity:1; filter:none; } }
+@keyframes zoom-out { from { transform:scale(2.6); opacity:0; filter:blur(10px); } 45% { opacity:1; } to { transform:none; opacity:1; filter:none; } }
+
+/* The meter: corner marks on every picture's frame, and the engine's take time and frame in the picture's corner
+   (src/components/signal-chain-3d.tsx). While the engine's ring lands on the app's loop or lifts off it, its words step aside. */
+.browser-figure { --hud:color-mix(in srgb,var(--ink) 30%,transparent);
+  background:linear-gradient(var(--hud),var(--hud)) 0 0/14px 1px no-repeat,linear-gradient(var(--hud),var(--hud)) 0 0/1px 14px no-repeat,
+    linear-gradient(var(--hud),var(--hud)) 100% 0/14px 1px no-repeat,linear-gradient(var(--hud),var(--hud)) 100% 0/1px 14px no-repeat,
+    linear-gradient(var(--hud),var(--hud)) 0 100%/14px 1px no-repeat,linear-gradient(var(--hud),var(--hud)) 0 100%/1px 14px no-repeat,
+    linear-gradient(var(--hud),var(--hud)) 100% 100%/14px 1px no-repeat,linear-gradient(var(--hud),var(--hud)) 100% 100%/1px 14px no-repeat; }
+.pano-meter { position:absolute; left:12px; bottom:10px; z-index:4; margin:0; font-size:10.5px; line-height:1; letter-spacing:.02em; white-space:nowrap; color:color-mix(in srgb,var(--stage-ink) 52%,transparent); pointer-events:none; }
+.chain3d .pano-labels { transition:opacity .3s; } .chain3d[data-move] .pano-labels { opacity:0; }

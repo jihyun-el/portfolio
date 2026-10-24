@@ -44,9 +44,23 @@ void main() {
 export const isDark = () => document.documentElement.classList.contains("dark");
 // Bloom on the light stage is kept short-reach so lit points still sparkle without a grey haze around each stage.
 export const BLOOM_RADIUS = 0.45, LIGHT_BLOOM = 0.45, LIGHT_RADIUS = 0.08, LIGHT_FALLOFF = 1.4;
+// Depth: a point fades toward the stage with its depth from `fogNear` to `fogFar`, by at most `fogAmount`, so what
+// stands farther back sinks into the stage; lines take the scene's fog (depthFog below).
 const POINT_VERTEX = `
-attribute float size; attribute float alpha; varying float vAlpha; uniform float pixelRatio; uniform float zoom;
-void main() { vAlpha = pow(alpha, 0.8); vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = size * pixelRatio * zoom * (4.0 / -mv.z); gl_Position = projectionMatrix * mv; }`;
+attribute float size; attribute float alpha; varying float vAlpha; uniform float pixelRatio; uniform float zoom; uniform float fogNear; uniform float fogFar; uniform float fogAmount;
+void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vAlpha = pow(alpha, 0.8) * (1.0 - fogAmount * smoothstep(fogNear, fogFar, -mv.z)); gl_PointSize = size * pixelRatio * zoom * (4.0 / -mv.z); gl_Position = projectionMatrix * mv; }`;
+export type Fog = { near: { value: number }; far: { value: number }; amount: { value: number } };
+export const fogUniforms = (): Fog => ({ near: { value: 0 }, far: { value: 1 }, amount: { value: 0 } });
+// The engine's clouds share this one, as they share ZOOM.
+export const FOG = fogUniforms();
+// Sets a figure's depth fog: points through `fog`, lines through the scene's own fog, which dims them toward black and
+// so toward the stage in the additive render. The lines' fog reaches its full strength a little past `far`.
+export function depthFog(scene: THREE.Scene, fog: Fog, near: number, far: number, amount: number) {
+  fog.near.value = near; fog.far.value = far; fog.amount.value = amount;
+  if (amount <= 0) { scene.fog = null; return; }
+  const span = (far - near) / amount;
+  if (scene.fog instanceof THREE.Fog) { scene.fog.near = near; scene.fog.far = near + span; } else scene.fog = new THREE.Fog(0x000000, near, near + span);
+}
 // Point sizes were tuned for a card camera about 4.8 units away; the panorama camera stands farther back, so every
 // cloud shares this factor to keep its points as large on screen as the stage around them.
 export const ZOOM = { value: 1 };
@@ -66,13 +80,14 @@ export function glowTexture() {
 }
 
 // A figure with its own camera passes its own zoom and falloff, so it never moves the engine's.
-export function cloud(count: number, map: THREE.Texture, pixelRatio: number, own: { zoom: { value: number }; falloff: { value: number } } = { zoom: ZOOM, falloff: FALLOFF }) {
+export function cloud(count: number, map: THREE.Texture, pixelRatio: number, own: { zoom: { value: number }; falloff: { value: number }; fog?: Fog } = { zoom: ZOOM, falloff: FALLOFF }) {
+  const fog = own.fog ?? FOG;
   const geometry = new THREE.BufferGeometry();
   const position = new Float32Array(count * 3), size = new Float32Array(count), alpha = new Float32Array(count);
   geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
   geometry.setAttribute("size", new THREE.BufferAttribute(size, 1));
   geometry.setAttribute("alpha", new THREE.BufferAttribute(alpha, 1));
-  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: map }, pixelRatio: { value: pixelRatio }, zoom: own.zoom, falloff: own.falloff }, vertexShader: POINT_VERTEX, fragmentShader: POINT_FRAGMENT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: map }, pixelRatio: { value: pixelRatio }, zoom: own.zoom, falloff: own.falloff, fogNear: fog.near, fogFar: fog.far, fogAmount: fog.amount }, vertexShader: POINT_VERTEX, fragmentShader: POINT_FRAGMENT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   const points = new THREE.Points(geometry, material); points.frustumCulled = false;
   const set = (i: number, x: number, y: number, z: number, s: number, a: number) => { position[i * 3] = x; position[i * 3 + 1] = y; position[i * 3 + 2] = z; size[i] = s; alpha[i] = a; };
   const commit = () => { for (const name of ["position", "size", "alpha"]) geometry.getAttribute(name).needsUpdate = true; };
@@ -115,4 +130,29 @@ export function ribbon(count: number) {
   };
   const commit = () => { geometry.getAttribute("position").needsUpdate = true; geometry.getAttribute("color").needsUpdate = true; };
   return { object: mesh, set, commit, dispose: () => { geometry.dispose(); material.dispose(); } };
+}
+// Dust: faint specks drifting slowly up through a box round the picture, so the space between things reads as depth,
+// as the fog does. A speck fades in and out at the ends of its rise, and one
+// nearer the camera than `near` fades out before it swells.
+const seedOf = (n: number) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const wrap = (v: number) => ((v % 1) + 1) % 1;
+// `scale` sizes the specks for a camera standing farther back than a card's.
+export function dust(count: number, map: THREE.Texture, pixelRatio: number, own?: Parameters<typeof cloud>[3], scale = 1) {
+  const specks = cloud(count, map, pixelRatio, own), p = new THREE.Vector3();
+  const seeds = Array.from({ length: count }, (_, i) => [seedOf(i * 3.1), seedOf(i * 7.7 + 1), seedOf(i * 1.3 + 2), seedOf(i * 5.9 + 3)]);
+  // `min` and `max` are the box in the cloud's own space; `on` 0 hides the dust.
+  const update = (s: number, min: readonly number[], max: readonly number[], camera: THREE.Camera, near: number, on: number) => {
+    specks.object.visible = on > 0;
+    if (on <= 0) return;
+    specks.object.updateWorldMatrix(true, false);
+    for (let i = 0; i < count; i++) {
+      const [u, v, w, q] = seeds[i], fy = wrap(v + s * (0.004 + 0.008 * q)), fx = wrap(u + s * 0.0015 * (q - 0.5) + 0.006 * Math.sin(s * 0.23 + i));
+      const x = min[0] + (max[0] - min[0]) * fx, y = min[1] + (max[1] - min[1]) * fy, z = min[2] + (max[2] - min[2]) * w;
+      const d = p.set(x, y, z).applyMatrix4(specks.object.matrixWorld).distanceTo(camera.position);
+      const fade = Math.sin(Math.PI * fy) * Math.min(1, Math.max(0, (d - near) / near));
+      specks.set(i, x, y, z, scale * (1.6 + 2.8 * q), on * (0.09 + 0.19 * q) * fade);
+    }
+    specks.commit();
+  };
+  return { object: specks.object, update, dispose: specks.dispose };
 }

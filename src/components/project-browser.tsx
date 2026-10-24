@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode, type MouseEvent } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SceneShown } from "@/lib/scene-shown";
+import { MOVE_MS, askEngine, type RingPlace } from "@/lib/engine-move";
 
 // `title` is the scene's largest line: what the unit achieved or the problem it answers, not its name.
 // The line above it is the problem it answers when `contextLabel` says so. The name stays in the list. `also` lists the other addresses that show this scene, such as the details
@@ -24,6 +25,31 @@ const CONTACT_MARKS: Record<string, ReactNode> = {
   GitHub: <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>,
 };
 
+// The product's parts nest, the phone holding the engine and the engine's third stage holding the pitch model, so
+// moving between them dives in or steps back out. The engine's third stage is found by its number on the ring while
+// it shows; until it has been seen, where it stands in the wide shot.
+const NEST: Record<string, number> = { app: 0, engine: 1, model: 2 };
+const STAGE03 = [0.86, 0.4];
+// Where the engine's screen is wide enough to open on its ring, its own camera makes the move
+// (src/components/signal-chain-3d.tsx): it dives into its third stage before the page shows the pitch model and pulls
+// out of it when the page comes back; with the app, the ring lands on the engine's loop in the app's structure picture
+// or lifts off it, and the two screens cross-fade there.
+const directed = () => window.matchMedia("(min-width: 900px)").matches && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// The engine's loop in the app's structure picture, on the page; none where the app is open on another step.
+function appLoop(): RingPlace | null {
+  const r = document.querySelector("#featured-app .ap-loop")?.getBoundingClientRect();
+  return r && r.width > 0 ? { cx: r.left + r.width / 2, cy: r.top + r.height / 2, rx: r.width / 2, ry: r.height / 2 } : null;
+}
+// The styles that lay a screen unseen over another while it is read, as the product's screen does for the engine.
+const LAID = ["position", "left", "top", "width", "height", "opacity", "pointer-events", "z-index", "transition"], CROSS_MS = 260;
+function engineThird(): number[] | null {
+  const box = document.querySelector<HTMLElement>("#featured-engine .stage-figure");
+  const tag = box && [...box.querySelectorAll<HTMLElement>(".pano-no")].find((el) => el.textContent === "03");
+  if (!box || !tag || !box.offsetParent || !(Number(tag.style.opacity) > 0.5)) return null;
+  const a = box.getBoundingClientRect(), b = tag.getBoundingClientRect();
+  return [(b.left + b.width / 2 - a.left) / a.width, (b.top + b.height / 2 - a.top) / a.height];
+}
+
 // A title with the words named by `accent` set apart, once, where they first stand.
 function accented(title: string, accent?: string): ReactNode {
   const at = accent ? title.indexOf(accent) : -1;
@@ -41,6 +67,24 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
   const [stack, setStack] = useState(false);
   const root = useRef<HTMLElement>(null);
   useAppBar(root);
+  // `handed` marks a change of screen the ring has already carried, which needs no zoom of its own.
+  const before = useRef(selected), third = useRef<number[] | null>(null), waiting = useRef(0), handed = useRef(false);
+  useEffect(() => {
+    const from = before.current;
+    before.current = selected;
+    if (handed.current) { handed.current = false; return; }
+    if (from === selected || !(from in NEST) || !(selected in NEST) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (selected === "engine" && from === "model" && directed()) { askEngine("pull"); return; }
+    const box = document.querySelector<HTMLElement>(`#featured-${selected} .stage-figure`);
+    if (!box) return;
+    const engineToModel = (from === "engine" || selected === "engine") && (from === "model" || selected === "model");
+    const at = engineToModel ? third.current ?? (window.matchMedia("(min-width: 900px)").matches ? STAGE03 : [0.5, 0.5]) : [0.5, 0.5];
+    box.style.setProperty("--zx", `${(at[0] * 100).toFixed(1)}%`); box.style.setProperty("--zy", `${(at[1] * 100).toFixed(1)}%`);
+    box.classList.remove("is-zoom-in", "is-zoom-out"); void box.offsetWidth;
+    box.classList.add(NEST[selected] > NEST[from] ? "is-zoom-in" : "is-zoom-out");
+    const done = window.setTimeout(() => box.classList.remove("is-zoom-in", "is-zoom-out"), 650);
+    return () => window.clearTimeout(done);
+  }, [selected]);
   useEffect(() => {
     const sync = () => {
       const hash = decodeURIComponent(location.hash.slice(1));
@@ -57,9 +101,66 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
   }, [projects]);
   const choose = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault(); setSelected(id);
-    history.replaceState(history.state, "", `#${id}`);
-    window.dispatchEvent(new Event("portfolio:navigate"));
+    event.preventDefault();
+    if (waiting.current) return;
+    if (selected === "engine") third.current = engineThird() ?? third.current;
+    const go = () => { setSelected(id); history.replaceState(history.state, "", `#${id}`); window.dispatchEvent(new Event("portfolio:navigate")); };
+    if (directed() && selected === "engine" && id === "model") {
+      askEngine("dive");
+      waiting.current = window.setTimeout(() => { waiting.current = 0; go(); }, MOVE_MS.dive - 40);
+      return;
+    }
+    if (directed() && ((selected === "engine" && id === "app") || (selected === "app" && id === "engine")) && handOver(selected, id, go)) return;
+    go();
+  };
+  // The engine's ring and its loop in the app's structure picture are one thing, so between the two screens the ring
+  // moves onto the loop or off it. The screen being opened is laid out unseen over this one first, so the places can be
+  // read. To the app: the engine's camera stands back until the ring lies on the loop, then the two screens cross-fade.
+  // From the app: the engine opens with its ring on the loop, fades in there, and opens out. False where there is
+  // nothing to land on (the engine on a stage, the app on another step); the page then moves as it otherwise does.
+  const handOver = (from: string, to: string, go: () => void) => {
+    const here = document.getElementById(`featured-${from}`), there = document.getElementById(`featured-${to}`);
+    if (!here || !there || (from === "engine" && !here.querySelector(".chain3d.is-wide"))) return false;
+    const loop = from === "app" ? appLoop() : null;
+    if (from === "app" && !loop) return false;
+    const box = here.getBoundingClientRect(), later = (ms: number, run: () => void) => window.setTimeout(run, ms);
+    const undo = () => { for (const name of LAID) { there.style.removeProperty(name); here.style.removeProperty(name); } };
+    const engine = to === "engine" ? there.querySelector<HTMLElement>(".chain3d") : null;
+    if (engine) delete engine.dataset.ring;
+    Object.assign(there.style, { position: "fixed", left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`, opacity: "0", pointerEvents: "none", zIndex: "6", transition: "none" });
+    there.hidden = false;
+    waiting.current = -1;
+    // The two screens cross-fade; this one is hidden by the change of screen, and only then does the other leave its
+    // place over it, so nothing moves.
+    const cross = (then: () => void) => {
+      for (const [el, to] of [[there, "1"], [here, "0"]] as const) { el.style.transition = `opacity ${CROSS_MS}ms ease-out`; el.style.opacity = to; }
+      later(CROSS_MS, () => {
+        handed.current = true; go();
+        const settle = () => { if (!here.hidden) { requestAnimationFrame(settle); return; } undo(); waiting.current = 0; then(); };
+        requestAnimationFrame(settle);
+      });
+    };
+    if (from === "engine") {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        // The app's picture rises into place as it is shown; unseen, it is set straight at its place before it is read.
+        for (const animation of there.getAnimations({ subtree: true })) { try { if (animation.effect?.getTiming().iterations !== Infinity) animation.finish(); } catch {} }
+        const target = appLoop();
+        if (!target) { undo(); there.hidden = true; waiting.current = 0; go(); return; }
+        askEngine("land", target);
+        // Cross-fade once the ring lies on the loop, however long the frames take to get it there.
+        const section = here.querySelector<HTMLElement>(".chain3d"), begun = performance.now();
+        const look = () => { if (section?.dataset.move === "landed" || performance.now() - begun > MOVE_MS.land + 900) cross(() => {}); else later(30, look); };
+        look();
+      }));
+    } else {
+      askEngine("lift", loop!);
+      const begun = performance.now(), look = () => {
+        if (engine?.dataset.ring || performance.now() - begun > 900) later(80, () => cross(() => askEngine("release")));
+        else later(40, look);
+      };
+      look();
+    }
+    return true;
   };
   // The name goes back to the root: the first scene, staying, with whatever was open over it closed.
   const goHome = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -109,7 +210,8 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
           {project.context && <p className="stage-context">{project.contextLabel && <b>{project.contextLabel}</b>}{project.context}</p>}
           <h2 className="stage-title" id={`featured-title-${project.id}`}>{accented(project.title, project.accent)}</h2>
           {(project.sub || project.line) && <div className="stage-copy">{project.sub && <p className="stage-sub">{project.sub}</p>}{project.line && <p className="stage-line">{project.line}</p>}</div>}
-          {project.stats.length > 0 && <ul className="stage-stats">{project.stats.map((item) => <li key={item.label}><b className="num">{item.value}{item.unit && <small>{item.unit}</small>}</b><span>{item.label}</span></li>)}</ul>}
+          {project.stats.length > 0 && <ul className="stage-stats">{project.stats.map((item) => <li key={item.label}>{item.label.includes("{value}") ? <span className="stage-said">{item.label.split("{value}").flatMap((piece, i) => i ? [<b key={i} className="num">{item.value}{item.unit}</b>, piece] : [piece])}</span>
+            : <><b className="num">{item.value}{item.unit && <small>{item.unit}</small>}</b><span>{item.label}</span></>}</li>)}</ul>}
           <div className="stage-actions">{project.actions}</div>
         </header>
         <div className="browser-figure stage-figure"><SceneShown.Provider value={selected === project.id}>{project.figure}</SceneShown.Provider></div>

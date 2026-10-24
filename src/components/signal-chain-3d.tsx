@@ -8,7 +8,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { BLOOM_RADIUS, FALLOFF, LIGHT_BLOOM, LIGHT_FALLOFF, LIGHT_RADIUS, RAMP, ZOOM, cloud, glowTexture, isDark, ribbon, segments } from "@/lib/glow-3d";
+import { BLOOM_RADIUS, FALLOFF, FOG, LIGHT_BLOOM, LIGHT_FALLOFF, LIGHT_RADIUS, RAMP, ZOOM, cloud, depthFog, dust, glowTexture, isDark, ribbon, segments } from "@/lib/glow-3d";
 import { BEAT, BIN_CENTS, CHORDS, C_HI, C_LO, LOOP, PF_PARTICLES, STATES, TOTAL, accompTempo, accompU, pfTempo, shapedTempo, anchorU, belief, beliefFlow, centOf, chordAt, clamp, coupleGain, engineEvents, recentEvents, type EngineEvents, confirmedIndex, followerTempo, frozenFor, hash, latestAnchor, modBeat, observationAt, passShift, passStart, phraseFactor, playheadU, predictedIndex, prepareFollower, salience, schedulerLead, singerTempo, singerU, sungNote, tempoLayers, voiceInScore, voiceWave, vqtParts, wrapTime } from "@/lib/halt-score";
 import { StepGlyph } from "@/components/step-glyphs";
 import { StepGo, heading, phrase } from "@/components/step-parts";
@@ -16,6 +16,9 @@ import { SoundMark } from "@/components/sound-mark";
 import { exampleTime, followSound } from "@/lib/example-clock";
 import { clockStates, drawStrip } from "@/lib/three-clocks";
 import { stageGround } from "@/lib/stage-ground";
+import { pointerLean } from "@/lib/pointer-lean";
+import { MOVE_MS, type RingPlace } from "@/lib/engine-move";
+import HALT from "@/lib/halt-run.json";
 import { setSceneStep } from "@/lib/scene-step";
 import { SceneShown, useSceneLeave } from "@/lib/scene-shown";
 import { useSceneMiddle } from "@/lib/scene-middle";
@@ -578,7 +581,7 @@ type Pose = { target: Vec3; radius: number; height: number; base: number; sway?:
 // `span` is how far the picture reaches to each side of its middle, where that is further than most.
 type Stage = { title: string; line: string; make: Maker; pose: Pose; span?: number; legend?: string[]; live?: (t: number) => string };
 const OBJECTS: Stage[] = [
-  { title: "라이브 오디오", line: "재생한 반주의 마이크 재유입 → 반주 제거, 가수 음높이만 추출", make: audioView,
+  { title: "라이브 오디오", line: "재생한 반주의 마이크 재유입 → 반주 제거, 가수 음높이만 관측", make: audioView,
     pose: { target: [0, -0.05, -1.7], radius: 5.3, height: 1.35, base: -0.25 },
     legend: ["위 = 마이크", "아래 = 직전 반주(참조)"] },
   { title: "VQT 전처리", line: "마이크 6채널 + 엔진이 재생한 반주 6채널(참조 채널)", make: vqtView,
@@ -627,6 +630,8 @@ const SPACING = 5.2, FOV = 30, TILT = 0.16, GLIDE_MS = 1700, AUTOPLAY_MS = 6000;
 // at `floor`, the height of the stages' feet. The camera stands `away` from the ring's middle and looks down on it
 // by `tilt`.
 const RING = { x: 14, z: 9.5, turn: 0.72, floor: -1.75, away: 17.7, tilt: 0.41 }, RING_X = (N - 1) / 2 * SPACING;
+// A camera move asked for by the page (src/lib/engine-move.ts), with the camera's place for a land or lift.
+type EngineMove = { kind: string; ms: number; start: number; rect?: RingPlace; held?: boolean; done?: boolean; pose?: { pos: THREE.Vector3; look: THREE.Vector3 } };
 const ringAngle = (stage: number) => stage / N * 2 * Math.PI;
 // The point of the ring at an angle from its front, `out` further out than the stages and at height `y`.
 const ringPoint = (angle: number, out = 0, y = 0): Vec3 => [RING_X + (RING.x + out) * Math.sin(angle), y, (RING.z + out) * Math.cos(angle)];
@@ -649,9 +654,9 @@ const RING_VIEW = (() => {
 })();
 // What the engine does, in order, and the stages that do it.
 const ACTS = [
-  { name: "듣는다", what: "마이크 입력에서 가수의 음높이를", from: 0, to: 2 },
-  { name: "찾는다", what: "악보에서 현재 위치를", from: 3, to: 4 },
-  { name: "친다", what: "그 위치에 맞춰 반주를", from: 5, to: 9 },
+  { name: "음높이 관측", from: 0, to: 2 },
+  { name: "위치 · 템포 추정", from: 3, to: 4 },
+  { name: "반주 재생", from: 5, to: 9 },
 ];
 // The points of light that make the ring: three lanes of evenly spaced points, the middle one the strongest.
 const STREAM_LANES = [{ out: -0.36, size: 6.5, light: 0.6 }, { out: 0, size: 9.5, light: 1 }, { out: 0.36, size: 6.5, light: 0.6 }], STREAM_EACH = 250, STREAM = STREAM_LANES.length * STREAM_EACH;
@@ -788,6 +793,20 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
   // Leaving the home screen sends the figure back to where it opens: the whole ring where there is one, the first
   // stage otherwise, playing. The camera is set there without a flight (`jump` holds the shot to land on).
   const jump = useRef<boolean | null>(null), wrapRef = useRef<HTMLDivElement>(null);
+  // A camera move the page asks for as it changes screen (src/components/project-browser.tsx): "dive" into the third
+  // stage and "pull" out of it, for the pitch model; "land" the ring on an ellipse of the page and "lift" it off one,
+  // for the engine's loop in the app's structure picture. A lift holds on the ellipse until "release". And the meter of
+  // the take's time and frame.
+  const move = useRef<EngineMove | null>(null), meterRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    const ask = (event: Event) => {
+      const { kind, rect } = (event as CustomEvent<{ kind: string; rect?: RingPlace }>).detail;
+      if (kind === "release") { const m = move.current; if (m?.kind === "lift") { m.held = false; m.start = -1; } return; }
+      move.current = { kind, rect, ms: MOVE_MS[kind as keyof typeof MOVE_MS] ?? 600, start: -1, held: kind === "lift" };
+    };
+    window.addEventListener("portfolio:engine-move", ask);
+    return () => window.removeEventListener("portfolio:engine-move", ask);
+  }, []);
   useSceneMiddle(wrapRef);
   useSceneLeave(() => {
     const c = scroll.current; c.s = c.from = c.to = 0; c.glide = false; c.drag = null;
@@ -841,6 +860,9 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     // what is flowing out of the stage it leaves, and a swell of light travels along it from that stage to the next.
     const stream = cloud(STREAM, map, pixelRatio);
     stream.object.visible = false; scene.add(stream.object);
+    // Dust through the row and round the ring, drawn larger for this camera standing farther back.
+    const specks = dust(520, map, pixelRatio, undefined, 2.6), dustMin = [-1.5 * SPACING, RING.floor - 2.5, -RING.z - 3], dustMax = [(N + 0.5) * SPACING, 5, RING.z + 3];
+    scene.add(specks.object);
     // How much of the view the strip of the three positions covers, eased so the picture makes room for it smoothly.
     let cover = 0, before = performance.now();
     // Stacked, how far the wide shot's picture reaches down past its own row, and how much of that it has taken.
@@ -888,10 +910,39 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       return best;
     };
     const start = performance.now();
+    // The names of the acts in the ring's hole come last: only once this screen stands in its own place (not laid out
+    // unseen over another while it is read, src/components/project-browser.tsx and product-landing.tsx) and the camera
+    // has come to rest. `settled` is when both last became true.
+    const article = sectionRef.current!.closest("article");
+    let settled = -1;
     let frame = 0, told = false, box = viewport.getBoundingClientRect(), dipped = 1;
+    // The camera's working points, and the place of the third stage among the stages drawn.
+    const aimAt = new THREE.Vector3(), aimTo = new THREE.Vector3(), swing = new THREE.Vector3(), farPos = new THREE.Vector3(), THIRD = WORLD.indexOf(2);
+    // Where the camera stands for the ring to lie on an ellipse of the view (its middle and half sizes in the view's
+    // pixels): looking down at the ring's middle, it stands back until the ring is as wide as the ellipse, looks down
+    // more or less until the ring is as deep, and moves across and up along its own axes until the middles meet. Each
+    // round measures the ring as the product's screen reads it (its front, back and sides) and corrects.
+    const solver = new THREE.PerspectiveCamera(), ringMiddle = new THREE.Vector3(RING_X, RING.floor + 0.06, 0), upward = new THREE.Vector3(), sideways = new THREE.Vector3(1, 0, 0);
+    const landing = (cx: number, cy: number, rx: number, ry: number, w: number, h: number) => {
+      solver.copy(camera);
+      const lens = h / 2 / Math.tan(THREE.MathUtils.degToRad(solver.fov / 2)), pos = new THREE.Vector3(), look = new THREE.Vector3();
+      let lean = RING.tilt, d = RING.away, across = 0, up = 0;
+      for (let round = 0; round < 12; round++) {
+        upward.set(0, Math.cos(lean), -Math.sin(lean));
+        look.copy(ringMiddle).addScaledVector(sideways, across).addScaledVector(upward, up);
+        pos.set(0, Math.sin(lean) * d, Math.cos(lean) * d).add(look);
+        solver.position.copy(pos); solver.lookAt(look); solver.updateMatrixWorld();
+        const ends = [0, 0.5, 1, 1.5].map((q) => { p.set(...ringPoint(q * Math.PI, 0, RING.floor + 0.06)).project(solver); return [(p.x + 1) / 2 * w, (1 - p.y) / 2 * h]; });
+        const mx = (ends[1][0] + ends[3][0]) / 2, my = (ends[0][1] + ends[2][1]) / 2, mw = (ends[1][0] - ends[3][0]) / 2, mh = (ends[0][1] - ends[2][1]) / 2;
+        d *= mw / rx;
+        lean = Math.asin(clamp(Math.sin(lean) * (ry / rx) / (mh / mw), 0.05, 0.98));
+        across -= (cx - mx) * d / lens; up += (cy - my) * d / lens;
+      }
+      return { pos, look };
+    };
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
-      if (!sectionVisible.current) return;
+      if (!sectionVisible.current) { if (move.current?.kind === "land") move.current = null; settled = -1; return; }
       // A detail opened over this screen changes the address without an event.
       if (homeHash.current !== null && (location.hash === homeHash.current) !== hereRef.current) syncSound();
       const wall = (now - start) / 1000, t = reduced && mutedRef.current ? STILL : exampleTime(now), motion = reduced ? 0 : wall;
@@ -989,7 +1040,48 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       // by part of that on the way, or it would pass close by the stage and the stage would swell.
       const back = spots[(flight ? flight.anchor : index) + 1][2] * (1 - spread) * 1.3;
       camera.position.set(camX + 0.3 * Math.sin(motion * 0.17), camY + distance * Math.tan(tilt) + 0.15 * Math.sin(motion * 0.11), distance + back);
-      camera.lookAt(camX, camY - 0.1, back); camera.updateMatrixWorld();
+      // The camera leans after the pointer, round the point it looks at, so the dust and the stages slide against each
+      // other and the depth shows.
+      if (!reduced) { const lean = pointerLean(now); camera.position.x += 0.075 * distance * lean.x; camera.position.y -= 0.045 * distance * lean.y; }
+      // Camera direction. Between two stages the camera swings back and up and comes in again, as on a crane, instead
+      // of sliding along the row. Going to the pitch model it dives into the third stage, where the model works, and
+      // coming back it pulls out of it; the page waits for the dive. Going to the app it stands back until the ring lies
+      // on the engine's loop in the app's structure picture, the stages folding into their places on the ring, and the
+      // app fades in over it; coming back from the app it starts there and opens out.
+      const looking = aimAt.set(camX, camY - 0.1, back);
+      let fold = 0;
+      const m = move.current;
+      if (reduced) move.current = null;
+      else {
+        if (c.glide) {
+          const arc = Math.sin(Math.PI * clamp((now - c.start) / GLIDE_MS));
+          swing.subVectors(camera.position, looking).normalize();
+          camera.position.addScaledVector(swing, 0.45 * distance * arc); camera.position.y += 0.12 * distance * arc;
+        }
+        if (m) {
+          if (m.start < 0) m.start = now;
+          if (m.kind === "dive" || m.kind === "pull") {
+            const q = clamp((now - m.start) / m.ms), weight = m.kind === "dive" ? q * q * q : (1 - q) ** 3, third = spots[THIRD];
+            aimTo.set(third[0], third[1] + 0.2, third[2]); swing.subVectors(camera.position, aimTo).normalize(); farPos.copy(aimTo).addScaledVector(swing, 2.2);
+            camera.position.lerp(farPos, weight); looking.lerp(aimTo, weight);
+            if (q >= 1) move.current = null;
+          } else if (m.rect) {
+            // Solved again every frame: the view's offset eases as the strip under it comes and goes.
+            const v = viewport.getBoundingClientRect(); m.pose = landing(m.rect.cx - v.left, m.rect.cy - v.top, m.rect.rx, m.rect.ry, w, h);
+            const q = m.held ? 0 : clamp((now - m.start) / m.ms), eased = q * q * (3 - 2 * q), weight = m.kind === "land" ? eased : 1 - eased;
+            // Standing farther back, the ring's points are drawn somewhat larger, so the ring stays a line.
+            ZOOM.value *= 1 + (m.pose.pos.distanceTo(m.pose.look) / Math.max(distance, 1e-3) - 1) * 0.5 * weight;
+            camera.position.lerp(m.pose.pos, weight); looking.lerp(m.pose.look, weight);
+            fold = weight;
+            if (m.kind === "lift" && q >= 1) move.current = null;
+            if (m.kind === "land" && q >= 1) m.done = true;
+          }
+        }
+      }
+      if (move.current || article?.style.position === "fixed") settled = -1; else if (settled < 0) settled = now;
+      const landed = move.current?.rect ? (move.current.done ? "landed" : move.current.kind) : "";
+      if ((sectionRef.current!.dataset.move ?? "") !== landed) { if (landed) sectionRef.current!.dataset.move = landed; else delete sectionRef.current!.dataset.move; }
+      camera.lookAt(looking); camera.updateMatrixWorld();
       const reach = distance * half * aspect + SPACING * 0.6, reachY = distance * half + SPACING * 0.6;
       const off = (x: number, y: number) => Math.max(Math.abs(x - camX) - (paired ? SPACING / 2 : 0), Math.abs(y - camY)), focusOf = (x: number, y: number) => Math.max(far, clamp(1 - off(x, y) / SPACING, 0.15, 1));
 
@@ -1000,6 +1092,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
         const o = WORLD[k], { pose } = OBJECTS[o], [x, y, z] = spots[k], sway = (pose.sway ?? 0.22) * 0.6 * Math.sin(motion * 0.25 + o * 0.9), depth = distance + back - z;
         // On the ring every stage faces the camera as it does when it stands alone in the middle, and then the ones at
         // the sides turn outwards with the ring.
+        holder.scale.setScalar(4.7 / pose.radius * (1 - 0.92 * fold));
         holder.rotation.set(Math.atan2(pose.height, pose.radius) - TILT - spread * (Math.atan2(camera.position.y - y, depth) - TILT), -(pose.base + sway) + spread * (RING.turn * Math.sin(ringAngle(o)) - Math.atan2(x - camera.position.x, depth)), 0);
         // The copies only serve the row's wrap; on the ring the last stage already stands beside the first.
         holder.visible = Math.abs(x - camX) < reach && Math.abs(y - camY) < reachY && !(flying && (k === 0 || k > N));
@@ -1071,7 +1164,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       }
       if (names) {
         // Stacked, the words stand at the foot of the picture, under the ring, and leave as soon as a stage is entered.
-        names.style.visibility = far > 0 && (!stacked || wideNow) ? "visible" : "hidden"; names.style.opacity = far.toFixed(2);
+        names.style.visibility = far > 0 && (!stacked || wideNow) ? "visible" : "hidden"; names.style.opacity = (settled < 0 ? 0 : far * clamp((now - settled - 350) / 500)).toFixed(2);
         if (stacked) names.style.transform = `translate(${(viewport.offsetLeft + w / 2).toFixed(1)}px, ${(viewport.offsetTop + h - room / 2).toFixed(1)}px) translate(-50%, -50%)`;
         else {
           p.set(RING_X, RING.floor, -0.12 * RING.z).project(camera);
@@ -1082,14 +1175,26 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       // a smudge around the ink, so the light theme uses a weaker, short-reach one.
       // In the wide shot the bloom would reach as far as a small stage is wide, so it is turned down there.
       bloom.strength = (0.8 - 0.5 * soft) * (dark ? 1 : LIGHT_BLOOM) * (1 - 0.55 * spread);
+      // Fog from just before the point looked at to well past it, over a stage's depth in the row and the ring's depth
+      // on the ring, so the stages at the back of the ring sink toward the stage colour.
+      const aimDistance = camera.position.distanceTo(p.set(camX, camY - 0.1, back)), extent = 2.6 + (RING.z + 1 - 2.6) * spread;
+      depthFog(scene, FOG, aimDistance - 0.4 * extent, aimDistance + 1.1 * extent, 0.7);
+      specks.update(motion, dustMin, dustMax, camera, 0.3 * aimDistance, 1);
       // The canvas reaches past the view by the margin: the lens widens by the same amount for the drawing only.
+      // The meter: where the take is, in the recording's own time and in the engine's 10ms frames.
+      const meter = meterRef.current;
+      if (meter) {
+        const u = wrapTime(t), at = HALT.origin + u, text = `녹음 ${Math.floor(at / 60)}:${(at % 60).toFixed(2).padStart(5, "0")} · 10ms 프레임 ${Math.floor(u / HALT.hop).toLocaleString("en-US")} / ${HALT.frames.toLocaleString("en-US")}`;
+        if (meter.textContent !== text) meter.textContent = text;
+      }
       if (bleed > 0) { camera.setViewOffset(w, h, -bleed, raise - bleed, w + 2 * bleed, h + 2 * bleed); camera.updateProjectionMatrix(); }
       composer.render();
       if (bleed > 0) { if (raise !== 0) camera.setViewOffset(w, h, 0, raise, w, h); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }
       // The product's screen hands over to this one: it lands its own ring on this ring and fades this screen in over
       // it, so the ring's place on the page (middle, half width and half height, in page pixels) is kept on the section.
       if (soloRef.current && far > 0.99) {
-        if (!told || world.frame % 30 === 0) box = viewport.getBoundingClientRect();
+        // Read fresh while the ring is carried to or from another screen, which reads it back.
+        if (!told || move.current || world.frame % 30 === 0) box = viewport.getBoundingClientRect();
         const ends = [0, 0.5, 1, 1.5].map((q) => { p.set(...ringPoint(q * Math.PI, 0, RING.floor + 0.06)).project(camera); return [(p.x + 1) / 2 * w, (1 - p.y) / 2 * h]; });
         const ring = [box.left + (ends[1][0] + ends[3][0]) / 2, box.top + (ends[0][1] + ends[2][1]) / 2, (ends[1][0] - ends[3][0]) / 2, (ends[0][1] - ends[2][1]) / 2].map((v) => v.toFixed(1)).join(",");
         if (sectionRef.current!.dataset.ring !== ring) sectionRef.current!.dataset.ring = ring;
@@ -1100,7 +1205,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     const warm = window.setTimeout(prepareFollower, 300);
     return () => {
       cancelAnimationFrame(frame); window.clearTimeout(warm); seen.disconnect(); sectionSeen.disconnect(); theme.disconnect();
-      views.forEach((view) => view.dispose()); bloom.dispose(); output.dispose(); ramp.dispose(); composer.dispose(); stream.dispose(); map.dispose(); renderer.dispose();
+      views.forEach((view) => view.dispose()); bloom.dispose(); output.dispose(); ramp.dispose(); composer.dispose(); stream.dispose(); specks.dispose(); map.dispose(); renderer.dispose();
     };
   }, []);
 
@@ -1165,7 +1270,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
       </div>
     </div>
     <div className="pano-wrap" ref={wrapRef}>
-    <div className={`pano${dragging ? " is-dragging" : ""}`} ref={viewportRef} role="img" aria-label={wide ? ACTS.map((act) => `${act.what} ${act.name}`).join(" → ") : shown.map((i) => `${pad(i + 1)} ${OBJECTS[i].title}: ${OBJECTS[i].line}`).join(" / ")}
+    <div className={`pano${dragging ? " is-dragging" : ""}`} ref={viewportRef} role="img" aria-label={wide ? ACTS.map((act) => act.name).join(" → ") : shown.map((i) => `${pad(i + 1)} ${OBJECTS[i].title}: ${OBJECTS[i].line}`).join(" / ")}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}>
       <canvas className="chain-gl" ref={canvasRef} aria-hidden="true" />
       <div className="pano-labels" aria-hidden="true">
@@ -1174,6 +1279,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
         {WORLD.slice(0, -1).map((o, k) => <span key={k} className="pano-step" ref={(el) => { steps.current[k] = el; }}><StepGlyph step={o} /><span className="pano-step-label"><StepLabel text={STEPS[o]} /></span></span>)}
       </div>
       <div className="pano-labels" ref={overlayRef} aria-hidden="true" />
+      <p className="pano-meter num" ref={meterRef} aria-hidden="true" />
       <div className="pano-hud" aria-hidden="true">
         {WORLD.map((o, k) => <div key={k} className="pano-cap" ref={(el) => { captions.current[k] = el; }}>
           <p className="pano-hud-head"><span className="num">{pad(o + 1)}</span><strong>{OBJECTS[o].title}</strong><em className="num" ref={(el) => { lives.current[k] = el; }} /></p>
@@ -1189,7 +1295,7 @@ export function SignalChain3D({ title = "소리가 들어와 반주가 되기까
     {/* The wide shot's words, in the ring's hole or, stacked, under the picture: the acts in order, each opening its first stage. The one line about the whole stands apart. */}
     {roomy && <div className="pano-acts" ref={actsBox} aria-hidden={!wide}>
       <div>{ACTS.map((act) => <button type="button" key={act.name} tabIndex={wide ? 0 : -1} onClick={() => enter(act.from)}>
-        <small>{act.what}</small><b>{act.name}</b><i className="num">{pad(act.from + 1)} – {pad(act.to + 1)}</i>
+        <b>{act.name}</b><i className="num">{pad(act.from + 1)} – {pad(act.to + 1)}</i>
       </button>)}</div>
       {note && <p>{note}</p>}
     </div>}

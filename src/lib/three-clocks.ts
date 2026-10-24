@@ -5,7 +5,7 @@ import { STATES, TOTAL, accompTempo, accompU, anchorU, coupleGain, frozenFor, pa
 
 // The strip sits on the panorama's stage; the light palette is the dark one inverted, like the light stage.
 const PALETTES = {
-  dark: { INK: "#e6e6e6", MID: "#9a9a9a", DIM: "#434343", FAINT: "#282828", GUIDE: "rgba(230,230,230,.18)", GLOW: 14 },
+  dark: { INK: "#e7e5eb", MID: "#9c98a1", DIM: "#45414a", FAINT: "#2a262e", GUIDE: "rgba(231,229,235,.18)", GLOW: 14 },
   light: { INK: "#232323", MID: "#656565", DIM: "#c5c5c5", FAINT: "#e2e2e2", GUIDE: "rgba(35,35,35,.18)", GLOW: 3.75 },
 };
 

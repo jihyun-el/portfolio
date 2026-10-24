@@ -19,7 +19,7 @@ guide in `node_modules/next/dist/docs/` before changing framework behavior.
   It includes merge/documentation/AI-assisted commits, not a hand-written ratio.
 - Keep authorship/update timestamps off the UI. Project and commit dates matter.
 - Preserve Chanh Dai's MIT notice (`LICENSE`, `public/LICENSE`) and the
-  Pretendard OFL notice.
+  Pretendard and Geist Mono OFL notices (`public/fonts/*-LICENSE.txt`).
 - Use local development at 127.0.0.1. Test the `/portfolio` base path before deploy.
 - Validate with `npm test`, `npm run build`, and `npm run check-types`.
 - Push/merge `main` to deploy through `.github/workflows/github-pages.yml`.

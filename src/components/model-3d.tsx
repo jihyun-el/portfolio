@@ -7,8 +7,9 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { BLOOM_RADIUS, LIGHT_BLOOM, LIGHT_FALLOFF, LIGHT_RADIUS, RAMP, cloud, glowTexture, isDark, segments } from "@/lib/glow-3d";
+import { BLOOM_RADIUS, LIGHT_BLOOM, LIGHT_FALLOFF, LIGHT_RADIUS, RAMP, cloud, depthFog, dust, fogUniforms, glowTexture, isDark, segments } from "@/lib/glow-3d";
 import { stageGround } from "@/lib/stage-ground";
+import { pointerLean } from "@/lib/pointer-lean";
 import { AXIS_HI, AXIS_LO, CURSOR01, DUET, DUET_LOOP, DUET_STARTS, PIANO_GAIN, PIANO_PARTIALS, VOICE_GAIN, VOICE_HARMONICS, pianoAt, voiceAt } from "@/components/model-figures";
 
 // The pitch model's step pictures drawn in the engine's 3D light (src/lib/glow-3d.ts): what the engine's stages draw
@@ -47,9 +48,15 @@ export function GlowFigure({ make, shot, tags, label, still }: { make: (kit: Kit
     renderer.setPixelRatio(pixelRatio); renderer.setClearColor(new THREE.Color().setRGB(5 / 255, 5 / 255, 5 / 255, THREE.LinearSRGBColorSpace), 1);
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(shot.fov ?? 24, 1, 0.1, 400);
     // Its own zoom and falloff, so the engine's figure on the same page keeps its own.
-    const zoom = { value: 1 }, falloff = { value: 1 }, map = glowTexture();
-    const made = make({ cloud: (count) => cloud(count, map, pixelRatio, { zoom, falloff }), segments });
+    const zoom = { value: 1 }, falloff = { value: 1 }, fog = fogUniforms(), map = glowTexture();
+    const made = make({ cloud: (count) => cloud(count, map, pixelRatio, { zoom, falloff, fog }), segments });
     scene.add(made.root);
+    // Dust in a box round the picture, deeper behind it than in front.
+    const specks = dust(240, map, pixelRatio, { zoom, falloff, fog });
+    made.root.add(specks.object);
+    const lo = [0, 1, 2].map((i) => Math.min(...shot.bounds.map((b) => b[i]))), hi = [0, 1, 2].map((i) => Math.max(...shot.bounds.map((b) => b[i])));
+    const span = Math.max(hi[0] - lo[0], hi[1] - lo[1]);
+    const dustMin = [lo[0] - 0.08 * span, lo[1] - 0.12 * (hi[1] - lo[1]), lo[2] - 0.35 * span], dustMax = [hi[0] + 0.08 * span, hi[1] + 0.12 * (hi[1] - lo[1]), hi[2] + 0.2 * span];
     const composer = new EffectComposer(renderer), bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, BLOOM_RADIUS, 0.2), output = new OutputPass(), ramp = new ShaderPass(RAMP);
     composer.setPixelRatio(pixelRatio); composer.addPass(new RenderPass(scene, camera)); composer.addPass(bloom); composer.addPass(output); composer.addPass(ramp);
     let dark = true;
@@ -91,22 +98,37 @@ export function GlowFigure({ make, shot, tags, label, still }: { make: (kit: Kit
       camera.setViewOffset(w, h, (e.x0 + e.x1) / 2 * w / 2, -(e.y0 + e.y1) / 2 * h / 2, w, h); camera.updateProjectionMatrix();
     };
 
-    let raf = 0, started = -1;
+    // `shown` is when the picture last came into view: the camera settles onto it from then.
+    let raf = 0, started = -1, shown = -1;
     const draw = (now: number) => {
       raf = requestAnimationFrame(draw);
-      if (!holder.offsetParent) return;
+      if (!holder.offsetParent) { shown = -1; return; }
       if (started < 0) started = now;
+      if (shown < 0) shown = now;
       const w = holder.clientWidth, h = holder.clientHeight;
       if (!w || !h) return;
       if (`${w}x${h}` !== size) { size = `${w}x${h}`; renderer.setSize(w, h, false); composer.setSize(w, h); fit(w, h); }
       const s = reduced ? still : (now - started) / 1000;
       // A slow sway, so the picture reads as standing in depth.
-      const sway = (reduced ? 0 : 0.035 * Math.sin(s * 0.21)) + (shot.orbit ? shot.orbit.amp * (0.5 - 0.5 * Math.cos(2 * Math.PI * s / shot.orbit.period)) : 0);
-      const turn = new THREE.Vector3(Math.sin(shot.yaw + sway) * Math.cos(shot.tilt), Math.sin(shot.tilt), Math.cos(shot.yaw + sway) * Math.cos(shot.tilt));
-      camera.position.copy(target).addScaledVector(turn, distance); camera.lookAt(target); camera.updateMatrixWorld();
+      // The camera leans after the pointer, round the picture's middle, so what stands nearer slides against what
+      // stands farther back.
+      const lean = reduced ? { x: 0, y: 0 } : pointerLean(now);
+      const sway = (reduced ? 0 : 0.035 * Math.sin(s * 0.21)) + (shot.orbit ? shot.orbit.amp * (0.5 - 0.5 * Math.cos(2 * Math.PI * s / shot.orbit.period)) : 0) + 0.11 * lean.x;
+      const tilt = shot.tilt + 0.06 * lean.y;
+      // A picture comes into view as the camera settles onto it, from farther back, higher and off to the side, fast at
+      // first and slowing to rest.
+      const settle = reduced ? 0 : (1 - clamp((now - shown) / 940)) ** 3;
+      const yaw = shot.yaw + sway + 0.6 * settle, pitch = tilt + 0.2 * settle;
+      const turn = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+      camera.position.copy(target).addScaledVector(turn, distance * (1 + 0.9 * settle)); camera.lookAt(target); camera.updateMatrixWorld();
       // Point sizes were set for a card camera about 4.8 units away; they keep their size on screen at any distance.
       zoom.value = distance / 4.8 * clamp(w / 900, 0.7, 1.2);
       made.update(s);
+      // The fog runs from a fifth of the way into the picture to past its back, where the dust behind it lies.
+      let near = Infinity, far = -Infinity;
+      for (const b of shot.bounds) { const d = -spot(b).applyMatrix4(camera.matrixWorldInverse).z; near = Math.min(near, d); far = Math.max(far, d); }
+      depthFog(scene, fog, near + 0.2 * (far - near), far + 0.25 * span, 0.55);
+      specks.update(reduced ? still : s, dustMin, dustMax, camera, 0.4 * distance, 1);
       bloom.strength = (shot.bloom ?? 0.55) * (dark ? 1 : LIGHT_BLOOM);
       composer.render();
       words.current.forEach((tag, i) => {
@@ -120,7 +142,7 @@ export function GlowFigure({ make, shot, tags, label, still }: { make: (kit: Kit
       });
     };
     raf = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(raf); watch.disconnect(); made.dispose(); bloom.dispose(); output.dispose(); ramp.dispose(); composer.dispose(); map.dispose(); renderer.dispose(); };
+    return () => { cancelAnimationFrame(raf); watch.disconnect(); specks.dispose(); made.dispose(); bloom.dispose(); output.dispose(); ramp.dispose(); composer.dispose(); map.dispose(); renderer.dispose(); };
   }, [make, shot, still]);
 
   return <div className="lf" ref={box}>

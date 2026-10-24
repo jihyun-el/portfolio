@@ -1,6 +1,7 @@
 "use client";
 
 import { MirrorPoseThumb } from "@/components/mirror-pose-figure";
+import { PHONE_ASPECT, phoneOutline } from "@/lib/phone-outline";
 
 // One symbol for each part, the same wherever the part is named: beside a detail, and in the product's list of its
 // parts. The engine's is its home figure small, the ring with the step being read lit, so the reader keeps hold of
@@ -16,7 +17,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const WHOLE = "전체";
 
 // The engine: its ten stages round a ring seen from the front, 01 nearest and largest, as on the home.
-const STAGES = 10, ACTS = [{ name: "듣는다", from: 1, to: 3 }, { name: "찾는다", from: 4, to: 5 }, { name: "친다", from: 6, to: 10 }];
+const STAGES = 10, ACTS = [{ name: "음높이 관측", from: 1, to: 3 }, { name: "위치 · 템포 추정", from: 4, to: 5 }, { name: "반주 재생", from: 6, to: 10 }];
 const RING = { cx: 120, cy: 60, rx: 142, ry: 52, near: 0.42, mid: 75 };
 function ringAt(share: number) {
   const angle = share * 2 * Math.PI, scale = (1 - RING.near) / (1 - RING.near * Math.cos(angle));
@@ -68,10 +69,17 @@ const APP_MARK = Array.from({ length: 18 }, (_, k) => {
   const angle = k / 18 * 2 * Math.PI, scale = (1 - RING.near) / (1 - RING.near * Math.cos(angle));
   return { k, x: 60 + 12.5 * Math.sin(angle) * scale, y: 31 + 5.4 * Math.cos(angle) * scale, r: k === 0 ? 2.4 : 0.7 + 1.25 * scale, scale };
 }).sort((a, b) => a.scale - b.scale);
+// The phone from the one outline the landing and the 3D pictures draw (src/lib/phone-outline.ts), 60 tall, its
+// earpiece slit from the same outline.
+const ONE_PHONE = (() => {
+  const points = phoneOutline(60, 32, 60 * PHONE_ASPECT, 60, 1), loop = points.slice(0, -9), slit = points.slice(-9);
+  const path = (list: [number, number][]) => list.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`).join("");
+  return { loop: `${path(loop)}Z`, slit: path([slit[0], slit[8]]) };
+})();
 function AppMark() {
   return <>
-    <rect className="hi plate" x="44" y="2" width="32" height="60" rx="6.5" strokeWidth="1.8" />
-    <line className="lo" x1="56" y1="6.6" x2="64" y2="6.6" strokeWidth="1.4" />
+    <path className="hi plate" d={ONE_PHONE.loop} strokeWidth="1.8" />
+    <path className="lo" d={ONE_PHONE.slit} strokeWidth="1.4" />
     {APP_MARK.map((dot) => <circle key={dot.k} className={dot.k === 0 ? "fill-hi" : "fill"} cx={dot.x} cy={dot.y} r={dot.r} />)}
   </>;
 }
