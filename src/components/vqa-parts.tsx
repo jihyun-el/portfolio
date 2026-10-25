@@ -3,18 +3,22 @@
 import { useMemo, type ReactNode } from "react";
 import { Photo, Say, StepParts, pct, type Box, type StepPart, phrase } from "@/components/step-parts";
 import { VqaModel3D, type PhotoSpec } from "@/components/vqa-model-3d";
+import { VqaZoomLight } from "@/components/vqa-light";
+import { ModelAnatomy } from "@/components/vqa-anatomy";
+import { VqaStepLight } from "@/components/vqa-light-steps";
+import { VqaStepFix } from "@/components/vqa-light-fix";
 
 // The VQA figure, one part at a time. A part is one step of the contest: the hypothesis (or the principle, the
 // measure, the method) stands on the left with who set it, who ran it and its verdict. The first part lays out the
 // hypotheses the lead set, one row each; from there on the picture is the team's model in 3D, showing where that step
-// changed it on one real question of the contest (src/components/vqa-model-3d.tsx; without WebGL, a flat figure). The reasons under "근거" stand open and can be folded away.
+// changed it on one real question of the contest (src/components/vqa-model-3d.tsx; 사진 확대 in one structure of light, src/components/vqa-light.tsx; without WebGL, a flat figure). The reasons under "근거" stand open and can be folded away.
 // Every answer and number below is in the contest's records: the validation runs for the 언주로 sign (a question
 // of the team's own validation split, so its answer is known), the submission's saved predictions for the two test
 // photos (whose answers were never published, so no answer is marked right there), and the leaderboards.
 const LETTERS = ["a", "b", "c", "d"];
 // Verdicts typed once for the steps (the photo gain comes from the leaderboard metrics).
 const RUN = { start: "70% → 89%", vote: 17, bits: 41, cascade: 6 };
-type Photos = { sign: string; vote: string; clock: string };
+type Photos = { sign: string; vote: string; clock: string; cards: string };
 type Props = { photos: Photos; gain: { public: number; private: number } };
 type PartProps = Props & { open: (part: number) => void };
 
@@ -99,15 +103,20 @@ function StartPart({ photos, gain, open }: PartProps) {
   </section>;
 }
 
+// A model step drawn in light: 02 as the structure of light (src/components/vqa-light-steps.tsx), 04 · 05 · 06 drawn
+// to what each step changed (src/components/vqa-light-fix.tsx; 06 from its sheet of sample questions).
+function Drawn({ step, src, fallback }: { step: "ocr" | "vote" | "bits" | "cascade"; src: string; fallback: ReactNode }) {
+  return step === "ocr" ? <VqaStepLight step={step} src={src} fallback={fallback} /> : <VqaStepFix step={step} src={src} fallback={fallback} />;
+}
+
 // 사진 확대: the same sign at 512² and at 768², and the chances the same 4B model gave at each.
 function ZoomPart({ photos, gain }: PartProps) {
-  const sign = useSign(photos.sign);
   return <section className="vp-part" aria-label="가설: 사진 확대">
     <Say kind="가설" name="사진 확대" line={LINES.zoom}
       more={[["방법", "같은 사진을 512²에서 768²로 키워 입력"],
         ["결과", "Public +134문항, Private에서도 +133문항"],
         ["이 문항", "512²에서는 100m와 300m에 49%씩 배정해 c를 선택, 768²에서는 300m에 99.98%"]]} />
-    <figure className="vp-picture" data-wide=""><VqaModel3D stage="zoom" photo={sign} /></figure>
+    <figure className="vp-picture" data-wide=""><VqaZoomLight src={photos.sign} fallback={<ModelAnatomy photo={photos.sign} />} /></figure>
   </section>;
 }
 
@@ -131,14 +140,13 @@ const OCR_LINES: [string, Box][] = [
 const OCR_KEY = [5, 6, 7];
 
 function OcrPart({ photos }: PartProps) {
-  const sign = useSign(photos.sign);
   return <section className="vp-part" aria-label="가설: OCR">
     <Say kind="가설" name="OCR 추가" line={LINES.ocr}
       more={[["방법", "OCR 모델(PaddleOCR)이 읽은 글 11줄을 질문과 함께 입력, 사진은 같은 512²"],
         ["결과", "자체 검증 1,074문항에서 971 → 976문항(+0.47%p)"],
         ["판정", "95% 신뢰구간 −0.47 ~ +1.49%p가 0을 포함해 우연과 구별되지 않음"],
         ["이 문항", "c 49.1 → 52.7%, d(정답 300m) 49.1 → 46.5%로 고른 답은 c 그대로"]]} />
-    <figure className="vp-picture" data-wide=""><VqaModel3D stage="ocr" photo={sign} fallback={<div className="vp-picture">
+    <figure className="vp-picture" data-wide=""><Drawn step="ocr" src={photos.sign} fallback={<div className="vp-picture">
       <SignPhoto src={photos.sign} marks={OCR_LINES.map(([, box], k) => ({ box, key: OCR_KEY.includes(k) }))} />
       <div className="vp-side">
         <p className="vp-question">{SIGN.text}</p>
@@ -217,7 +225,6 @@ const majority = (votes: number[]) => {
 };
 
 function VotePart({ photos }: PartProps) {
-  const door = useSpec(photos.vote, [720, 1280], [458, 818], [350, 638], VOTE.box);
   const rows = [{ name: "모델 3개", votes: VOTE.three }, { name: "모델 7개", votes: VOTE.seven }];
   return <section className="vp-part" aria-label="결정: 앙상블">
     <Say kind="결정" name="앙상블" line={LINES.vote}
@@ -226,7 +233,7 @@ function VotePart({ photos }: PartProps) {
         ["한 일", "학습 대신 다수결. 기본 답은 모델 3개, 32B와 Gemma의 답이 갈린 434문항만 모델 7개"],
         ["결과", "Public 3,240 → 3,257문항(0.97021)"],
         ["반증", "다음 단계에서 학습 조건을 바꾸자 27 · 31B 세 모델 모두 상승"]]} />
-    <figure className="vp-picture" data-wide=""><VqaModel3D stage="vote" photo={door} fallback={<div className="vp-picture">
+    <figure className="vp-picture" data-wide=""><Drawn step="vote" src={photos.vote} fallback={<div className="vp-picture">
       <Photo src={photos.vote} size={VOTE.size} alt="통제구역 관계자외출입금지라고 적힌 EPS-B 실 문 표지." marks={[{ box: VOTE.box, key: true }]} />
       <div className="vp-side">
         <p className="vp-question">{VOTE.text}</p>
@@ -269,7 +276,6 @@ function GainChart() {
 }
 
 function BitsPart({ photos }: PartProps) {
-  const sign = useSign(photos.sign);
   return <section className="vp-part" aria-label="가설: 4비트 학습과 보기 순서">
     <Say kind="가설" name="BF16 · 순서 섞기" line={LINES.bits}
       more={[["계기", "다른 팀의 단독 모델이 팀의 7표(0.97021)를 넘음. Qwen3.5-27B 0.97169"],
@@ -279,7 +285,7 @@ function BitsPart({ photos }: PartProps) {
         ["한계", "학습에서 두 요인의 기여도는 분리하지 않음(마감 4일 전, 학습 1회 약 4.5시간)"],
         ["결합", "세 모델의 로그 확률 평균 0.97170으로 7표를 넘음, 7표는 약한 한 표로만"]]} />
     <figure className="vp-picture" data-wide="">
-      <VqaModel3D stage="bits" photo={sign} fallback={<div className="vp-side"><GainChart /></div>} />
+      <Drawn step="bits" src={photos.sign} fallback={<div className="vp-side"><GainChart /></div>} />
     </figure>
   </section>;
 }
@@ -294,14 +300,13 @@ const CLOCK = {
 };
 
 function CascadePart({ photos }: PartProps) {
-  const clock = useSpec(photos.clock, [720, 960], [225, 585], [299, 405], CLOCK.box);
   return <section className="vp-part" aria-label="가설: 불확실 문항에만 추가 연산">
     <Say kind="가설" name="불확실 문항" line={LINES.cascade}
       more={[["대상", "세 모델의 답이 갈리거나 로그 확률 1 · 2등 차가 2.0 미만인 298문항(전체의 4.4%), 목록은 결과 전에 고정"],
         ["방법", "이 문항만 2배 · 3배 확대, 보기 순서 4가지, 전체 데이터로 다시 학습한 모델로 다시 채점"],
         ["결과", "Public +6문항, 대상을 500~700문항으로 넓혀도 새로 바뀐 답 0"],
         ["이 문항", "d(밤 9시 10분)와 b(밤 10시 10분)의 차 0.1 → 다시 채점해 b"]]} />
-    <figure className="vp-picture" data-wide=""><VqaModel3D stage="cascade" photo={clock} fallback={<div className="vp-picture">
+    <figure className="vp-picture" data-wide=""><Drawn step="cascade" src={photos.cards} fallback={<div className="vp-picture">
       <Photo src={photos.clock} size={CLOCK.size} alt="밤거리 가로등에 달린 보라색 시계들. 바늘이 10시 10분을 가리킨다." marks={[{ box: CLOCK.box, key: true }]} />
       <div className="vp-side">
         <p className="vp-question">{CLOCK.text}</p>
@@ -411,5 +416,5 @@ const PARTS: (StepPart<Props> & { kind?: string; line?: string; before?: Before 
 ];
 
 export function VqaParts({ project, ...props }: Props & { project: string }) {
-  return <StepParts parts={PARTS} props={props} label="VQA 대회의 단계" scene="vqa" project={project} />;
+  return <><StepParts parts={PARTS} props={props} label="VQA 대회의 단계" scene="vqa" project={project} /></>;
 }

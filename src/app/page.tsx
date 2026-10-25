@@ -52,7 +52,7 @@ export default function HomePage() {
     app: <AppParts project={home("app")} score={sitePath("/images/pipeline-debussy-p1.svg")} />,
     pipeline: <PipelineParts project={home("pipeline")} score={sitePath("/images/pipeline-debussy-p1.svg")} />,
     // The VQA figure: one step of the contest at a time, each on one real question of it.
-    vqa: <VqaParts project={home("vqa")} photos={{ sign: sitePath("/images/vqa-question-sign.jpg"), vote: sitePath("/images/vqa-vote-sign.jpg"), clock: sitePath("/images/vqa-clock-street.jpg") }} gain={metrics.vqa.checks.confirmed[0]} />,
+    vqa: <VqaParts project={home("vqa")} photos={{ sign: sitePath("/images/vqa-question-sign.jpg"), vote: sitePath("/images/vqa-vote-sign.jpg"), clock: sitePath("/images/vqa-clock-street.jpg"), cards: sitePath("/images/vqa-cascade-cards.jpg") }} gain={metrics.vqa.checks.confirmed[0]} />,
   };
   // What the small pictures in a detail are drawn from: the pipeline's engraving and the contest's photos.
   const assets = { base: sitePath("/").replace(/\/$/, ""), sign: sitePath("/images/vqa-question-sign.jpg") };
