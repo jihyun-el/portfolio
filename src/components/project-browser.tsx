@@ -233,7 +233,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
 // under the name. Where both rails stand at the side nothing moves. Scrolling down slides them by as much as the
 // text moved, scrolling up brings them back, and a stop settles them all the way out or in; the detail's foot slides
 // down out of the way with them. The text area keeps its size throughout; only the bars move. A new screen or detail
-// shows them again.
+// shows them again, and so does a window that changes width, or a key that moves the focus into a bar that slid away.
 const PHONE = "(max-width:680px)", OVER = `${PHONE}, (max-aspect-ratio:5/4)`;
 function useAppBar(ref: { current: HTMLElement | null }) {
   useEffect(() => {
@@ -281,17 +281,26 @@ function useAppBar(ref: { current: HTMLElement | null }) {
         if (to !== shift) { el.dataset.snap = ""; shift = to; apply(); }
       }, 160);
     };
+    // A slid-away bar is only moved, not hidden, so a focused link in it would sit off screen.
+    const onFocus = (event: FocusEvent) => { if (shift < 0 && event.target instanceof Element && event.target.closest(".browser-side,.drawer-h,.drawer-f")) show(); };
+    // Only the width: a phone's toolbar changes the height while the text scrolls.
+    let width = window.innerWidth;
+    const onResize = () => { if (window.innerWidth !== width) { width = window.innerWidth; show(); } };
     const sized = new ResizeObserver(measure), changed = new MutationObserver(() => { measure(); sized.disconnect(); for (const part of el.querySelectorAll(".browser-side,.drawer-h,.drawer-f,.dv-rail")) sized.observe(part); });
     changed.observe(el.querySelector(".browser-main") ?? el, { childList: true, subtree: true });
     for (const part of el.querySelectorAll(".browser-side")) sized.observe(part);
     const signs = ["hashchange", "popstate", "portfolio:navigate"];
     el.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    el.addEventListener("focusin", onFocus);
+    window.addEventListener("resize", onResize);
     for (const sign of signs) window.addEventListener(sign, show);
     for (const media of [phone, over]) media.addEventListener("change", show);
     measure();
     return () => {
       window.clearTimeout(settle); sized.disconnect(); changed.disconnect(); for (const name of ["bar", "ride", "across"]) flag(name, false);
       el.removeEventListener("scroll", onScroll, { capture: true });
+      el.removeEventListener("focusin", onFocus);
+      window.removeEventListener("resize", onResize);
       for (const sign of signs) window.removeEventListener(sign, show);
       for (const media of [phone, over]) media.removeEventListener("change", show);
     };

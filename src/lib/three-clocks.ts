@@ -27,10 +27,13 @@ function text(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, co
 }
 
 /* ---------- The strip: three cursors on the score around the singer ---------- */
+const BAND = 12;
 export function drawStrip(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, font: string, dark = true) {
   const { INK, MID, DIM, FAINT, GUIDE, GLOW } = PALETTES[dark ? "dark" : "light"];
   ctx.clearRect(0, 0, w, h);
-  const span = 6, centre = singerU(t), X = (beat: number) => w / 2 + (beat - centre) / span * (w / 2 - 8), rowH = h / 3;
+  // The rows share the strip above a band at its foot that names the two ends of time, so no note runs under the words.
+  // The rows beside the strip are as high as these (.clock-rows p, 3 × height + BAND = .clock-track).
+  const span = 6, centre = singerU(t), X = (beat: number) => w / 2 + (beat - centre) / span * (w / 2 - 8), rowH = (h - BAND) / 3;
   const rows: { at: number; draw: (x: number, y: number) => void }[] = [
     { at: centre, draw: (x, y) => { ctx.strokeStyle = singing(t) ? MID : DIM; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.stroke(); } },
     { at: anchorU(t), draw: (x, y) => { ctx.fillStyle = INK; ctx.fillRect(x - 4.5, y - 4.5, 9, 9); } },
@@ -48,7 +51,7 @@ export function drawStrip(ctx: CanvasRenderingContext2D, w: number, h: number, t
     });
     row.draw(X(row.at), y);
   });
-  ctx.strokeStyle = GUIDE; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke(); ctx.setLineDash([]);
-  text(ctx, "← 지난 음", 4, h - 6, MID, font, 10, 600);
-  text(ctx, "다음 음 →", w - 4, h - 6, MID, font, 10, 600, "right");
+  ctx.strokeStyle = GUIDE; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h - BAND); ctx.stroke(); ctx.setLineDash([]);
+  text(ctx, "← 지난 음", 4, h - BAND / 2, MID, font, 10, 600);
+  text(ctx, "다음 음 →", w - 4, h - BAND / 2, MID, font, 10, 600, "right");
 }
