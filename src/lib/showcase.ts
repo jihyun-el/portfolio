@@ -56,8 +56,9 @@ export function caseViews(): CaseView[] {
     const used = stack.groups.flatMap((group) => group.items).filter((tech) => tech.projectId === item.projectId && tech.part === item.part);
     return {
       id: item.id, projectId: item.projectId, part: item.part, short: item.short, home: item.home, fold: item.fold ?? false, lead: item.lead ?? [], anchor: `part-${item.id}`,
-      // The unit whose result is the release carries the project's store listings next to it.
-      store: item.results?.includes("release") && project.links?.length ? { short: project.short, links: project.links } : undefined,
+      // The unit whose result is the release carries the project's store listings next to it; a project without parts
+      // is its one unit, which carries the project's links (VQA's code repository).
+      store: (item.results?.includes("release") || !project.parts?.length) && project.links?.length ? { short: project.short, links: project.links } : undefined,
       title: item.title ?? part!.title,
       tag: `${span(repo.firstDate, repo.lastDate)} · ${ko(repo.authorCommits)}커밋`,
       stack: item.stack ?? [...new Set(used.map((tech) => tech.language)), ...used.map((tech) => tech.name)],

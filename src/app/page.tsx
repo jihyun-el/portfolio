@@ -112,7 +112,7 @@ export default function HomePage() {
     return {
       ...head, name: unit.short, label: project.short, period: project.period,
       stats: (unit.home?.stats ?? []).map(metricView), figure: figures[unit.id],
-      // The button opens the unit's record; the unit whose result is the release carries the store listings.
+      // The button opens the unit's record; the unit whose result is the release carries the store listings, and VQA its repository.
       actions: <>
         <a className="stage-go" href={sitePath(unit.part ? `/projects/${project.id}/#${unit.part}` : `/projects/${project.id}/`)}>{unit.part ? `${unit.short} 개발 과정` : "개발 과정"}<span aria-hidden="true">→</span></a>
         {unit.store && <div className="stage-more"><ProjectLinks project={unit.store} named /></div>}
