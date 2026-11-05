@@ -1,7 +1,7 @@
 {
   "name": "우지현",
   "subtitle": "AI/ML Portfolio",
-  "role": "AI/ML Engineer",
+  "role": "AI Researcher",
   "heroLines": ["Audio DSP", "Flutter"],
   "card": [
     { "label": "주력 언어", "value": "Python · Dart" },
