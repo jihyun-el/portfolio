@@ -672,7 +672,13 @@ body:has(.project-browser) #main-content { height:100dvh; }
 .browser-side { min-height:0; display:flex; flex-direction:column; padding:24px 22px 20px; overflow-y:auto; scrollbar-width:thin; }
 .browser-id-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
 .browser-identity h1 { font-size:30px; font-weight:900; letter-spacing:-.035em; line-height:1.2; }
-.browser-home { text-decoration:none; }
+.browser-home { text-decoration:none; display:inline-flex; align-items:center; gap:.24em; }
+.name-mark { width:.84em; height:.84em; flex:none; overflow:visible; --mark-ink:#c04466; }
+.dark .name-mark { --mark-ink:#d94446; }
+.name-mark path { fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.name-mark-node { fill:var(--paper); stroke:currentColor; stroke-width:2.6; }
+.name-mark-out { fill:var(--mark-ink); }
+.dark .name-mark-out { filter:drop-shadow(0 0 2px var(--mark-ink)) drop-shadow(0 0 5px var(--mark-ink)); }
 .browser-identity p { font-size:14px; font-weight:600; margin-top:6px; }
 .browser-identity .browser-fields { font-size:12px; font-weight:400; color:var(--ink-2); margin-top:2px; }
 .browser-choices { display:grid; margin-top:30px; border-top:2px solid var(--ink); }
@@ -1069,7 +1075,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .browser-side { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto auto; grid-template-areas:"name role resources contact theme" "choices choices choices choices choices"; align-items:center; gap:8px clamp(14px,2vw,24px); padding:10px clamp(20px,2.2vw,36px) 12px; }
   .browser-identity,.browser-id-row { display:contents; }
   .browser-identity h1 { grid-area:name; align-self:last baseline; font-size:25px; }
-  .browser-identity p { grid-area:role; align-self:last baseline; margin:0; font-size:12px; }
+  .browser-identity p { grid-area:role; align-self:last baseline; margin:0 0 0 calc(6px - clamp(14px,2vw,24px)); font-size:12px; }
   .browser-id-row .icon-button { grid-area:theme; }
   .browser-identity .browser-fields { display:none; }
   /* The product takes four of the six places: its name over its parts. */
@@ -1128,7 +1134,7 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   /* The name row: the name with the role beside it, the theme switch at its right end. */
   .browser-id-row { display:contents; }
   .browser-identity h1 { align-self:last baseline; font-size:22px; }
-  .browser-identity p { order:1; align-self:last baseline; margin:0; font-size:11px; }
+  .browser-identity p { order:1; align-self:last baseline; margin:0 0 0 -4px; font-size:11px; }
   .browser-identity .browser-fields { display:none; }
   .browser-id-row .icon-button { order:2; width:28px; height:28px; margin-left:auto; }
   .browser-choices { grid-area:choices; grid-template-columns:minmax(0,4fr) minmax(0,1.15fr) minmax(0,1.1fr); grid-template-rows:auto auto; align-items:stretch; gap:0 6px; margin:0; border-top:0; }

@@ -1,5 +1,6 @@
 "use client";
 
+import { NameMark } from "@/components/name-mark";
 import { useEffect, useRef, useState, type ReactNode, type MouseEvent } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SceneShown } from "@/lib/scene-shown";
@@ -190,7 +191,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
   return <section className="wrap project-browser" id="about" ref={root} aria-label="소개와 대표 프로젝트">
     <noscript><style>{"html:has(.project-browser){overflow:auto}.project-browser{height:auto}.browser-scenes>article[hidden]{display:grid!important}.browser-scenes>article{min-height:700px;margin-bottom:40px}.browser-main{overflow:visible}"}</style></noscript>
     <aside className="browser-side">
-      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}</a></h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p></div>
+      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}<NameMark /></a></h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p></div>
       <nav className="browser-choices" aria-label="대표 프로젝트 선택">
         {entries}
         <a href="#mini" aria-current={current("mini")} aria-controls="featured-mini" onClick={(event) => choose(event, "mini")}>
