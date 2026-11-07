@@ -12,7 +12,9 @@ export const DrawerBack = createContext<(() => void) | null>(null);
 // (#classicmate/engine), which makes a drawer shareable and lets Back close it.
 // Links to the standalone pages are caught here, so they still work without JavaScript.
 // `routes` maps a standalone page address, written "project#fragment", to the drawer that holds it.
-export function DrawerHost({ panels, basePath, routes, inline = false }: { panels: DrawerPanel[]; basePath: string; routes: Record<string, string>; inline?: boolean }) {
+// `home` is the address the home was opened at inside the site: its root, or a title's own address such as
+// "/researcher/". A link to it, as to the root, opens the panel its fragment names.
+export function DrawerHost({ panels, basePath, routes, inline = false, home = "/" }: { panels: DrawerPanel[]; basePath: string; routes: Record<string, string>; inline?: boolean; home?: string }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [displayedKey, setDisplayedKey] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -40,7 +42,7 @@ export function DrawerHost({ panels, basePath, routes, inline = false }: { panel
     if (url.origin !== location.origin) return null;
     const path = url.pathname.startsWith(basePath) ? url.pathname.slice(basePath.length) || "/" : url.pathname;
     const fragment = decodeURIComponent(url.hash.slice(1));
-    if (path === "/" || path === "") return byKey.current.has(fragment) ? [fragment, null] : null;
+    if (path === "/" || path === "" || path === home || path === home.replace(/\/$/, "")) return byKey.current.has(fragment) ? [fragment, null] : null;
     const project = path.match(/^\/projects\/([a-z0-9-]+)\/?$/);
     if (project) {
       const id = project[1], key = routes[`${id}#${fragment}`] ?? `${id}/overview`;
@@ -51,7 +53,7 @@ export function DrawerHost({ panels, basePath, routes, inline = false }: { panel
     // A troubleshooting post or a mini project: the drawer key is the page address itself.
     const page = path.match(/^\/((?:writing|mini)\/[a-z0-9-]+)\/?$/);
     return page && byKey.current.has(page[1]) ? [page[1], null] : null;
-  }, [basePath, routes]);
+  }, [basePath, routes, home]);
 
   const open = useCallback((key: string, anchor: string | null) => {
     const wasOpen = byKey.current.has(decodeURIComponent(location.hash.slice(1)));

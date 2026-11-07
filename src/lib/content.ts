@@ -6,6 +6,8 @@ export type Profile = {
   name: string;
   subtitle: string;
   role: string;
+  // The same site under another title, each at its own address (/engineer/, /researcher/): only the title differs.
+  roles: Record<string, string>;
   heroLines: string[];
   card: { label: string; value: string }[];
   stats: string[];

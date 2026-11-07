@@ -4,6 +4,7 @@ import Link from "next/link";
 import { profile, getSiteUrl, sitePath } from "@/lib/content";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Reveal } from "@/components/reveal";
+import { TitleHome } from "@/components/title-home";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="foot"><span>© 2026 {profile.name}</span></div>
       </div></footer>
       <Reveal />
+      <TitleHome base={sitePath("/").replace(/\/$/, "")} titles={Object.keys(profile.roles)} />
     </body>
   </html>;
 }
