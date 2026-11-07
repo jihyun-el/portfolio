@@ -2275,28 +2275,56 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
   .project-browser[data-snap]>.browser-side,.project-browser[data-snap]>.browser-side::before,.project-browser[data-snap]>.browser-side>*,.project-browser[data-snap]>.browser-side>.browser-identity :is(h1,p,.icon-button) { transition:translate .2s ease-out; }
 }
 
-/* A phone's app bar: the rail lies over the scene and slides away as the text is read down, back as it is read up
-   (--bar-shift, set by the script; --bar-hide is the same as a fraction). An open detail's head rides with it and its
-   foot slides down out of the way; the text area keeps its full height and only the bars move. */
+/* A phone's app bar: the name row stays, and over a scene a thin line under it says where the reader is and opens the
+   list. The list folds up under them and opens over the top (--side-shift and --push, set by the script). Open over a
+   scene, the scene stands under it and moves up with it, keeping its size; over a detail it lies over the text and the
+   detail's head and place bar move down under it. The head slides away as the text is read down and back as it is
+   read up (--bar-shift; --bar-hide is the same as a fraction) and the foot slides down out of the way with it; the
+   text area keeps its full height and only the bars move. */
+.browser-peek { display:none; }
 @media (max-width:680px) {
   .project-browser { grid-template-rows:minmax(0,1fr); }
-  .project-browser>.browser-side { grid-row:1; grid-column:1; align-self:start; position:relative; z-index:20; overflow:visible; background:var(--paper); box-shadow:0 1px 0 var(--line); translate:0 var(--bar-shift,0px); }
-  .project-browser>.browser-main { grid-row:1; grid-column:1; padding-top:var(--side-h,0px); }
+  .project-browser>.browser-side { grid-row:1; grid-column:1; align-self:start; position:relative; z-index:20; overflow:visible; background:var(--paper); box-shadow:0 1px 0 var(--line); translate:0 var(--side-shift,0px); }
+  .project-browser>.browser-main { grid-row:1; grid-column:1; padding-top:var(--keep-h,0px); }
+  .project-browser .browser-scenes { margin-top:var(--push,0px); }
   /* The name row stays: the rest of the bar slides up under it. */
-  .project-browser>.browser-side>.browser-identity { position:relative; z-index:2; margin:-10px -12px -6px; padding:10px 12px 6px; background:var(--paper); translate:0 calc(-1 * var(--bar-shift,0px)); }
-  .project-browser>.browser-side>.browser-identity::after { content:""; position:absolute; left:0; right:0; top:100%; height:min(var(--keep-pad,0px), -1 * var(--bar-shift,0px)); background:var(--paper); }
+  .project-browser>.browser-side>.browser-identity { position:relative; z-index:2; margin:-10px -12px -6px; padding:10px 12px 6px; background:var(--paper); translate:0 calc(-1 * var(--side-shift,0px)); }
+  .project-browser>.browser-side>.browser-identity::after { content:""; position:absolute; left:0; right:0; top:100%; height:min(var(--keep-pad,0px), -1 * var(--side-shift,0px)); background:var(--paper); }
   .project-browser[data-collapsed]>.browser-side>.browser-identity::after { box-shadow:0 1px 0 var(--line); }
-  .project-browser[data-snap]>.browser-side>.browser-identity,.project-browser[data-snap]>.browser-side,.project-browser[data-snap] .drawer-inline>.drawer-h,.project-browser[data-snap] .drawer-inline>.drawer-f { transition:translate .2s ease-out; }
+  .project-browser[data-live]>.browser-side,.project-browser[data-live]>.browser-side>.browser-identity { transition:translate .24s ease-out; }
+  .project-browser[data-live] .browser-scenes { transition:margin-top .24s ease-out; }
+  .project-browser:is([data-snap],[data-fold]) .drawer-inline>:is(.drawer-h,.drawer-f) { transition:translate .2s ease-out; }
+  .project-browser:is([data-snap],[data-fold]) .dv-rail { transition:top .2s ease-out; }
   .project-browser .browser-main .drawer-inline { padding:0; }
-  .project-browser .drawer-inline>.drawer-h { position:absolute; left:0; right:0; top:var(--side-h,0px); z-index:15; padding:10px 12px; background:var(--paper); translate:0 var(--bar-shift,0px); }
-  .project-browser .drawer-inline>.drawer-body,.project-browser .drawer-inline>.drawer-body:has(>.dv) { height:100%; padding:calc(var(--side-h,0px) + var(--head-h,0px) + 14px) 12px calc(var(--foot-h,0px) + 24px); }
-  .project-browser .drawer-inline>.drawer-body:has(>.dv) { padding-top:calc(var(--side-h,0px) + var(--head-h,0px)); }
+  .project-browser .drawer-inline>.drawer-h { position:absolute; left:0; right:0; top:var(--keep-h,0px); z-index:15; padding:10px 12px; background:var(--paper); translate:0 calc(var(--bar-shift,0px) + var(--push,0px)); }
+  .project-browser .drawer-inline>.drawer-body,.project-browser .drawer-inline>.drawer-body:has(>.dv) { height:100%; padding:calc(var(--keep-h,0px) + var(--head-h,0px) + 14px) 12px calc(var(--foot-h,0px) + 24px); }
+  .project-browser .drawer-inline>.drawer-body:has(>.dv) { padding-top:calc(var(--keep-h,0px) + var(--head-h,0px)); }
   .project-browser .drawer-inline>.drawer-f { position:absolute; left:0; right:0; bottom:0; z-index:15; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:var(--paper); translate:0 calc(var(--bar-hide,0) * 100%); }
-  /* The detail's own place bar sticks under the app bar. A sticky offset counts from the inside of the text's top
-     padding, which the app bar covers, so it moves by the bar's shift alone (--stick); a jump to a part counts from
-     the top of the screen and stops under all three (--bar). */
-  .project-browser .dv-rail { top:var(--bar-shift,0px); }
-  .project-browser .dv-in { --bar:calc(var(--side-h,0px) + var(--head-h,0px) + var(--rail-h,78px)); --stick:calc(var(--bar-shift,0px) + var(--rail-h,78px)); }
+  /* The detail's own place bar sticks under the head. A sticky offset counts from the inside of the text's top
+     padding, which the bars cover, so it moves by the head's shift and the open list alone; a jump to a part counts
+     from the top of the screen and stops under the name row, the head and the place bar (--bar). */
+  .project-browser .dv-rail { top:calc(var(--bar-shift,0px) + var(--push,0px)); }
+  .project-browser .dv-in { --bar:calc(var(--keep-h,0px) + var(--head-h,0px) + var(--rail-h,78px)); --stick:calc(var(--bar-shift,0px) + var(--push,0px) + var(--rail-h,78px)); }
+  /* The line under the name: the screen's number and name at the left, a short bar for each numbered screen at the
+     right with the current one dark (the product's own screen marks its parts), and the arrow that opens the list.
+     A detail has its own place bar there instead. */
+  .browser-identity { flex-wrap:wrap; row-gap:2px; }
+  .browser-peek { order:3; flex:1 0 100%; display:flex; align-items:center; gap:8px; min-width:0; height:22px; margin:0; padding:0; border:0; background:none; color:var(--ink); font:inherit; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .browser-peek:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
+  .browser-peek-now { display:flex; align-items:baseline; gap:6px; min-width:0; overflow:hidden; white-space:nowrap; }
+  .browser-peek-now i { font-size:9px; font-style:normal; font-weight:700; color:var(--ink-2); }
+  .browser-peek-now b { overflow:hidden; text-overflow:ellipsis; font-size:11px; font-weight:800; letter-spacing:-.02em; }
+  .browser-peek-bars { display:flex; align-items:center; gap:3px; margin-left:auto; }
+  .browser-peek-bars i { width:12px; height:3px; background:color-mix(in srgb,var(--ink) 16%,transparent); }
+  .browser-peek-bars i.is-break { margin-left:5px; }
+  .browser-peek-bars i.is-lead { background:color-mix(in srgb,var(--ink) 50%,transparent); }
+  .browser-peek-bars i.is-on { background:var(--ink); }
+  .browser-peek svg { flex:none; width:10px; height:6px; margin-right:9px; transition:rotate .24s ease-out; }
+  .browser-peek[aria-expanded="true"] svg { rotate:180deg; }
+  .project-browser:has(.drawer-inline:not(.is-leaving)) .browser-peek { display:none; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .project-browser[data-live]>.browser-side,.project-browser[data-live]>.browser-side>.browser-identity,.project-browser[data-live] .browser-scenes,.browser-peek svg { transition:none; }
 }
 /* The engine's sound switch, right after the screen's title on every layout: a mark of light points that hops now and
    then while muted and leaps with the chords while the sound plays. The note beside it says what is heard; a phone

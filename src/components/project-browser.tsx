@@ -188,11 +188,24 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
       {projects.filter((item) => item.group === group.id && !item.head).map(choice)}
     </div>];
   });
+  // A phone's folded bar says where the reader is in a line under the name: the screen's number and name, and a short
+  // bar for each numbered screen with the current one dark, the product's parts kept together. Pressing it opens the
+  // list.
+  const at = stack ? -1 : selected === "mini" ? numbered.length : numbered.findIndex((item) => item.id === selected);
+  const lead = projects.find((item) => item.id === selected && item.head), leadGroup = lead && groups.find((item) => item.id === lead.group);
+  const now = stack ? "기술 스택" : at === numbered.length ? "미니 프로젝트" : at >= 0 ? numbered[at].name : leadGroup?.name ?? lead?.name ?? "";
+  const kinds = [...numbered.map((item) => item.group ?? ""), "mini"];
+  const peek = <button type="button" className="browser-peek" aria-controls="browser-list" aria-expanded="false" aria-label={`프로젝트 목록 · 지금 ${now}`}>
+    <span className="browser-peek-now">{at >= 0 && <i className="num">{no(at)}</i>}<b>{now}</b></span>
+    <span className="browser-peek-bars" aria-hidden="true">{kinds.map((kind, i) => <i key={i} className={[
+      i === at ? "is-on" : lead && kind === lead.group ? "is-lead" : "", i > 0 && (kind !== kinds[i - 1] || !kind) ? "is-break" : ""].join(" ").trim() || undefined} />)}</span>
+    <svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  </button>;
   return <section className="wrap project-browser" id="about" ref={root} aria-label="소개와 대표 프로젝트">
     <noscript><style>{"html:has(.project-browser){overflow:auto}.project-browser{height:auto}.browser-scenes>article[hidden]{display:grid!important}.browser-scenes>article{min-height:700px;margin-bottom:40px}.browser-main{overflow:visible}"}</style></noscript>
     <aside className="browser-side">
-      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}<NameMark /></a></h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p></div>
-      <nav className="browser-choices" aria-label="대표 프로젝트 선택">
+      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}<NameMark /></a></h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p>{peek}</div>
+      <nav className="browser-choices" id="browser-list" aria-label="대표 프로젝트 선택">
         {entries}
         <a href="#mini" aria-current={current("mini")} aria-controls="featured-mini" onClick={(event) => choose(event, "mini")}>
           <span className="browser-no num">{no(numbered.length)}</span><b>미니 프로젝트</b><em>{mini.count}개 프로젝트</em>
@@ -228,53 +241,92 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
 }
 
 // An app bar for every layout. The name row and the way back always stay on screen; what slides away depends on
-// which of the two rails has moved to the top. Where the site's rail lies over the scene (a phone, or a tall window
-// where it folds into a strip), its rows under the name slide away. Where a detail is narrow enough that its place
-// bar runs across the top, the detail's head slides away as well, and that bar, which then holds the way back, stays
-// under the name. Where both rails stand at the side nothing moves. Scrolling down slides them by as much as the
-// text moved, scrolling up brings them back, and a stop settles them all the way out or in; the detail's foot slides
-// down out of the way with them. The text area keeps its size throughout; only the bars move. A new screen or detail
-// shows them again, and so does a window that changes width, or a key that moves the focus into a bar that slid away.
+// which of the two rails has moved to the top. Where the site's rail lies over the scene in a tall window, where it
+// folds into a strip, its rows under the name slide away. Where a detail is narrow enough that its place bar runs
+// across the top, the detail's head slides away as well, and that bar, which then holds the way back, stays under the
+// name. Where both rails stand at the side nothing moves. Scrolling down slides them by as much as the text moved,
+// scrolling up brings them back, and a stop settles them all the way out or in; the detail's foot slides down out of
+// the way with them. The text area keeps its size throughout; only the bars move. A new screen or detail shows them
+// again, and so does a window that changes width, or a key that moves the focus into a bar that slid away.
+// A phone keeps only the name row and, over a scene, a thin line under it that says where the reader is and opens the
+// list; the list folds up under them. It is open on a first arrival, so the reader sees what the site holds, and folds
+// at the first scroll or touch, or 2.5 seconds after the landing has handed over to the engine (after arriving, where
+// the first screen is another). From then on it opens when that line is tapped, the text is scrolled back up or the
+// focus moves into it, and folds when the text is scrolled down or another screen is chosen. Open over a scene, the
+// scene stands under it and moves up with it, keeping its size; over a detail it lies over the text, and the detail's
+// head and place bar move down under it. The detail's head slides with the text as on the other layouts.
 const PHONE = "(max-width:680px)", OVER = `${PHONE}, (max-aspect-ratio:5/4)`;
+const PEEK_MS = 2500, FOLD_MS = 240, OPEN_PX = 32, SHUT_PX = 6;
 function useAppBar(ref: { current: HTMLElement | null }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const phone = window.matchMedia(PHONE), over = window.matchMedia(OVER), last = new WeakMap<Element, number>();
     let shift = 0, total = 0, settle = 0, down = false;
+    // The phone's list: whether it is open, how far it folds, the run of scrolling in one direction that moves it,
+    // until when a scroll is only the page settling after it moved, and the first arrival's showing of it.
+    let open = false, list = 0, run = 0, quiet = 0, peek: "" | "wait" | "time" = "", peekAt = 0, fold = 0, timer = 0, tap = 0;
     const px = (name: string, value: number) => el.style.setProperty(name, `${Math.round(value)}px`);
     const flag = (name: string, on: boolean) => { if (on) el.dataset[name] = ""; else delete el.dataset[name]; };
-    const apply = () => { if (shift < 0) el.dataset.collapsed = ""; else delete el.dataset.collapsed; px("--bar-shift", shift); el.style.setProperty("--bar-hide", total ? (-shift / total).toFixed(3) : "0"); };
+    const pane = () => el.querySelector<HTMLElement>(".drawer-inline:not(.is-leaving)");
+    const apply = () => {
+      const folded = phone.matches ? !open : shift < 0;
+      flag("collapsed", folded); px("--bar-shift", shift); el.style.setProperty("--bar-hide", total ? (-shift / total).toFixed(3) : "0");
+      px("--push", phone.matches && open ? list : 0); px("--side-shift", phone.matches && !open ? -list : 0);
+      el.querySelector(".browser-peek")?.setAttribute("aria-expanded", String(phone.matches && open));
+    };
     const measure = () => {
-      const pane = el.querySelector<HTMLElement>(".drawer-inline:not(.is-leaving)");
+      const here = pane();
       const bar = el.querySelector<HTMLElement>(".browser-side"), name = bar?.querySelector<HTMLElement>(".browser-identity");
-      // What stays: on a phone the name row; in a strip its whole first row (the name, the resources, the contact),
-      // which ends where the list starts. Folded, it gets as much room under it as it has above (`pad`), which opens
-      // only as the rest slides away, so the unfolded bar keeps its size.
-      const list = bar?.querySelector<HTMLElement>(".browser-choices"), style = bar ? getComputedStyle(bar) : null;
-      const side = over.matches ? bar?.offsetHeight ?? 0 : 0, head = pane?.querySelector<HTMLElement>(".drawer-h")?.offsetHeight ?? 0;
+      // What stays: on a phone the name row (with the line under it over a scene); in a strip its whole first row (the
+      // name, the resources, the contact), which ends where the list starts. Folded, it gets as much room under it as
+      // it has above (`pad`), which opens only as the rest slides away, so the unfolded bar keeps its size.
+      const choices = bar?.querySelector<HTMLElement>(".browser-choices"), style = bar ? getComputedStyle(bar) : null;
+      const side = over.matches ? bar?.offsetHeight ?? 0 : 0, head = here?.querySelector<HTMLElement>(".drawer-h")?.offsetHeight ?? 0;
       let row = 0, pad = 0;
       if (over.matches && name && style) {
-        if (phone.matches || !list) { const own = getComputedStyle(name); row = name.offsetTop + name.offsetHeight; pad = Math.max(0, parseFloat(own.paddingTop) - parseFloat(own.paddingBottom)); }
-        else { row = list.offsetTop - (parseFloat(style.rowGap) || 0); pad = parseFloat(style.paddingTop) || 0; }
+        if (phone.matches || !choices) { const own = getComputedStyle(name); row = name.offsetTop + name.offsetHeight; pad = Math.max(0, parseFloat(own.paddingTop) - parseFloat(own.paddingBottom)); }
+        else { row = choices.offsetTop - (parseFloat(style.rowGap) || 0); pad = parseFloat(style.paddingTop) || 0; }
       }
       const keep = row + pad;
-      px("--side-h", side); px("--head-h", head); px("--keep-row", row); px("--keep-pad", pad);
-      px("--foot-h", pane?.querySelector<HTMLElement>(".drawer-f")?.offsetHeight ?? 0);
-      const rail = pane?.querySelector<HTMLElement>(".dv-rail"), across = !!rail && getComputedStyle(rail).getPropertyValue("--across").trim() === "1";
+      px("--side-h", side); px("--keep-h", keep); px("--head-h", head); px("--keep-row", row); px("--keep-pad", pad);
+      px("--foot-h", here?.querySelector<HTMLElement>(".drawer-f")?.offsetHeight ?? 0);
+      const rail = here?.querySelector<HTMLElement>(".dv-rail"), across = !!rail && getComputedStyle(rail).getPropertyValue("--across").trim() === "1";
       px("--rail-h", rail?.offsetHeight ?? 0);
-      total = Math.max(0, side - keep + (across ? head : 0)); shift = Math.max(shift, -total); apply();
+      // On a phone only the detail's head rides with the text; the list folds on its own.
+      list = phone.matches ? Math.max(0, side - keep) : 0;
+      total = Math.max(0, (phone.matches ? 0 : side - keep) + (across ? head : 0)); shift = Math.max(shift, -total); apply();
       flag("bar", true); flag("ride", over.matches || across); flag("across", across);
     };
     const show = () => { delete el.dataset.snap; shift = 0; apply(); requestAnimationFrame(measure); };
+    // The phone's list opens or folds as a whole. A scene under it moves with it, which can move its scroll too, so
+    // the scrolling that follows for as long as it moves is not read as the reader's. A detail's text does not move.
+    const setOpen = (to: boolean) => {
+      if (open === to) return;
+      open = to; run = 0; quiet = pane() ? 0 : performance.now() + FOLD_MS + 60;
+      el.dataset.fold = ""; window.clearTimeout(fold); fold = window.setTimeout(() => { delete el.dataset.fold; }, FOLD_MS + 40);
+      apply();
+    };
+    const stopPeek = () => { peek = ""; window.clearTimeout(timer); };
+    const peekFor = () => { peek = "time"; peekAt = performance.now(); window.clearTimeout(timer); timer = window.setTimeout(() => { peek = ""; setOpen(false); }, PEEK_MS); };
     const onScroll = (event: Event) => {
       const box = event.target;
       if (!(box instanceof HTMLElement) || !box.matches(".browser-main,.drawer-body")) return;
-      const top = Math.max(0, box.scrollTop), before = last.get(box) ?? top;
-      last.set(box, top); delete el.dataset.snap;
+      // A bounce past either end is not a scroll back.
+      const end = Math.max(0, box.scrollHeight - box.clientHeight);
+      const top = Math.min(end, Math.max(0, box.scrollTop)), before = last.get(box) ?? top, move = top - before;
+      last.set(box, top);
+      if (phone.matches && (!move || performance.now() < quiet)) return;
+      delete el.dataset.snap;
       // Near the top the bars stay attached to the text, so no empty strip ever opens above it.
-      shift = Math.min(0, Math.max(-total, shift - (top - before), -top)); apply();
-      if (top !== before) down = top > before;
+      shift = Math.min(0, Math.max(-total, shift - move, -top));
+      if (move) down = move > 0;
+      if (phone.matches) {
+        run = Math.sign(move) === Math.sign(run) ? run + move : move;
+        if (open && run > SHUT_PX && top > 0) { stopPeek(); setOpen(false); }
+        else if (!open && !peek && run < -OPEN_PX) setOpen(true);
+      }
+      apply();
       window.clearTimeout(settle);
       // A stop settles the bars the way the text was last moving.
       settle = window.setTimeout(() => {
@@ -282,28 +334,73 @@ function useAppBar(ref: { current: HTMLElement | null }) {
         if (to !== shift) { el.dataset.snap = ""; shift = to; apply(); }
       }, 160);
     };
+    // A new screen folds the phone's list, but the landing's own move to the engine keeps the first showing of it.
+    const onNavigate = () => {
+      if (phone.matches) {
+        if (peek === "wait" && !pane()) peekFor();
+        else if (!(peek === "time" && performance.now() - peekAt < 300 && !pane())) { stopPeek(); setOpen(false); }
+      }
+      show();
+    };
+    // The first touch folds the first showing of the list, once what it pressed has acted; a link is left to move on.
+    const onPress = (event: PointerEvent) => {
+      if (!phone.matches || !peek) return;
+      stopPeek();
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target || target.closest(".browser-side,a")) return;
+      window.clearTimeout(tap); tap = window.setTimeout(() => setOpen(false), 250);
+    };
+    const onClick = (event: globalThis.MouseEvent) => {
+      if (!phone.matches || !(event.target instanceof Element) || !event.target.closest(".browser-peek")) return;
+      stopPeek(); setOpen(!open);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !phone.matches || !open) return;
+      stopPeek(); setOpen(false);
+      if (document.activeElement?.closest(".browser-choices,.browser-resources,.browser-contact")) el.querySelector<HTMLElement>(".browser-peek")?.focus();
+    };
     // A slid-away bar is only moved, not hidden, so a focused link in it would sit off screen.
-    const onFocus = (event: FocusEvent) => { if (shift < 0 && event.target instanceof Element && event.target.closest(".browser-side,.drawer-h,.drawer-f")) show(); };
+    const onFocus = (event: FocusEvent) => {
+      if (!(event.target instanceof Element)) return;
+      if (phone.matches && !open && event.target.closest(".browser-choices,.browser-resources,.browser-contact")) { stopPeek(); setOpen(true); }
+      if (shift < 0 && event.target.closest(".browser-side,.drawer-h,.drawer-f")) show();
+    };
     // Only the width: a phone's toolbar changes the height while the text scrolls.
     let width = window.innerWidth;
     const onResize = () => { if (window.innerWidth !== width) { width = window.innerWidth; show(); } };
+    const onMedia = () => { stopPeek(); open = false; show(); };
     const sized = new ResizeObserver(measure), changed = new MutationObserver(() => { measure(); sized.disconnect(); for (const part of el.querySelectorAll(".browser-side,.drawer-h,.drawer-f,.dv-rail")) sized.observe(part); });
     changed.observe(el.querySelector(".browser-main") ?? el, { childList: true, subtree: true });
     for (const part of el.querySelectorAll(".browser-side")) sized.observe(part);
     const signs = ["hashchange", "popstate", "portfolio:navigate"];
     el.addEventListener("scroll", onScroll, { capture: true, passive: true });
     el.addEventListener("focusin", onFocus);
+    el.addEventListener("pointerdown", onPress, { capture: true });
+    el.addEventListener("click", onClick);
+    window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
-    for (const sign of signs) window.addEventListener(sign, show);
-    for (const media of [phone, over]) media.addEventListener("change", show);
+    for (const sign of signs) window.addEventListener(sign, onNavigate);
+    for (const media of [phone, over]) media.addEventListener("change", onMedia);
+    // The first arrival: the root's landing moves on to the engine by itself, and the list stays open until it has.
+    if (phone.matches && !pane()) {
+      open = true;
+      if (!location.hash && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) peek = "wait"; else peekFor();
+    }
     measure();
+    // Moves are eased only once the bar stands where it starts.
+    const live = requestAnimationFrame(() => requestAnimationFrame(() => flag("live", true)));
     return () => {
-      window.clearTimeout(settle); sized.disconnect(); changed.disconnect(); for (const name of ["bar", "ride", "across"]) flag(name, false);
+      for (const id of [settle, fold, timer, tap]) window.clearTimeout(id);
+      cancelAnimationFrame(live); sized.disconnect(); changed.disconnect();
+      for (const name of ["bar", "ride", "across", "live", "fold"]) flag(name, false);
       el.removeEventListener("scroll", onScroll, { capture: true });
       el.removeEventListener("focusin", onFocus);
+      el.removeEventListener("pointerdown", onPress, { capture: true });
+      el.removeEventListener("click", onClick);
+      window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
-      for (const sign of signs) window.removeEventListener(sign, show);
-      for (const media of [phone, over]) media.removeEventListener("change", show);
+      for (const sign of signs) window.removeEventListener(sign, onNavigate);
+      for (const media of [phone, over]) media.removeEventListener("change", onMedia);
     };
   }, [ref]);
 }
