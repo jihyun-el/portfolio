@@ -21,14 +21,7 @@ import { PipelineParts } from "@/components/pipeline-parts";
 import { ModelParts } from "@/components/model-parts";
 import { VqaParts } from "@/components/vqa-parts";
 import { ProductLanding } from "@/components/product-landing";
-
-function ProfileCard() {
-  return <aside className="card" aria-label="개발자 카드"><div className="card-h"><span>DEVELOPER CARD</span></div><dl>
-    {profile.experiences.map((item) => <div key={item.title}><dt>경험</dt><dd>{item.title}<small className="num">{item.period}</small><p>{item.description}</p></dd></div>)}
-    {profile.card.map((row) => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
-    {profile.education.map((item) => <div key={item.title}><dt>교육</dt><dd>{item.title}<small className="num">{item.period}</small></dd></div>)}
-  </dl></aside>;
-}
+import { Resume } from "@/components/resume";
 
 // The home, at the site's root and at each title's address (`at`, such as "/researcher/"). Only the title under the
 // name differs; the name and every link inside lead back to the address it was opened at.
@@ -92,7 +85,7 @@ export function HomePage({ role, at }: { role: string; at: string }) {
       return { key: `mini/${item.id}`, group: "mini", kicker: `미니 프로젝트 · ${miniTag(item)}`, title: detail.title, body: <DetailPanel detail={detail} name="미니 프로젝트" kind="mini" assets={assets} top={<MirrorPoseFigure />}
         intros={{ "mirror-single-camera-stereo": <MirrorIdeaSteps />, "mirror-vanishing-relation": <MirrorVanishing /> }} /> };
     }),
-    { key: "card", group: "profile", kicker: profile.name, title: "이력", body: <ProfileCard /> },
+    { key: "card", group: "profile", kicker: profile.name, title: "이력", body: <Resume /> },
     { key: "skills", group: "profile", kicker: profile.name, title: "기술 스택", body: <StackSection units={parts} /> },
     { key: "writing", group: "records", kicker: "글과 기록", title: "트러블슈팅", body: <div className="screen-writing">{writing.filter((post) => post.onHome).map((post) => <article key={post.slug}>
       <h3><Link href={`/writing/${post.slug}/`}>{post.title}</Link></h3><p>{post.excerpt}</p><Link className="read" href={`/writing/${post.slug}/`}>글 읽기 →</Link>

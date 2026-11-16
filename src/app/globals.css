@@ -58,12 +58,94 @@ button { font:inherit; color:inherit; }
 .hero-id span::before { content:"·"; margin-right:10px; color:var(--ink-3); }
 .hero h1 { font-size:clamp(30px,3.4vw,46px); line-height:1.15; letter-spacing:-.03em; }
 .hero-sub { margin-top:8px; font-size:clamp(20px,2vw,26px); font-weight:300; letter-spacing:-.02em; line-height:1.3; color:var(--ink-2); }
-.card { border:1px solid var(--ink); font-size:var(--fs-s); }
-.card-h { display:flex; justify-content:space-between; padding:12px 16px; background:var(--ink); color:var(--paper); font-size:var(--fs-xs); font-weight:700; letter-spacing:.14em; }
-.card dl>div { display:grid; grid-template-columns:76px 1fr; gap:12px; padding:10px 16px; border-top:1px solid var(--line); }
-.card dl>div:first-child { border-top:0; }
-.card dt { color:var(--ink-2); white-space:nowrap; } .card dd { font-weight:700; }
-.card dd small { display:block; font-size:var(--fs-xs); font-weight:400; color:var(--ink-2); }
+/* The 이력 panel (src/components/resume.tsx): a line of where things stand, a timeline, then the ledger. Its widths are
+   the panel's own (container queries), as the rail stands beside it on a wide window and above it on a narrow one. No
+   box and no colour: the one black bar on the timeline is ClassicMate. Weight carries the emphasis: 800 for a section's
+   head, 700 only for what someone was or won (a role, a prize, a value in the line on top), 500 for where, 400 for
+   dates and the lines under them. The lightest grey is for lines and bars, never for text. */
+.cv { container:cv / inline-size; max-width:1180px; font-size:var(--fs-s); }
+/* The line on top is the panel's head: each group a large mark on the left and two lines on the right — the label,
+   then the value with its dates stepping back. 16px is as large as it goes; above that it reads as the figures row
+   that was taken out. The marks are in the text colour: the image is a mask over the colour (see Mark in resume.tsx).
+   Their heights differ on purpose: the SSAFY tile is a solid block and stands lowest, the thin ClassicMate monogram
+   tallest, the two language logos in between. */
+.cv-meta { display:flex; flex-wrap:wrap; gap:6px 0; padding-bottom:12px; border-bottom:1px solid var(--line); }
+.cv-meta>div { display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-rows:18px 24px; column-gap:12px; row-gap:2px; align-items:center; min-width:0; }
+.cv-meta>div+div { margin-left:20px; padding-left:20px; border-left:1px solid var(--line); }
+.cv-meta dt { display:contents; }
+.cv-meta-marks { grid-column:1; grid-row:1 / 3; display:flex; align-items:center; gap:6px; }
+.cv-meta-label { grid-column:2; grid-row:1; font-size:13px; font-weight:700; line-height:18px; letter-spacing:.04em; color:var(--ink-2); }
+.cv-meta dd { grid-column:2; grid-row:2; font-size:var(--fs-m); font-weight:700; line-height:24px; letter-spacing:-.02em; white-space:nowrap; }
+.cv-meta-when { margin-left:8px; font-size:13px; font-weight:400; letter-spacing:0; color:var(--ink-2); white-space:nowrap; }
+.cv-mark { display:block; flex:none; background:currentColor; -webkit-mask:var(--mark) center / contain no-repeat; mask:var(--mark) center / contain no-repeat; }
+.cv-mark[data-mark="ssafy"] { height:26px; width:calc(26px * var(--ratio)); }
+.cv-mark[data-mark="classicmate"] { height:38px; width:calc(38px * var(--ratio)); }
+.cv-meta .stack-logo { width:24px; height:24px; }
+/* Experience above the axis, education below; a year's guide runs through both bars. A name sits 3px off its bar. */
+.cv-line { display:grid; grid-template-columns:44px minmax(0,1fr); grid-template-rows:34px 24px 34px; row-gap:4px; margin:16px 0 clamp(20px,3vh,40px); }
+.cv-lane-name { grid-column:1; font-size:var(--fs-xs); font-weight:700; line-height:12px; letter-spacing:.04em; color:var(--ink-2); }
+.cv-lane-name[data-lane="work"] { grid-row:1; align-self:end; margin-bottom:-1px; }
+.cv-lane-name[data-lane="study"] { grid-row:3; align-self:start; margin-top:-1px; }
+.cv-plot { grid-column:2; grid-row:1 / -1; position:relative; display:grid; grid-template-rows:34px 24px 34px; row-gap:4px; }
+.cv-guides { position:absolute; inset:24px 0; pointer-events:none; }
+.cv-guides i { position:absolute; top:0; bottom:0; left:calc(var(--s) * 1%); width:1px; background:color-mix(in srgb,var(--ink-3) 55%,var(--paper)); }
+.cv-lane,.cv-axis { position:relative; }
+.cv-track { position:absolute; inset:0; }
+.cv-bar { position:absolute; left:calc(var(--s) * 1%); width:calc((var(--e) - var(--s)) * 1%); height:10px; }
+.cv-lane[data-lane="work"] .cv-bar { bottom:0; }
+.cv-lane[data-lane="study"] .cv-bar { top:0; }
+.cv-bar[data-tone="ink"] { background:var(--ink); }
+.cv-bar[data-tone="mute"] { background:var(--ink-3); }
+.cv-bar[data-tone="open"] { background:var(--wash); border:1px solid var(--ink-2); }
+.cv-bar[data-tone="plan"] { background:var(--paper); border:1px dashed var(--ink-2); }
+.cv-lane .cv-bar[data-tone="tick"] { bottom:-4px; width:2px; height:18px; margin-left:-1px; background:var(--ink); }
+.cv-bar-label { position:absolute; left:0; font-size:13px; font-weight:600; line-height:18px; color:var(--ink); white-space:nowrap; }
+.cv-lane[data-lane="work"] .cv-bar-label { bottom:13px; }
+.cv-lane[data-lane="study"] .cv-bar-label { top:13px; }
+/* The mark hangs 4px below the bars, so its name rises 4px more to share their line. */
+.cv-lane .cv-bar[data-tone="tick"] .cv-bar-label { left:8px; bottom:17px; }
+.cv-bar:is([data-tone="ink"],[data-tone="tick"]) .cv-bar-label { font-weight:700; }
+.cv-axis::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--ink-3); }
+.cv-axis span { position:absolute; top:50%; left:calc(var(--s) * 1%); translate:-50% -50%; padding:0 6px; background:var(--paper); font-size:var(--fs-xs); font-weight:500; line-height:1; color:var(--ink-2); }
+/* The ledger: a title on the left, its date on the right, one line under it. */
+.cv-cols { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:48px; row-gap:28px; align-items:start; }
+.cv-sec h3 { padding-bottom:8px; border-bottom:1px solid var(--ink); font-size:var(--fs-m); font-weight:800; line-height:1.4; letter-spacing:-.01em; }
+.cv-item { padding:6px 0; border-bottom:1px solid var(--line); }
+.cv-item:last-child,.cv-facts>div:last-child { border-bottom:0; }
+.cv-item-h { display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
+.cv-item-t { font-size:var(--fs-s); font-weight:500; line-height:1.45; }
+.cv-item-t b { font-weight:700; }
+.cv-when { flex:none; font-size:var(--fs-xs); color:var(--ink-2); white-space:nowrap; }
+.cv-item-d { margin-top:2px; font-size:13px; line-height:1.6; color:var(--ink-2); }
+.cv-go { margin-left:8px; font-size:var(--fs-xs); font-weight:700; color:var(--ink-2); text-decoration:none; white-space:nowrap; }
+.cv-go:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
+.cv-facts>div { display:grid; grid-template-columns:72px minmax(0,1fr); gap:12px; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--line); }
+.cv-facts dt { font-size:13px; color:var(--ink-2); }
+.cv-facts dd { display:flex; justify-content:space-between; align-items:baseline; gap:16px; font-size:var(--fs-s); font-weight:500; }
+/* Where the line on top no longer fits on one row, its groups wrap without the rules between them. */
+@container cv (max-width:979px) {
+  .cv-meta { gap:12px 32px; }
+  .cv-meta>div+div { margin-left:0; padding-left:0; border-left:0; }
+}
+/* Below this the timeline's names would meet; the dates stay in the ledger. */
+@container cv (max-width:819px) {
+  .cv-line { display:none; }
+  .cv-meta { margin-bottom:24px; }
+  .cv-cols { grid-template-columns:minmax(0,1fr); row-gap:24px; }
+}
+@container cv (max-width:519px) {
+  .cv-meta { display:grid; gap:0; padding-bottom:0; border-bottom:0; }
+  .cv-meta>div { grid-template-columns:48px minmax(0,1fr); grid-template-rows:auto; row-gap:1px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .cv-meta-marks { gap:4px; }
+  .cv-meta-label { font-size:var(--fs-xs); }
+  .cv-meta dd { font-size:15px; line-height:22px; white-space:normal; }
+  .cv-meta-when { display:block; margin-left:0; font-size:var(--fs-xs); }
+  .cv-mark[data-mark="ssafy"] { height:20px; width:calc(20px * var(--ratio)); }
+  .cv-mark[data-mark="classicmate"] { height:30px; width:calc(30px * var(--ratio)); }
+  .cv-meta .stack-logo { width:18px; height:18px; }
+  .cv-item-h { flex-direction:column; gap:2px; }
+  .cv-facts>div { grid-template-columns:64px minmax(0,1fr); }
+}
 /* Two short outcome rows beside the identity; the actual project diagrams follow below. */
 .sums { display:grid; gap:22px; }
 .sum { display:grid; grid-template-columns:24px minmax(0,1fr); gap:12px; text-decoration:none; }
@@ -95,8 +177,6 @@ button { font:inherit; color:inherit; }
 .stack-tool { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin-top:8px; font-size:var(--fs-s); color:var(--ink-2); }
 .stack-tool b { font-size:var(--fs-xs); font-weight:700; letter-spacing:.12em; }
 .stack-tool span { display:inline-flex; align-items:center; gap:6px; } .stack-tool .stack-logo { width:14px; height:14px; color:var(--ink); }
-/* The developer card sits before the contact footer, for a reader who arrives without the résumé. */
-.sec>.wrap>.card { max-width:520px; }
 
 /* Projects: each project is its own band with a number, so two projects never read as one.
    Parts are single rows that open their details in the drawer. */
@@ -632,7 +712,6 @@ html.drawer-open .pmap { opacity:0; pointer-events:none; }
   :root { --bar-h:56px; }
   .brand span,.nav-wide { display:none; }
   .nav { gap:12px; font-size:13px; }
-  .card dl>div { grid-template-columns:66px 1fr; }
   .diagram-figure,.performance-figure,.clock-figure,.matrix-figure,.score-figure { padding:16px; margin-block:24px; }
   .service-flow,.ownership-flow { grid-template-columns:1fr; gap:5px; }
   .sol>li { grid-template-columns:1fr; padding:14px 0; } .sol-stage span { flex-basis:auto; } .sol-lanes,.sol-two,.sol-two.is-split { grid-template-columns:1fr; } .sol-two { gap:10px; }
@@ -957,7 +1036,6 @@ a.solution-node:hover h3,.solution-models>a:hover strong { text-decoration:under
 .screen-writing h3 { font-size:22px; font-weight:800; line-height:1.4; }
 .screen-writing h3 a { text-decoration:none; }
 .screen-writing p { margin:10px 0 14px; font-size:14px; color:var(--ink-2); }
-.drawer-inline .card dd p { margin-top:8px; font-size:13px; font-weight:400; color:var(--ink-2); }
 
 /* A unit's record in that pane: what was owned and what came of it stay on top, the index of
    steps stays on the left, and one step shows at a time. Only the step scrolls. */

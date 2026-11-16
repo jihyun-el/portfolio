@@ -8,7 +8,7 @@ type Mark = string | { viewBox: string; transform?: string; paths: MarkPath[] };
 // A technology's logo in the text colour, so it follows the light and dark themes. A string is one
 // 24×24 path from Simple Icons (CC0); an object carries a mark in its own coordinates, where a
 // `paper` path is filled with the page colour to cover what lies behind it.
-function Logo({ icon }: { icon?: string }) {
+export function Logo({ icon }: { icon?: string }) {
   const mark = icon ? (icons as Record<string, Mark>)[icon] : undefined;
   if (!mark) return <span className="stack-logo" aria-hidden="true" />;
   const { viewBox, transform, paths }: { viewBox: string; transform?: string; paths: MarkPath[] } = typeof mark === "string" ? { viewBox: "0 0 24 24", paths: [mark] } : mark;

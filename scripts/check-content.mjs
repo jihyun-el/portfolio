@@ -86,8 +86,20 @@ if (!contract.stages.find(stage => stage.id === "body")?.handoff?.label.includes
 const metricKeys = new Set(["frontend", "compute", "controlTicks", "publicScore", "leaderboard", "release"]);
 const cases = JSON.parse(fs.readFileSync(path.join(content, "cases.json"), "utf8"));
 if (!Array.isArray(profile.heroLines) || !profile.heroLines.length || profile.heroLines.some(line => !line)) throw new Error("profile.heroLines lists the secondary fields shown under the role on the first screen");
-if (!Array.isArray(profile.card) || profile.card.some(row => !row.label || !row.value)) throw new Error("Developer card rows need a label and value");
-if (!Array.isArray(profile.education) || profile.education.some(row => !row.title || !row.period)) throw new Error("Developer card education rows need a title and period");
+// The 이력 panel: every dated row carries dates the timeline can place, and a bar only one of the known tones.
+{
+  const resume = profile.resume ?? {};
+  const date = /^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$/;
+  const tones = new Set(["ink", "mute", "open", "plan", "tick"]);
+  for (const key of ["experiences", "awards", "education", "facts"]) if (!Array.isArray(resume[key]) || !resume[key].length) throw new Error(`profile.resume.${key} must be a non-empty list`);
+  for (const row of [...resume.experiences, ...resume.education]) {
+    if (!row.title || !date.test(row.from) || !date.test(row.to) || row.from > row.to) throw new Error(`Resume row "${row.title}" needs a title and from ≤ to as YYYY-MM[-DD]`);
+    if (row.bar && (!row.bar.label || !tones.has(row.bar.tone))) throw new Error(`Resume row "${row.title}" has a bar without a label or a known tone`);
+  }
+  if (resume.experiences.some(row => !row.description || !row.role || !row.title.endsWith(row.role))) throw new Error("Resume experiences need a description and a role that ends the title");
+  if (resume.awards.some(row => !row.event || !row.prize || !date.test(row.date) || (!row.detail && !row.leaderboard))) throw new Error("Resume awards need an event, prize, date, and a detail or the leaderboard flag");
+  if (resume.facts.some(row => !row.label || !row.value || (row.date && !date.test(row.date)))) throw new Error("Resume facts need a label and value");
+}
 if (!Array.isArray(profile.stats) || !profile.stats.length || profile.stats.some(key => !metricKeys.has(key))) throw new Error("Home stats need known metric keys");
 for (const project of projects) if (!project.short) throw new Error(`${project.id}: missing short label`);
 const caseIds = new Set();

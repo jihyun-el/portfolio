@@ -4,18 +4,36 @@
   "role": "AI Researcher",
   "roles": { "engineer": "AI/ML Engineer", "researcher": "AI Researcher" },
   "heroLines": ["Audio DSP", "Flutter"],
-  "card": [
-    { "label": "주력 언어", "value": "Python · Dart" },
-    { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" }
-  ],
   "stats": ["release", "leaderboard"],
-  "experiences": [
-    { "title": "ClassicMate 초기팀 리드 엔지니어", "period": "2025.09 ~ 2026.07", "description": "모바일 앱 · 악보 파이프라인 · 반주 엔진을 설계하고 개발했다. 초기팀에 풀타임으로 참여했다." },
-    { "title": "SSAFY 16기 AI 챌린지 최우수상 · A011 팀장", "period": "2026.09.21 ~ 2026.09.28", "description": "5인 팀의 가설 설계·실험 배분·공통 실행 환경·발표를 맡았다. Private 리더보드 217팀 중 3위 · 서울 캠퍼스 1위로 최우수상을 받았다." }
-  ],
-  "education": [
-    { "title": "인텔 AI For Future Workforce", "period": "2025.04 ~ 2025.09 · 우수 수료 (상위 10%)" },
-    { "title": "SSAFY 16기", "period": "2026.07 ~ 2027.06 (수료 예정)" }
-  ],
+  "resume": {
+    "experiences": [
+      { "title": "ClassicMate 초기팀 리드 엔지니어", "role": "리드 엔지니어", "mark": "classicmate", "from": "2025-09", "to": "2026-07", "description": "초기팀 풀타임. 앱 iOS · Android 출시, 반주 엔진 iOS 실기기 통합.",
+        "link": { "label": "ClassicMate", "href": "#classicmate" }, "bar": { "label": "ClassicMate 리드 엔지니어", "tone": "ink" } },
+      { "title": "SSAFY 16기 AI 챌린지 · A011 팀장", "role": "A011 팀장", "from": "2026-09-21", "to": "2026-09-28", "description": "5인 팀의 가설 설계 · 실험 배분 · 공통 실행 환경 · 발표.",
+        "link": { "label": "멀티모달 VQA", "href": "#ssafy-ai-challenge" }, "bar": { "label": "AI 챌린지 최우수상", "tone": "tick" } },
+      { "title": "용인시의회 탄소중립 연구용역 2건 · 공동연구원", "role": "공동연구원", "from": "2023-06", "to": "2024-08", "description": "단국대학교 행정법무대학원 탄소중립학과 주관. 보고서별 1개 장 집필.",
+        "bar": { "label": "용인시의회 탄소중립 연구용역", "tone": "mute" } }
+    ],
+    "awards": [
+      { "event": "SSAFY 16기 AI 챌린지", "prize": "최우수상", "date": "2026-09", "leaderboard": true },
+      { "event": "인텔 AI For Future Workforce", "prize": "우수 수료", "date": "2025-09", "detail": "상위 10% · 930시간" },
+      { "event": "UWC 2025 AI&무인이동체 퓨처 해커톤", "prize": "미래인재상", "date": "2025-07", "detail": "성인부 · 주최 과학기술정보통신부" },
+      { "event": "단국대 탄소중립학과 학생학술대회", "prize": "최우수연구", "date": "2024-12", "detail": "태양광 발전 잠재량 평가방법 연구" }
+    ],
+    "education": [
+      { "title": "SSAFY(삼성 청년 SW·AI 아카데미) 16기", "mark": "ssafy", "from": "2026-07", "to": "2027-06", "detail": "수료 예정",
+        "bar": { "label": "SSAFY 16기", "tone": "plan" } },
+      { "title": "인텔 AI For Future Workforce", "from": "2025-04", "to": "2025-09", "detail": "930시간 · 상위 10% 우수 수료",
+        "bar": { "label": "인텔 AI For Future Workforce", "tone": "open" } },
+      { "title": "단국대학교 행정법무대학원 탄소중립학과 석사", "from": "2022-09", "to": "2025-02", "detail": "학위논문 「방위각과 경사각을 고려한 옥상 태양광 발전 시스템의 최적화 배치에 관한 연구」",
+        "bar": { "label": "단국대 탄소중립학과 석사", "tone": "open" } },
+      { "title": "단국대학교 스페인어학과 학사", "from": "2016-03", "to": "2022-08" }
+    ],
+    "facts": [
+      { "label": "어학", "value": "OPIc IH", "date": "2026-09" },
+      { "label": "자격", "value": "컴퓨터활용능력 1급", "date": "2021-08" },
+      { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" }
+    ]
+  },
   "links": [{"label":"Email","url":"mailto:wkc0631sy@gmail.com"},{"label":"GitHub","url":"https://github.com/jihyun-el"}]
 }

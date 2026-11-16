@@ -9,11 +9,23 @@ export type Profile = {
   // The same site under another title, each at its own address (/engineer/, /researcher/): only the title differs.
   roles: Record<string, string>;
   heroLines: string[];
-  card: { label: string; value: string }[];
   stats: string[];
-  experiences: { title: string; period: string; description: string }[];
-  education: { title: string; period: string }[];
+  resume: Resume;
   links: { label: string; url: string }[];
+};
+
+// The 이력 panel. Dates are "YYYY-MM" or "YYYY-MM-DD"; the lists and the timeline are both drawn from them. An entry
+// with a `bar` also stands on the timeline: `ink` is the one black bar, `mute` a grey one, `open` an outlined one,
+// `plan` a dashed one (not finished yet), `tick` a single mark for a week-long event.
+export type ResumeBar = { label: string; tone: "ink" | "mute" | "open" | "plan" | "tick" };
+export type Resume = {
+  // `role` is the end of `title` that names what was held; it is the bold part.
+  // `mark` names a logo drawn before the entry in the line on top (src/components/resume.tsx).
+  experiences: { title: string; role: string; mark?: string; from: string; to: string; description: string; link?: { label: string; href: string }; bar?: ResumeBar }[];
+  // `leaderboard` writes the contest's ranks from metrics.json instead of a hand-typed line.
+  awards: { event: string; prize: string; date: string; detail?: string; leaderboard?: boolean }[];
+  education: { title: string; mark?: string; from: string; to: string; detail?: string; bar?: ResumeBar }[];
+  facts: { label: string; value: string; date?: string }[];
 };
 
 export type Project = {
