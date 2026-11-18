@@ -1,9 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import { metrics, profile, sitePath, stack, type ResumeBar } from "@/lib/content";
 import { Logo } from "@/components/stack-section";
+import { Line } from "@/components/unit-card";
 
 // The 이력 panel: a short line of where things stand, a timeline you take in at a glance, then the ledger under them —
-// experience, awards, education and the rest as rows of the same shape.
+// experience, awards and education as rows of the same shape, and the certificates as a table of name, grade and issuer.
 
 // A date as months since year 0. A day-precise date counts its day; an end date runs to the end of its month or day.
 function months(date: string, end = false) {
@@ -62,7 +63,7 @@ function Timeline({ work, study }: { work: Placed[]; study: Placed[] }) {
 }
 
 export function Resume() {
-  const { experiences, awards, education, facts } = profile.resume;
+  const { experiences, awards, education, certs } = profile.resume;
   // The contest's ranks are read from metrics.json, as every number on the home is.
   const board = metrics.vqa.leaderboard;
   const ranks = `Private 리더보드 ${board.teams}팀 중 ${board.private.overall}위 · 서울 캠퍼스 ${board.private.seoul}위`;
@@ -102,11 +103,20 @@ export function Resume() {
           {item.detail && <p className="cv-item-d">{item.detail}</p>}
         </li>)}</ol>
       </section>
-      <section className="cv-sec" aria-labelledby="cv-facts">
-        <h3 id="cv-facts">자격 · 기술</h3>
-        <dl className="cv-facts">{facts.map((item) => <div key={item.label}>
-          <dt>{item.label}</dt><dd><span>{item.value}</span>{item.date && <time className="cv-when num" dateTime={item.date}>{shown(item.date)}</time>}</dd>
-        </div>)}</dl>
+      <section className="cv-sec" aria-labelledby="cv-certs">
+        <h3 id="cv-certs">자격</h3>
+        <table className="cv-certs">
+          <thead><tr><th scope="col">이름</th><th scope="col">급수</th><th scope="col">주관</th><th scope="col"><span className="sr-only">취득</span></th></tr></thead>
+          {certs.map((item) => <tbody key={item.name}>
+            <tr>
+              <th scope="row">{item.name}</th>
+              <td className="cv-cert-g">{item.grade ?? <span aria-label="없음">—</span>}</td>
+              <td className="cv-cert-i">{item.issuer}</td>
+              <td><time className="cv-when num" dateTime={item.date}>{shown(item.date)}</time></td>
+            </tr>
+            {item.detail?.map((line) => <tr className="cv-cert-d" key={line}><td colSpan={4}><Line>{line}</Line></td></tr>)}
+          </tbody>)}
+        </table>
       </section>
     </div>
   </article>;

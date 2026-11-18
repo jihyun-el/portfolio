@@ -25,7 +25,9 @@ export type Resume = {
   // `leaderboard` writes the contest's ranks from metrics.json instead of a hand-typed line.
   awards: { event: string; prize: string; date: string; detail?: string; leaderboard?: boolean }[];
   education: { title: string; mark?: string; from: string; to: string; detail?: string; bar?: ResumeBar }[];
-  facts: { label: string; value: string; date?: string }[];
+  // A certificate or test: its name, the grade it gave (none where the name holds it), who runs it, and when.
+  // `detail` holds the lines under the row, one each; **…** in them is set in bold.
+  certs: { name: string; grade?: string; issuer: string; date: string; detail?: string[] }[];
 };
 
 export type Project = {

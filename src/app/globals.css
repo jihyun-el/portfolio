@@ -111,7 +111,7 @@ button { font:inherit; color:inherit; }
 .cv-cols { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:48px; row-gap:28px; align-items:start; }
 .cv-sec h3 { padding-bottom:8px; border-bottom:1px solid var(--ink); font-size:var(--fs-m); font-weight:800; line-height:1.4; letter-spacing:-.01em; }
 .cv-item { padding:6px 0; border-bottom:1px solid var(--line); }
-.cv-item:last-child,.cv-facts>div:last-child { border-bottom:0; }
+.cv-item:last-child { border-bottom:0; }
 .cv-item-h { display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
 .cv-item-t { font-size:var(--fs-s); font-weight:500; line-height:1.45; }
 .cv-item-t b { font-weight:700; }
@@ -119,9 +119,19 @@ button { font:inherit; color:inherit; }
 .cv-item-d { margin-top:2px; font-size:13px; line-height:1.6; color:var(--ink-2); }
 .cv-go { margin-left:8px; font-size:var(--fs-xs); font-weight:700; color:var(--ink-2); text-decoration:none; white-space:nowrap; }
 .cv-go:hover { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
-.cv-facts>div { display:grid; grid-template-columns:72px minmax(0,1fr); gap:12px; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--line); }
-.cv-facts dt { font-size:13px; color:var(--ink-2); }
-.cv-facts dd { display:flex; justify-content:space-between; align-items:baseline; gap:16px; font-size:var(--fs-s); font-weight:500; }
+/* The certificates: name, grade and issuer in columns, the date at the right edge; a line under a row spans it. */
+.cv-certs { width:100%; border-collapse:collapse; }
+.cv-certs thead th { padding:8px 12px 4px 0; font-size:var(--fs-xs); font-weight:500; text-align:left; color:var(--ink-2); }
+.cv-certs tbody { border-bottom:1px solid var(--line); }
+.cv-certs tbody:last-child { border-bottom:0; }
+.cv-certs tbody th,.cv-certs tbody td { padding:7px 12px 7px 0; vertical-align:baseline; text-align:left; }
+.cv-certs tbody th { font-size:var(--fs-s); font-weight:500; line-height:1.45; }
+.cv-certs .cv-cert-g { font-size:var(--fs-s); font-weight:700; white-space:nowrap; }
+.cv-certs .cv-cert-i { font-size:13px; color:var(--ink-2); }
+.cv-certs :is(th,td):last-child { padding-right:0; text-align:right; }
+.cv-certs .cv-cert-d td { padding:0 0 7px; text-align:left; font-size:13px; line-height:1.6; color:var(--ink-2); }
+.cv-certs tr:has(+ .cv-cert-d) :is(th,td) { padding-bottom:2px; }
+.cv-cert-d b { font-weight:700; color:var(--ink); }
 /* Where the line on top no longer fits on one row, its groups wrap without the rules between them. */
 @container cv (max-width:979px) {
   .cv-meta { gap:12px 32px; }
@@ -144,7 +154,7 @@ button { font:inherit; color:inherit; }
   .cv-mark[data-mark="classicmate"] { height:30px; width:calc(30px * var(--ratio)); }
   .cv-meta .stack-logo { width:18px; height:18px; }
   .cv-item-h { flex-direction:column; gap:2px; }
-  .cv-facts>div { grid-template-columns:64px minmax(0,1fr); }
+  .cv-certs .cv-cert-i { font-size:var(--fs-xs); }
 }
 /* Two short outcome rows beside the identity; the actual project diagrams follow below. */
 .sums { display:grid; gap:22px; }

@@ -29,10 +29,10 @@
         "bar": { "label": "단국대 탄소중립학과 석사", "tone": "open" } },
       { "title": "단국대학교 스페인어학과 학사", "from": "2016-03", "to": "2022-08" }
     ],
-    "facts": [
-      { "label": "어학", "value": "OPIc IH", "date": "2026-09" },
-      { "label": "자격", "value": "컴퓨터활용능력 1급", "date": "2021-08" },
-      { "label": "모델", "value": "PyTorch · Core ML · VLM 파인튜닝" }
+    "certs": [
+      { "name": "삼성 SW 역량테스트", "grade": "A+", "issuer": "삼성", "date": "2026-11" },
+      { "name": "OPIc", "grade": "IH", "issuer": "ACTFL", "date": "2026-09" },
+      { "name": "컴퓨터활용능력", "grade": "1급", "issuer": "대한상공회의소", "date": "2021-08" }
     ]
   },
   "links": [{"label":"Email","url":"mailto:wkc0631sy@gmail.com"},{"label":"GitHub","url":"https://github.com/jihyun-el"}]
