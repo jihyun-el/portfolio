@@ -770,6 +770,19 @@ body:has(.project-browser) #main-content { height:100dvh; }
 .dark .name-mark-out { filter:drop-shadow(0 0 2px var(--mark-ink)) drop-shadow(0 0 5px var(--mark-ink)); }
 .browser-identity p { font-size:14px; font-weight:600; margin-top:6px; }
 .browser-identity .browser-fields { font-size:12px; font-weight:400; color:var(--ink-2); margin-top:2px; }
+/* The title and 이력 beside it are one link to the 이력, in the name block that every window keeps in sight; 이력 sits
+   on the title's bottom line. */
+.browser-cv { display:inline-flex; align-items:last baseline; gap:4px; white-space:nowrap; text-decoration:none; }
+/* 이력 in the signal's colour, as the name mark's lit node; its arrow is a half arrow lying on the text's bottom line.
+   Hovered or open, a line of the same colour runs under the whole link. */
+.browser-cv b { display:inline-flex; align-items:baseline; gap:4px; font-size:1em; font-weight:800; color:#c04466; }
+.dark .browser-cv b { color:#d94446; }
+.cv-arrow { width:1em; height:.57em; flex:none; overflow:visible; transition:translate .18s ease-out; }
+.cv-arrow path { fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+.browser-cv:hover .cv-arrow { translate:2px 0; }
+.browser-cv { padding-bottom:3px; background:linear-gradient(#c04466,#c04466) 0 100% / 0 1.5px no-repeat; transition:background-size .2s ease-out; }
+.dark .browser-cv { background-image:linear-gradient(#d94446,#d94446); }
+.browser-cv:is(:hover,[aria-current]) { background-size:100% 1.5px; }
 .browser-choices { display:grid; margin-top:30px; border-top:2px solid var(--ink); }
 .browser-choices a { --pt:14px; --pb:16px; display:flex; flex-direction:column; gap:3px; padding:var(--pt) 12px var(--pb); border-bottom:1px solid var(--line); text-decoration:none; }
 .browser-choices a:last-child { border-bottom:2px solid var(--ink); }

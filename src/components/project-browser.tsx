@@ -66,6 +66,8 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
   const [selected, setSelected] = useState(projects[0].id);
   // The stack opens over the scene but stands in the list, so while it is open it is the list's current entry.
   const [stack, setStack] = useState(false);
+  // The 이력 panel, marked on its link in the name row while it is open.
+  const [cv, setCv] = useState(false);
   const root = useRef<HTMLElement>(null);
   useAppBar(root);
   // `handed` marks a change of screen the ring has already carried, which needs no zoom of its own.
@@ -90,6 +92,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
     const sync = () => {
       const hash = decodeURIComponent(location.hash.slice(1));
       setStack(hash === "skills");
+      setCv(hash === "card");
       if (hash === "mini" || hash.startsWith("mini/")) { setSelected("mini"); return; }
       const project = projects.find((item) => hash === item.id || item.also?.includes(hash));
       if (project) setSelected(project.id);
@@ -204,7 +207,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
   return <section className="wrap project-browser" id="about" ref={root} aria-label="소개와 대표 프로젝트">
     <noscript><style>{"html:has(.project-browser){overflow:auto}.project-browser{height:auto}.browser-scenes>article[hidden]{display:grid!important}.browser-scenes>article{min-height:700px;margin-bottom:40px}.browser-main{overflow:visible}"}</style></noscript>
     <aside className="browser-side">
-      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}<NameMark /></a></h1><ThemeToggle /></div><p>{role}</p><p className="browser-fields">{fields.join(" · ")}</p>{peek}</div>
+      <div className="browser-identity"><div className="browser-id-row"><h1><a className="browser-home" href={home} onClick={goHome}>{name}<NameMark /></a></h1><ThemeToggle /></div><p><a className="browser-cv" href="#card" aria-current={cv ? "true" : undefined}>{role}<b>이력<svg className="cv-arrow" viewBox="0 0 14 8" aria-hidden="true"><path d="M1.2 6.8h11.6L8.4 1.4" /></svg></b></a></p><p className="browser-fields">{fields.join(" · ")}</p>{peek}</div>
       <nav className="browser-choices" id="browser-list" aria-label="대표 프로젝트 선택">
         {entries}
         <a href="#mini" aria-current={current("mini")} aria-controls="featured-mini" onClick={(event) => choose(event, "mini")}>
@@ -213,7 +216,7 @@ export function ProjectBrowser({ name, role, fields, links, projects, groups, mi
         {/* The stack is no project: it has no number and opens over the scene, as the resources below do. */}
         <a className="browser-stack" href="#skills" aria-current={stack ? "true" : undefined}><b>기술 스택</b><em>{stackCount}개 기술</em></a>
       </nav>
-      <nav className="browser-resources" aria-label="이력과 기록"><a href="#card">이력</a><a className="is-stack" href="#skills">기술 스택</a><a href="#writing">글</a><a href="#commits">개발 기록</a></nav>
+      <nav className="browser-resources" aria-label="이력과 기록"><a className="is-stack" href="#skills">기술 스택</a><a href="#writing">글</a><a href="#commits">개발 기록</a></nav>
       <div className="browser-contact">{links.map((link) => <a href={link.url} key={link.url} {...(link.url.startsWith("https://") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{CONTACT_MARKS[link.label]}{link.label} ↗</a>)}</div>
     </aside>
     <div className="browser-main" id="projects">
