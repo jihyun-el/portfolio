@@ -3,7 +3,7 @@ import { metrics, profile, sitePath, stack, type ResumeBar } from "@/lib/content
 import { Logo } from "@/components/stack-section";
 import { Line } from "@/components/unit-card";
 
-// The 이력 panel: a short line of where things stand, a timeline you take in at a glance, then the ledger under them —
+// The 프로필 panel: a short line of where things stand, a timeline you take in at a glance, then the ledger under them —
 // experience, awards and education as rows of the same shape, and the certificates as a table of name, grade and issuer.
 
 // A date as months since year 0. A day-precise date counts its day; an end date runs to the end of its month or day.
@@ -74,7 +74,7 @@ export function Resume() {
   // terms and details.
   const now = education.find((item) => item.bar?.tone === "plan"), lead = experiences.find((item) => item.bar?.tone === "ink");
   const term = (label: string, marks: ReactNode) => <dt><span className="cv-meta-marks" aria-hidden="true">{marks}</span><span className="cv-meta-label">{label}</span></dt>;
-  return <article className="cv" aria-label="이력">
+  return <article className="cv" aria-label="프로필">
     <dl className="cv-meta">
       {now && <div>{term("현재", <Mark name={now.mark} />)}<dd>{now.bar?.label ?? now.title}<span className="cv-meta-when"><span className="num">{shown(now.to)}</span> {now.detail}</span></dd></div>}
       {lead && <div>{term("이전", <Mark name={lead.mark} />)}<dd>{lead.title}<span className="cv-meta-when num">{shown(lead.from)} ~ {shown(lead.to)}</span></dd></div>}

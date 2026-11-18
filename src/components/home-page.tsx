@@ -85,7 +85,7 @@ export function HomePage({ role, at }: { role: string; at: string }) {
       return { key: `mini/${item.id}`, group: "mini", kicker: `미니 프로젝트 · ${miniTag(item)}`, title: detail.title, body: <DetailPanel detail={detail} name="미니 프로젝트" kind="mini" assets={assets} top={<MirrorPoseFigure />}
         intros={{ "mirror-single-camera-stereo": <MirrorIdeaSteps />, "mirror-vanishing-relation": <MirrorVanishing /> }} /> };
     }),
-    { key: "card", group: "profile", kicker: profile.name, title: "이력", body: <Resume /> },
+    { key: "card", group: "profile", kicker: profile.name, title: "프로필", body: <Resume /> },
     { key: "skills", group: "profile", kicker: profile.name, title: "기술 스택", body: <StackSection units={parts} /> },
     { key: "writing", group: "records", kicker: "글과 기록", title: "트러블슈팅", body: <div className="screen-writing">{writing.filter((post) => post.onHome).map((post) => <article key={post.slug}>
       <h3><Link href={`/writing/${post.slug}/`}>{post.title}</Link></h3><p>{post.excerpt}</p><Link className="read" href={`/writing/${post.slug}/`}>글 읽기 →</Link>

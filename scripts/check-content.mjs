@@ -86,7 +86,7 @@ if (!contract.stages.find(stage => stage.id === "body")?.handoff?.label.includes
 const metricKeys = new Set(["frontend", "compute", "controlTicks", "publicScore", "leaderboard", "release"]);
 const cases = JSON.parse(fs.readFileSync(path.join(content, "cases.json"), "utf8"));
 if (!Array.isArray(profile.heroLines) || !profile.heroLines.length || profile.heroLines.some(line => !line)) throw new Error("profile.heroLines lists the secondary fields shown under the role on the first screen");
-// The 이력 panel: every dated row carries dates the timeline can place, and a bar only one of the known tones.
+// The 프로필 panel: every dated row carries dates the timeline can place, and a bar only one of the known tones.
 {
   const resume = profile.resume ?? {};
   const date = /^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$/;

@@ -14,7 +14,7 @@ export type Profile = {
   links: { label: string; url: string }[];
 };
 
-// The 이력 panel. Dates are "YYYY-MM" or "YYYY-MM-DD"; the lists and the timeline are both drawn from them. An entry
+// The 프로필 panel. Dates are "YYYY-MM" or "YYYY-MM-DD"; the lists and the timeline are both drawn from them. An entry
 // with a `bar` also stands on the timeline: `ink` is the one black bar, `mute` a grey one, `open` an outlined one,
 // `plan` a dashed one (not finished yet), `tick` a single mark for a week-long event.
 export type ResumeBar = { label: string; tone: "ink" | "mute" | "open" | "plan" | "tick" };
